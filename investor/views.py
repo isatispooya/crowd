@@ -29,7 +29,7 @@ class RequestViewset(APIView):
         return Response({'error' :cart_serializer.errors }, status=status.HTTP_400_BAD_REQUEST)
     
 
-
+# ساخت کارت ها
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         
@@ -45,8 +45,8 @@ class RequestViewset(APIView):
         cart_serializer  =serializers.CartSerializer(cart ,  many = True)
         return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
 
-
-    def get (self,request,) :
+# لیست کارت ها
+    def get (self,request) :
         Authorization = request.headers.get('Authorization')
         
         if not Authorization:
@@ -60,7 +60,50 @@ class RequestViewset(APIView):
         cart = models.Cart.objects.filter(user=user)
         cart_serializer  =serializers.CartSerializer(cart ,  many = True)
         return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
+    
+# update کارت ها 
+    def update(self,request, id) :
+        Authorization = request.headers.get('Authorization')
+        
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
+        user = fun.decryptionUser(Authorization)
+
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()  
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart_serializer = serializers.CartSerializer(cart, data=request.data, partial=True)
+        if cart_serializer.is_valid():
+            cart_serializer.save()
+            return Response({'message': 'Cart updated successfully', 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
+        
+        return Response(cart_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+            Authorization = request.headers.get('Authorization')
+            
+            if not Authorization:
+                return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = fun.decryptionUser(Authorization)
+
+            if not user:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            user = user.first()
+
+            cart = models.Cart.objects.filter(id=id).first()
+            if not cart:
+                return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            cart.delete()
+            return Response({'message': 'Cart deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+    
+# جزییات کارت
 class DetailViewset(APIView):
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -79,3 +122,6 @@ class DetailViewset(APIView):
         cart_serializer = serializers.CartSerializer(cart)
     
         return Response({'message': True, 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
+    
+
+    
