@@ -1,7 +1,9 @@
 from django.db import models
+from authentication.models import User
 
 #  کارت درخواست سرمایه پذیر
 class Cart (models.Model) :
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=200)
     activity_industry = models.CharField(max_length=200)
     registration_number = models.CharField(max_length= 20 , unique=True)

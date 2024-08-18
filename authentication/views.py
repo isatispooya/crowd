@@ -26,7 +26,10 @@ class OtpViewset(APIView) :
         national_code = request.data['national_code']
         if not national_code :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
-        user = models.User.objects.get(national_code = national_code)
+        try :
+            user = models.User.objects.get(national_code = national_code)
+        except models.User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
         if not user :
             return Response ({'message' : 'ورود با سجام'})
         user.save()
