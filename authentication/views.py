@@ -98,6 +98,37 @@ class LoginViewset(APIView) :
         return Response({'access': token} , status=status.HTTP_200_OK)
 
 
+class SignUpViewset(APIView):
+    def post (self, request) :
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
+        otp = request.data.get('otp')
+        if not uniqueIdentifier or not otp:
+            return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        url = "http://31.40.4.92:8870/information"
+        payload = json.dumps({
+        "uniqueIdentifier": uniqueIdentifier,
+        "otp": otp
+        })
+        headers = {
+        'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+        'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        print(response.content)
+        
+        return Response({'message': True})
+
+
+
+
+
+
+
+
+
+
+
 #otp for admin
 class OtpAdminViewset(APIView) :
     def post (self,request) :
