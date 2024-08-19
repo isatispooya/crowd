@@ -83,7 +83,9 @@ class DetailCartViewset(APIView):
         cart = Cart.objects.filter(id=id).first()
         if not cart:
             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        cart_serializer = serializers.CartSerializer(cart, data=request.data, partial=True)
+        data = request.data.copy()
+        data.pop('code', None)
+        cart_serializer = serializers.CartSerializer(cart, data=data, partial=True)
         if cart_serializer.is_valid():
             cart_serializer.save()
             return Response({'message': 'Cart updated successfully', 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
@@ -109,4 +111,65 @@ class DetailCartViewset(APIView):
             cart.delete()
             return Response({'message': 'Cart deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
-    
+
+
+class CartAdmin(APIView) :
+    def get(self , request) :
+        Authorization = request.headers.get('Authorization')     
+
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        admin = admin.first()
+        cart = Cart.objects.all()
+        cart_serializer = serializers.CartSerializer(cart , many = True)
+        return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
+
+
+    def patch (self , request , id) :
+        Authorization = request.headers.get('Authorization')    
+
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        admin = admin.first()
+
+        cart = Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        data.pop('code', None)
+        if 'status' in data :
+            cart.status = data['status']
+            
+        cart_serializer = serializers.CartSerializer(cart, data = data , partial=True)
+        if cart_serializer.is_valid():
+            cart_serializer.save()
+            return Response({'message': 'Cart updated successfully', 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
+        return Response(cart_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self , request , id):
+        Authorization = request.headers.get('Authorization')    
+
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        admin = admin.first()
+
+        cart = Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart.delete()
+        return Response({'message': 'Cart deleted successfully'}, status=status.HTTP_204_NO_CONTENT)

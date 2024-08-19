@@ -8,7 +8,7 @@ from . import models
 from . import serializers
 import datetime
 from . import fun
-
+import json
 
 class CaptchaViewset(APIView) :
     def get (self,request):
@@ -24,35 +24,51 @@ class OtpViewset(APIView) :
         captcha = captcha.check_response(request.data['encrypted_response'] , request.data['captcha'])
         if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        national_code = request.data['national_code']
-        if not national_code :
+        uniqueIdentifier = request.data['uniqueIdentifier']
+        if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
-        try :
-            user = models.User.objects.get(national_code = national_code)
-        except models.User.DoesNotExist:
-            return Response({'error': 'User not found'}, status=404)
-        if not user :
-            return Response ({'message' : 'ورود با سجام'})
-        user.save()
-        mobile = user.mobile
-        result = {'registered' : True , 'message' : 'کد تایید ارسال شد'}    
-        code = 11111 #random.randint(10000,99999)
-        otp = models.Otp(mobile=mobile, code=code)
-        otp.save()
-        # SendSms(mobile ,code)
-        return Response(result,status=status.HTTP_200_OK)
+        user = models.User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
+        if user :
+            mobile = user.mobile
+            code = 11111 #random.randint(10000,99999)
+            otp = models.Otp(mobile=mobile, code=code)
+            otp.save()
+            # SendSms(mobile ,code)
+            return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
+        
+        if not user:
+            url = "http://31.40.4.92:8870/otp"
+            payload = json.dumps({
+            "uniqueIdentifier": uniqueIdentifier
+            })
+            headers = {
+            'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+            'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            if response.status_code >=300 :
+                return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
+            return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
+
+      
+        return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+                
+
+
+
+        
     
 
 # login for user
 class LoginViewset(APIView) :
     def post (self,request) :
-        national_code = request.data.get('national_code')
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
         code = request.data.get('code')
-        if not national_code or not code:
+        if not uniqueIdentifier or not code:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            user = models.User.objects.get(national_code=national_code)
+            user = models.User.objects.get(uniqueIdentifier=uniqueIdentifier)
         except:
             result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
             return Response(result, status=status.HTTP_404_NOT_FOUND)
@@ -89,15 +105,14 @@ class OtpAdminViewset(APIView) :
         captcha = captcha.check_response(request.data['encrypted_response'] , request.data['captcha'])
         if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        national_code = request.data['national_code']
-        if not national_code :
+        uniqueIdentifier = request.data['uniqueIdentifier']
+        if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         try :
-            admin = models.Admin.objects.get(national_code = national_code)
+            admin = models.Admin.objects.get(uniqueIdentifier = uniqueIdentifier)
         except models.Admin.DoesNotExist:
             return Response({'error': 'Admin not found'}, status=404)
-        if not admin :
-            return Response ({'message' : 'ورود با سجام'})
+
         admin.save()
         mobile = admin.mobile
         result = {'registered' : True , 'message' : 'کد تایید ارسال شد'}    
@@ -110,17 +125,16 @@ class OtpAdminViewset(APIView) :
 
 
 
-#otp for admin
 
 class LoginAdminViewset(APIView) :
     def post (self,request) :
-        national_code = request.data.get('national_code')
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
         code = request.data.get('code')
-        if not national_code or not code:
+        if not uniqueIdentifier or not code:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            admin = models.Admin.objects.get(national_code=national_code)
+            admin = models.Admin.objects.get(uniqueIdentifier=uniqueIdentifier)
         except:
             result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
             return Response(result, status=status.HTTP_404_NOT_FOUND)
