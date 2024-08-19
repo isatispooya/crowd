@@ -15,3 +15,10 @@ class OtpSerializer(serializers.ModelSerializer):
         model = models.Otp
         fields = '__all__'
 
+
+
+class AdminSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.Admin
+        fields = '__all__'
+
