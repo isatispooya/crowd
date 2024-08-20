@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,LoginAdminViewset,SignUpViewset
+from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,LoginAdminViewset,SignUpViewset 
 
 urlpatterns = [
     path('captcha/', CaptchaViewset.as_view(), name='captcha'),

@@ -1,49 +1,43 @@
 from django.db import models
 
+class User(models.Model):
+    agent = models.CharField(max_length= 200 , null=True, blank=True )
+    email = models.EmailField( null=True, blank=True)
+    legalPerson = models.CharField(max_length=150 ,null=True, blank=True )
+    legalPersonShareholders = models.CharField(max_length=150 ,null=True, blank=True )
+    legalPersonStakeholders = models.CharField(max_length=150 ,null=True, blank=True )
+    mobile = models.CharField(max_length=11)
+    status = models.CharField(max_length=150 , null=True, blank=True)
+    type = models.CharField(max_length=200)
+    uniqueIdentifier = models.CharField(max_length=150 , unique=True)
 
-class bank (models.Model):
-    id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length = 150)
-
-class branchCity (models.Model) :
-    id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length = 150)
-
+    def __str__(self):
+        uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
+        return f'{uniqueIdentifier}'
+    
 class accounts (models.Model) :
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
     accountNumber = models.CharField(max_length=200)
-    bank = models.ForeignKey( bank, on_delete = models.CASCADE)
-    branchCity = models.ForeignKey(branchCity, on_delete = models.CASCADE)
+    bank = models.CharField( max_length=200)
+    branchCity = models.CharField( max_length=200)
     branchCode = models.CharField(max_length=20)
     branchName = models.CharField(max_length=200)
-    isDefault = models.DateTimeField (default=False)
-    modifiedDate = models.DateTimeField()
+    isDefault = models.CharField( max_length=200)
+    modifiedDate = models.CharField( max_length=200)
     type = models.CharField(max_length= 200)
     sheba = models.CharField(max_length= 200)
 
 
-class city (models.Model):
-    name = models.CharField(max_length=200)
-    id = models.IntegerField (primary_key=True)
 
-class country (models.Model):
-    name = models.CharField(max_length=200)
-    id = models.IntegerField (primary_key=True)
-
-class province (models.Model):
-    name = models.CharField(max_length=200)
-    id = models.IntegerField (primary_key=True)
-
-class section (models.Model):
-    name = models.CharField(max_length=200)
-    id = models.IntegerField (primary_key=True)
 
 class addresses (models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
     alley = models.CharField(max_length=1000 ,  blank=True , null= True)
-    city = models.ForeignKey( city, on_delete = models.CASCADE)
+    city = models.CharField(max_length=1000 ,  blank=True , null= True)
     cityPrefix = models.CharField(max_length=1000 ,  blank=True , null= True)
-    country =models.ForeignKey( country, on_delete = models.CASCADE)
+    country =models.CharField(max_length=1000 ,  blank=True , null= True)
     countryPrefix = models.CharField(max_length=1000 ,  blank=True , null= True)
-    email = models.EmailField ()
+    email = models.EmailField ( blank=True , null= True)
     emergencyTel =  models.CharField(max_length=1000 ,  blank=True , null= True) 
     emergencyTelCityPrefix =  models.CharField(max_length=1000 ,  blank=True , null= True)
     emergencyTelCountryPrefix = models.CharField(max_length=1000 ,  blank=True , null= True)
@@ -52,9 +46,9 @@ class addresses (models.Model):
     mobile = models.CharField(max_length=1000 ,  blank=True , null= True)
     plaque = models.CharField(max_length=1000 ,  blank=True , null= True)
     postalCode = models.CharField(max_length=1000 ,  blank=True , null= True)
-    province = models.ForeignKey( province, on_delete = models.CASCADE)
+    province = models.CharField(max_length=1000 ,  blank=True , null= True)
     remnantAddress = models.CharField(max_length=1000 ,  blank=True , null= True)
-    section =models.ForeignKey( section, on_delete = models.CASCADE)
+    section =models.CharField(max_length=1000 ,  blank=True , null= True)
     tel =  models.CharField(max_length=1000 ,  blank=True , null= True)
     website = models.CharField(max_length=1000 ,  blank=True , null= True)
 
@@ -62,7 +56,8 @@ class addresses (models.Model):
 
 
 class financialInfo (models.Model) :
-    assetsValue = models.CharField(max_length=1000 ,  blank=True , null= True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    assetsValue = models.CharField(max_length=1000 ,  blank=True , null= True , default="")
     cExchangeTransaction = models.CharField(max_length=1000 ,  blank=True , null= True)
     companyPurpose = models.CharField(max_length=1000 ,  blank=True , null= True)
     financialBrokers = models.CharField(max_length=1000 ,  blank=True , null= True)
@@ -76,12 +71,8 @@ class financialInfo (models.Model) :
     transactionLevel = models.CharField(max_length=1000 ,  blank=True , null= True)
 
 
-
-class job (models.Model) :
-    id = models.IntegerField (primary_key=True)
-    title = models.CharField(max_length=200 ,  blank=True , null= True)
-
 class jobInfo (models.Model) :
+    user = models.ForeignKey(User,on_delete=models.CASCADE)                   
     companyAddress = models.CharField(max_length=1000 ,  blank=True , null= True)
     companyCityPrefix = models.CharField(max_length=1000 ,  blank=True , null= True)
     companyEmail = models.CharField(max_length=1000 ,  blank=True , null= True)
@@ -92,12 +83,14 @@ class jobInfo (models.Model) :
     companyPostalCode = models.CharField(max_length=1000 ,  blank=True , null= True)
     companyWebSite = models.CharField(max_length=1000 ,  blank=True , null= True)
     employmentDate = models.CharField(max_length=1000 ,  blank=True , null= True)
-    job = models.ForeignKey( job, on_delete = models.CASCADE)
+    job = models.CharField(max_length=1000 ,  blank=True , null= True)
     jobDescription = models.CharField(max_length=1000 ,  blank=True , null= True)
     position = models.CharField(max_length=1000 ,  blank=True , null= True)
 
+
 class privatePerson (models.Model) :
-    birthDate = models.DateField()
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    birthDate = models.CharField( max_length=200)
     fatherName = models.CharField(max_length=200)
     firstName = models.CharField(max_length=200)
     gender = models.CharField(max_length=200)
@@ -111,7 +104,9 @@ class privatePerson (models.Model) :
     signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True) 
 
 
+
 class tradingCodes (models.Model) :
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
     code = models.CharField(max_length=200)
     firstPart =  models.CharField(max_length=200)
     secondPart  = models.CharField(max_length=200)
@@ -120,28 +115,9 @@ class tradingCodes (models.Model) :
 
 
 
-class User(models.Model):
-    accounts = models.ForeignKey( accounts, on_delete = models.CASCADE)
-    addresses = models.ForeignKey( addresses, on_delete = models.CASCADE)
-    agent = models.CharField(max_length= 200 , null=True, blank=True )
-    email = models.EmailField( null=True, blank=True)
-    financialInfo = models.ForeignKey( financialInfo, on_delete = models.CASCADE)
-    jobInfo =models.ForeignKey( jobInfo, on_delete = models.CASCADE)
-    legalPerson = models.CharField(max_length=150 ,null=True, blank=True )
-    legalPersonShareholders = models.CharField(max_length=150 ,null=True, blank=True )
-    legalPersonStakeholders = models.CharField(max_length=150 ,null=True, blank=True )
-    mobile = models.CharField(max_length=11)
-    privatePerson = models.ForeignKey( privatePerson, on_delete = models.CASCADE)
-    status = models.CharField(max_length=150 , null=True, blank=True)
-    tradingCodes = models.ForeignKey( tradingCodes, on_delete = models.CASCADE)
-    type = models.CharField(max_length=200)
-    uniqueIdentifier = models.CharField(max_length=150 , unique=True)
 
 
-    def __str__(self):
-        uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
-        return f'{uniqueIdentifier}'
-    
+
 class Otp(models.Model):
     code = models.CharField(max_length=4)
     mobile = models.CharField(max_length=11)
