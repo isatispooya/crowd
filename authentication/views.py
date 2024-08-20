@@ -122,7 +122,7 @@ class SignUpViewset(APIView):
         except:
             return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
         if data == None :
-            return Response({'message' :'2دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
         print(data)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         if  not new_user :
@@ -182,7 +182,6 @@ class SignUpViewset(APIView):
 
 
         jobInfo_data = data.get('jobInfo')
-
         if isinstance(jobInfo_data, dict):
             new_jobInfo = jobInfo(
                 user=new_user,
@@ -204,10 +203,7 @@ class SignUpViewset(APIView):
         else:
             return Response({'error' : 'Invalid data format for financialInfo_data'})
 
-
-        
         privatePerson_data = data.get('privatePerson')
-
         if isinstance(privatePerson_data, dict):
             birthDate = privatePerson_data.get('birthDate', '')
             fatherName = privatePerson_data.get('fatherName', '')
@@ -238,10 +234,6 @@ class SignUpViewset(APIView):
             new_privatePerson.save()
         else:
             return Response({'error': 'Invalid data format for privatePerson'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
         if len (data['tradingCodes']) > 0 :
             for tradingCodes_data in data ['tradingCodes']:
@@ -291,9 +283,12 @@ class SignUpViewset(APIView):
             new_financialInfo.save()
         else:
             return Response({'error': 'Invalid data format for financialInfo'}, status=status.HTTP_400_BAD_REQUEST)
+        token = fun.encryptionUser(new_user)
+
+        return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)
 
 
-        return Response({'message': True})
+
 
 
 
@@ -329,7 +324,7 @@ class OtpAdminViewset(APIView) :
 
 
 
-
+# login for admin
 class LoginAdminViewset(APIView) :
     def post (self,request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
