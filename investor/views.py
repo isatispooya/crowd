@@ -26,6 +26,15 @@ class RequestViewset(APIView):
         cart_serializer = serializers.CartSerializer(data=cart_data)
         if cart_serializer.is_valid():
             cart_instance = cart_serializer.save()
+            if 'financial_report1' in request.FILES:
+                cart_instance.uploaded_file1 = request.FILES['financial_report1']
+
+            if 'financial_report2' in request.FILES:
+                cart_instance.uploaded_file2 = request.FILES['financial_report2']
+
+            if 'update_report' in request.FILES:
+                cart_instance.uploaded_file3 = request.FILES['update_report']
+
             code = random.randint(10000,99999)
             cart_instance.code= code
             cart_instance.save()
