@@ -10,7 +10,6 @@ class User(models.Model):
     status = models.CharField(max_length=150 , null=True, blank=True)
     type = models.CharField(max_length=200)
     uniqueIdentifier = models.CharField(max_length=150 , unique=True)
-    status_profile = models.BooleanField(default=False)
 
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"

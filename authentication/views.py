@@ -57,47 +57,7 @@ class OtpViewset(APIView) :
 
 
         
-    
-
-# login for user
-class LoginViewset(APIView) :
-    def post (self,request) :
-        uniqueIdentifier = request.data.get('uniqueIdentifier')
-        code = request.data.get('code')
-        if not uniqueIdentifier or not code:
-            return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
-        except:
-            result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
-            return Response(result, status=status.HTTP_404_NOT_FOUND)
-        
-        try:
-            mobile = user.mobile
-            otp_obj = Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
-        except :
-            return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        otp = serializers.OtpSerializer(otp_obj).data
-        if otp['code']== None :
-            result = {'message': 'کد تأیید نامعتبر است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            
-        otp = serializers.OtpSerializer(otp_obj).data
-        dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
-        
-        dt = dt.total_seconds()
-
-        if dt >120 :
-            result = {'message': 'زمان کد منقضی شده است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-    
-        otp_obj.delete()
-        token = fun.encryptionUser(user)
-        return Response({'access': token} , status=status.HTTP_200_OK)
-
-
+# sign up for first user sejam
 class SignUpViewset(APIView):
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
@@ -116,7 +76,6 @@ class SignUpViewset(APIView):
         }
         response = requests.request("POST", url, headers=headers, data=payload)
         response = json.loads(response.content)
-        print(response)
         try :
             data = response['data']
         except:
@@ -283,12 +242,88 @@ class SignUpViewset(APIView):
             new_financialInfo.save()
         else:
             return Response({'error': 'Invalid data format for financialInfo'}, status=status.HTTP_400_BAD_REQUEST)
+
         token = fun.encryptionUser(new_user)
 
         return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)
 
 
+class InformationViewset (APIView) :
+    def get (self,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()   
+        user = User.objects.filter(id=user.id).first() if user else None
+        
+        if not user:
+            return Response({'error': 'User not found in database'}, status=status.HTTP_404_NOT_FOUND)
+        serializer_user = serializers.UserSerializer(user).data
+        user_accounts = accounts.objects.filter(user=user)
+        serializer_accounts = serializers.accountsSerializer(user_accounts , many = True).data
+        user_addresses = addresses.objects.filter(user=user)
+        serializer_addresses = serializers.addressesSerializer(user_addresses , many = True).data
+        user_privatePerson = privatePerson.objects.filter(user=user)
+        serializer_privatePerson = serializers.privatePersonSerializer(user_privatePerson , many = True).data
+        user_financialInfo = financialInfo.objects.filter(user=user)
+        serializer_financialInfo = serializers.financialInfoSerializer(user_financialInfo , many = True).data
+        user_jobInfo = jobInfo.objects.filter(user=user)
+        serializer_jobInfo = serializers.jobInfoSerializer(user_jobInfo , many = True).data
+        user_tradingCodes = tradingCodes.objects.filter(user=user)
+        serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes , many = True).data
+        combined_data = {
+            **serializer_user,  
+            'accounts': serializer_accounts,   
+            'addresses': serializer_addresses,  
+            'private_person': serializer_privatePerson,  
+            'financial_info': serializer_financialInfo,  
+            'job_info': serializer_jobInfo,    
+            'trading_codes': serializer_tradingCodes,     
+        }
+        return Response({'received_data': True ,  'acc' : combined_data})
+    
 
+
+# login for user
+class LoginViewset(APIView) :
+    def post (self,request) :
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
+        otp = request.data.get('otp')
+        if not uniqueIdentifier or not otp:
+            return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
+        except:
+            result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
+            return Response(result, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            mobile = user.mobile
+            otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
+        except :
+            return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        otp = serializers.OtpSerializer(otp_obj).data
+        if otp['code']== None :
+            result = {'message': 'کد تأیید نامعتبر است'}
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+            
+        otp = serializers.OtpSerializer(otp_obj).data
+        dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+        
+        dt = dt.total_seconds()
+
+        if dt >120 :
+            result = {'message': 'زمان کد منقضی شده است'}
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+    
+        otp_obj.delete()
+        token = fun.encryptionUser(user)
+        return Response({'access': token} , status=status.HTTP_200_OK)
 
 
 
