@@ -25,8 +25,15 @@ class Cart (models.Model) :
     status = models.CharField(max_length = 20 , choices = OPTION_STATUS , default = 'waiting')
     email = models.EmailField(blank = True, null = True)
     address = models.CharField (max_length=500 , blank = True, null = True)
-    financial_report1 = models.FileField(upload_to='static/' ,  blank = True, null = True)
-    financial_report2 = models.FileField(upload_to='static/' ,  blank = True, null = True)
-    update_report = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    financial_report_thisyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    financial_report_lastyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    financial_report_yearold = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    audit_report_thisyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    audit_report_lastyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    audit_report_yearold = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    statement_thisyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    statement_lastyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    statement_yearold = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    alignment_of_6_columns = models.FileField(upload_to='static/' ,  blank = True, null = True)
     def __str__(self):
         return self.company_name

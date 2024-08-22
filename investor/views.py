@@ -21,26 +21,43 @@ class RequestViewset(APIView):
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        cart_data = request.data.copy()
-        cart_data['user'] = user.id  
-        cart_serializer = serializers.CartSerializer(data=cart_data)
-        if cart_serializer.is_valid():
-            cart_instance = cart_serializer.save()
-            if 'financial_report1' in request.FILES:
-                cart_instance.uploaded_file1 = request.FILES['financial_report1']
 
-            if 'financial_report2' in request.FILES:
-                cart_instance.uploaded_file2 = request.FILES['financial_report2']
+        # ترکیب request.data و request.FILES
+        data = request.data.copy()
+        serializer = serializers.CartSerializer(data=request.data)
 
-            if 'update_report' in request.FILES:
-                cart_instance.uploaded_file3 = request.FILES['update_report']
+        if serializer.is_valid():
+            cart = serializer.save(user=user)
+            if 'financial_report_thisyear' in request.FILES:
+                serializer.uploaded_file1 = request.FILES['financial_report_thisyear']
+            if 'financial_report_lastyear' in request.FILES:
+                serializer.uploaded_file2 = request.FILES['financial_report_lastyear']
+            if 'financial_report_yearold' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['financial_report_yearold']
+                
+            if 'audit_report_thisyear' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['audit_report_thisyear']
+            if 'audit_report_lastyear' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['audit_report_lastyear']
+            if 'audit_report_yearold' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['audit_report_yearold']
+            
+            if 'statement_thisyear' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['statement_thisyear']
+            if 'statement_lastyear' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['statement_lastyear']
+            if 'statement_yearold' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['statement_yearold']
+            if 'alignment_of_6_columns' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['alignment_of_6_columns']
 
             code = random.randint(10000,99999)
-            cart_instance.code= code
-            cart_instance.save()
-            return Response({'message' :True , 'cart' : cart_serializer.data } , status=status.HTTP_201_CREATED)
-        return Response({'error' :cart_serializer.errors }, status=status.HTTP_400_BAD_REQUEST)
-    
+            serializer.code= code
+            serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     def get (self,request) :
