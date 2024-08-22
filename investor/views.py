@@ -28,6 +28,7 @@ class RequestViewset(APIView):
 
         if serializer.is_valid():
             cart = serializer.save(user=user)
+            
             if 'financial_report_thisyear' in request.FILES:
                 serializer.uploaded_file1 = request.FILES['financial_report_thisyear']
             if 'financial_report_lastyear' in request.FILES:
@@ -35,6 +36,7 @@ class RequestViewset(APIView):
             if 'financial_report_yearold' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['financial_report_yearold']
                 
+
             if 'audit_report_thisyear' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['audit_report_thisyear']
             if 'audit_report_lastyear' in request.FILES:
@@ -42,14 +44,22 @@ class RequestViewset(APIView):
             if 'audit_report_yearold' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['audit_report_yearold']
             
+
             if 'statement_thisyear' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['statement_thisyear']
             if 'statement_lastyear' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['statement_lastyear']
             if 'statement_yearold' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['statement_yearold']
-            if 'alignment_of_6_columns' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['alignment_of_6_columns']
+
+
+            if 'alignment_6columns_thisyear' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['alignment_6columns_thisyear']
+            if 'alignment_6columns_lastyear' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['alignment_6columns_lastyear']
+            if 'alignment_6columns_yearold' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['alignment_6columns_yearold']
+
 
             code = random.randint(10000,99999)
             serializer.code= code

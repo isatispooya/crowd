@@ -34,6 +34,8 @@ class Cart (models.Model) :
     statement_thisyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
     statement_lastyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
     statement_yearold = models.FileField(upload_to='static/' ,  blank = True, null = True)
-    alignment_of_6_columns = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    alignment_6columns_thisyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    alignment_6columns_lastyear = models.FileField(upload_to='static/' ,  blank = True, null = True)
+    alignment_6columns_yearold = models.FileField(upload_to='static/' ,  blank = True, null = True)
     def __str__(self):
         return self.company_name
