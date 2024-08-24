@@ -98,7 +98,7 @@ class privatePerson (models.Model) :
     placeOfBirth = models.CharField(max_length=200)
     placeOfIssue = models.CharField(max_length=200)
     seriSh = models.CharField(max_length=200)
-    seriShChar = models.CharField(max_length=200)
+    seriShChar = models.CharField(max_length=200, null=True, blank=True)
     serial = models.CharField(max_length=200)
     shNumber = models.CharField(max_length=200)
     signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True) 
@@ -109,9 +109,9 @@ class tradingCodes (models.Model) :
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     code = models.CharField(max_length=200)
     firstPart =  models.CharField(max_length=200)
-    secondPart  = models.CharField(max_length=200)
-    thirdPart = models.CharField(max_length=200)
-    type = models.CharField(max_length=200)
+    secondPart  = models.CharField(max_length=200 , null=True, blank=True)
+    thirdPart = models.CharField(max_length=200, null=True, blank=True)
+    type = models.CharField(max_length=200, null=True, blank=True)
 
 
 

@@ -23,44 +23,46 @@ class AdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AdminSerializer(serializers.ModelSerializer):
-    class Meta :
-        model = models.Admin
-        fields = '__all__'
-
-
 class addressesSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.addresses
         fields = '__all__'
 
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
 
 class accountsSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.accounts
         fields = '__all__'
-
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
 
 class privatePersonSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.privatePerson
         fields = '__all__'
-
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
 
 class jobInfoSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.jobInfo
         fields = '__all__'
-
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
 
 class tradingCodesSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.tradingCodes
         fields = '__all__'
-
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
 
 class financialInfoSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.financialInfo
         fields = '__all__'
 
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)

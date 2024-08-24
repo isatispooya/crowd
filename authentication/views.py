@@ -9,6 +9,7 @@ from . import serializers
 import datetime
 from . import fun
 import json
+import random
 
 class CaptchaViewset(APIView) :
     def get (self,request):
@@ -16,12 +17,25 @@ class CaptchaViewset(APIView) :
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
     
-    
+
+
+frm ='30001526'
+usrnm = 'isatispooya'
+psswrd ='5246043adeleh'
+
+def SendSms(snd,txt):
+    txt = f'کد تایید :{txt}'
+    resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={frm}&to={snd}&username={usrnm}&password={psswrd}&message={txt}').json()
+    print(txt)
+    return resp
+
+
 # otp for user
 class OtpViewset(APIView) :
     def post (self,request) :
+        encrypted_response = request.data['encrypted_response'].encode()
         captcha = GuardPyCaptcha()
-        captcha = captcha.check_response(request.data['encrypted_response'] , request.data['captcha'])
+        captcha = captcha.check_response(encrypted_response, request.data['captcha'])
         if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
@@ -30,10 +44,10 @@ class OtpViewset(APIView) :
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
         if user :
             mobile = user.mobile
-            code = 11111 #random.randint(10000,99999)
+            code = random.randint(10000,99999)
             otp = Otp(mobile=mobile, code=code)
             otp.save()
-            # SendSms(mobile ,code)
+            SendSms(mobile ,code)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
@@ -305,15 +319,12 @@ class InformationViewset (APIView) :
         if not acc_data:
             return Response({'error': 'No acc data provided'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Update the User model
         user_serializer = serializers.UserSerializer(user, data=acc_data, partial=True)
         if user_serializer.is_valid():
             user_serializer.save()
         else:
             return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Assuming acc_data contains related models data like accounts, addresses, etc.
-        # Loop through each related model to update them
+
         related_models = {
             'accounts': (accounts, serializers.accountsSerializer),
             'addresses': (addresses, serializers.addressesSerializer),
