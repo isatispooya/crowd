@@ -32,13 +32,13 @@ def decryptionUser(Bearer):
         return None
 
 
-def encryptionadmin(user):
+def encryptionadmin(admin):
     admin = serializers.AdminSerializer(admin).data
     admin = str(admin)
     with open('secret.key', 'rb') as key_file:
         key = key_file.read()
     fernet = Fernet(key)
-    token = fernet.encrypt(user.encode())
+    token = fernet.encrypt(admin.encode())
     token = base64.urlsafe_b64encode(token).decode()
     return token
 

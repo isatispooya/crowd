@@ -6,7 +6,7 @@ class User(models.Model):
     legalPerson = models.CharField(max_length=150 ,null=True, blank=True )
     legalPersonShareholders = models.CharField(max_length=150 ,null=True, blank=True )
     legalPersonStakeholders = models.CharField(max_length=150 ,null=True, blank=True )
-    mobile = models.CharField(max_length=11)
+    mobile = models.CharField(max_length=14)
     status = models.CharField(max_length=150 , null=True, blank=True)
     type = models.CharField(max_length=200)
     uniqueIdentifier = models.CharField(max_length=150 , unique=True)
@@ -120,7 +120,7 @@ class tradingCodes (models.Model) :
 
 class Otp(models.Model):
     code = models.CharField(max_length=4)
-    mobile = models.CharField(max_length=11)
+    mobile = models.CharField(max_length=14)
     date = models.DateTimeField(auto_now_add=True)
 
 class Admin(models.Model):

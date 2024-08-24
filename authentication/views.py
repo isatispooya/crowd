@@ -24,7 +24,7 @@ usrnm = 'isatispooya'
 psswrd ='5246043adeleh'
 
 def SendSms(snd,txt):
-    txt = f'کد تایید :{txt}'
+    txt = f'به ایساتیس کراد خوش آمدید \n کد تایید :{txt}'
     resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={frm}&to={snd}&username={usrnm}&password={psswrd}&message={txt}').json()
     print(txt)
     return resp
@@ -452,6 +452,8 @@ class LoginAdminViewset(APIView) :
             
         otp = serializers.OtpSerializer(otp_obj).data
         dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+     
+
         
         dt = dt.total_seconds()
 
@@ -460,5 +462,5 @@ class LoginAdminViewset(APIView) :
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
     
         otp_obj.delete()
-        token = fun.encryptionUser(admin)
+        token = fun.encryptionadmin(admin)
         return Response({'access': token} , status=status.HTTP_200_OK)
