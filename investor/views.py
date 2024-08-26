@@ -211,3 +211,26 @@ class CartAdmin(APIView) :
             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
         cart.delete()
         return Response({'message': 'Cart deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class DetailCartAdminViewset(APIView):    
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        admin = fun.decryptionadmin(Authorization)
+
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()   
+        cart = Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart_serializer = serializers.CartSerializer(cart)
+    
+        return Response({'message': True, 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
+    
+
+    
