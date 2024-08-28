@@ -1,7 +1,7 @@
 from django.shortcuts import render
 import datetime
 from . import serializers
-from .models import Cart
+from .models import Cart , Message
 from rest_framework import status 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -236,10 +236,43 @@ class DetailCartAdminViewset(APIView):
         return Response({'message': True, 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
     
 
-class Message(APIView):
+class MessageViewSet(APIView):
     def post(self, request):
         Authorization = request.headers.get('Authorization')
+
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        print(request)
-        return Response({'success':'message posted'}, status=status.HTTP_201_CREATED)
+
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+
+        serializer = serializers.MessageSerializer(data=request.data)
+        if not serializer.is_valid():
+            print(serializer.errors)  
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        if serializer.is_valid():
+            message = serializer.save()  
+            return Response({'status': True, 'cart': serializer.data}, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+    
+    def get(self , request) :
+        Authorization = request.headers.get('Authorization')     
+
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        admin = admin.first()
+        message = Message.objects.all()
+        message_serializer = serializers.MessageSerializer(message , many = True)
+        return Response ({'message' : True ,  'cart': message_serializer.data} ,  status=status.HTTP_200_OK )
+
+
+
