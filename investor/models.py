@@ -93,3 +93,10 @@ class Cart (models.Model) :
     creat = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.company_name
+    
+
+class Message(models.Model):
+    cart  = models.ForeignKey(Cart , on_delete=models.CASCADE)
+    message = models.CharField(max_length=512 )
+    def __str__(self):
+        return self.cart

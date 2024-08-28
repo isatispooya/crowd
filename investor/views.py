@@ -22,11 +22,16 @@ class RequestViewset(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
 
-        # ترکیب request.data و request.FILES
         data = request.data.copy()
+        print(data)
+
         serializer = serializers.CartSerializer(data=request.data)
+        if not serializer.is_valid():
+            print(serializer.errors)  # چاپ خطاها برای بررسی
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
+
             cart = serializer.save(user=user)
             
             if 'financial_report_thisyear' in request.FILES:
@@ -60,7 +65,6 @@ class RequestViewset(APIView):
             if 'alignment_6columns_yearold' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['alignment_6columns_yearold']
 
-
             code = random.randint(10000,99999)
             serializer.code= code
             serializer.save()
@@ -81,7 +85,6 @@ class RequestViewset(APIView):
         cart = Cart.objects.filter(user=user)
         cart  =cart.order_by('creat')
         cart_serializer  =serializers.CartSerializer(cart ,  many = True)
-        print(cart_serializer.data)
         return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
     
 

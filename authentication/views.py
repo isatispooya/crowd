@@ -34,6 +34,8 @@ def SendSms(snd,txt):
 class OtpViewset(APIView) :
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
+        if isinstance(encrypted_response, str):
+            encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
         if False : 
@@ -398,7 +400,10 @@ class LoginViewset(APIView) :
 class OtpAdminViewset(APIView) :
     def post (self,request) :
         captcha = GuardPyCaptcha()
-        captcha = captcha.check_response(request.data['encrypted_response'] , request.data['captcha'])
+        encrypted_response = request.data['encrypted_response']
+        if isinstance(encrypted_response, str):
+            encrypted_response = encrypted_response.encode('utf-8')
+        captcha = captcha.check_response(encrypted_response , request.data['captcha'])
         if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
