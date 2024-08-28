@@ -11,3 +11,7 @@ class CartSerializer (serializers.ModelSerializer):
         read_only_fields = ['user']  # جلوگیری از تغییر کاربر توسط کاربر
 
 
+class MessageSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = models.Message
+        fields = '__all__'

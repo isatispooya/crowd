@@ -236,4 +236,10 @@ class DetailCartAdminViewset(APIView):
         return Response({'message': True, 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
     
 
-    
+class Message(APIView):
+    def post(self, request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        print(request)
+        return Response({'success':'message posted'}, status=status.HTTP_201_CREATED)
