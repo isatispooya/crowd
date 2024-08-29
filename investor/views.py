@@ -83,7 +83,7 @@ class RequestViewset(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()   
         cart = Cart.objects.filter(user=user)
-        cart  =cart.order_by('creat')
+        cart  =cart.order_by('-id')
         cart_serializer  =serializers.CartSerializer(cart ,  many = True)
         return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
     
@@ -166,7 +166,7 @@ class CartAdmin(APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         
         admin = admin.first()
-        cart = Cart.objects.all()
+        cart = Cart.objects.all().order_by('-id')
         cart_serializer = serializers.CartSerializer(cart , many = True)
         return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
 
@@ -236,43 +236,66 @@ class DetailCartAdminViewset(APIView):
         return Response({'message': True, 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
     
 
-class MessageViewSet(APIView):
-    def post(self, request):
+class MessageAdminViewSet(APIView):
+    def post(self,request,id):
         Authorization = request.headers.get('Authorization')
-
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-
-        serializer = serializers.MessageSerializer(data=request.data)
+        cart = Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = serializers.MessageSerializer(data={**request.data, 'cart': cart.id})
+        # اینجا پیامک باید بره
+        send_sms = request.query_params.get('send_sms')
+        print(send_sms)
         if not serializer.is_valid():
             print(serializer.errors)  
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         if serializer.is_valid():
             message = serializer.save()  
-            return Response({'status': True, 'cart': serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({'status': True, 'message': serializer.data}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
     
-    def get(self , request) :
-        Authorization = request.headers.get('Authorization')     
 
+    def get(self , request,id) :
+        Authorization = request.headers.get('Authorization')     
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        
         admin = admin.first()
-        message = Message.objects.all()
-        message_serializer = serializers.MessageSerializer(message , many = True)
-        return Response ({'message' : True ,  'cart': message_serializer.data} ,  status=status.HTTP_200_OK )
+        cart = Cart.objects.filter(id=id).first()
+        message = Message.objects.filter(cart=cart).order_by('-id').first()
+        message_serializer = serializers.MessageSerializer(message)
+        return Response ({'status' : True ,  'message': message_serializer.data} ,  status=status.HTTP_200_OK )
+
+
+
+class MessageUserViewSet(APIView):
+    def get(self , request,id) :
+        Authorization = request.headers.get('Authorization')     
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = Cart.objects.filter(id=id).first()
+        message = Message.objects.filter(cart=cart).order_by('-id').first()
+        if not message: 
+            return Response({'status': False, 'message': 'No messages found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+        message_serializer = serializers.MessageSerializer(message )
+        return Response ({'status' : True ,  'message': message_serializer.data} ,  status=status.HTTP_200_OK )
+
+
+
 
 
 

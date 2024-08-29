@@ -33,8 +33,14 @@ class Cart (models.Model) :
     Lock_personnel = models.BooleanField(default=False)
 
     OPTION_KIND = [
-        ('special stock', 'سهامی خاص'),
-        ('common stock', 'سهامی عام'),
+        ('1', 'سهامی عام'),
+        ('2', 'با مسئولیت محدود'),
+        ('3', 'تضامنی'),
+        ('4', 'مختلط'),
+        ('5', 'نسبی'),
+        ('6', 'تعاونی'),
+        ('7', 'دانش بنیان'),
+        ('8', 'سهامی خاص'),
     ]
     company_kind = models.CharField(max_length = 13, choices = OPTION_KIND, blank = True, null = True) #نوع شرکت
     Lock_company_kind = models.BooleanField(default=False)
@@ -44,9 +50,9 @@ class Cart (models.Model) :
 
     code = models.CharField(max_length = 5, blank = True, null = True)
     OPTION_STATUS = [
-        ('waiting','در انتظار تایید'),
-        ('editing','نیاز به تکمیل'),
-        ('okay','تایید شده'),
+        ('1','در انتظار تایید'),
+        ('2','نیاز به تکمیل'),
+        ('3','تایید شده'),
     ]
     status = models.CharField(max_length = 20 , choices = OPTION_STATUS , default = 'waiting')
 
