@@ -16,7 +16,7 @@ class Manager (models.Model):
     lock = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return str(self.name)
     
 
     
@@ -25,7 +25,7 @@ class Resume (models.Model):
     manager = models.ForeignKey(Manager,  on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.file
+        return str(self.file)
     
 
 

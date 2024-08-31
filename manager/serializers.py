@@ -20,8 +20,8 @@ class CartWithManagersSerializer(serializers.ModelSerializer):
         model = models.Cart
         fields = '__all__'
 
-
 class ResumeSerializer (serializers.ModelSerializer):
+    manager = ManagerSerializer(read_only=True)
     class Meta:
         model = models.Resume
         fields = '__all__'
