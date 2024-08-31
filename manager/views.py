@@ -203,3 +203,62 @@ class ResumeViewset(APIView):
 
 
 
+class ResumeAdminViewset(APIView) :
+    def get(self, request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        national_code = request.query_params.get('national_code')
+
+        if not national_code:
+            return Response({'error': 'National code is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        manager = Manager.objects.filter(national_code=national_code).first()
+
+        if not manager:
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        resumes = Resume.objects.filter(manager=manager)
+
+        if not resumes.exists():
+            return Response({'error': 'No resumes found for this manager'}, status=status.HTTP_404_NOT_FOUND)
+        resume_files = [{'file': resume.file.url} for resume in resumes]
+
+        return Response({'manager': manager.national_code, 'resumes': resume_files}, status=status.HTTP_200_OK)
+
+
+    def patch(self,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        national_code = request.query_params.get('national_code')
+        if not national_code:
+            return Response({'error': 'National code is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        manager = Manager.objects.filter(national_code=national_code).first()
+        if not manager:
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        resume = Resume.objects.filter(manager=manager).first()     
+        if resume:
+            resume.delete()   
+
+        if not request.FILES:
+            return Response({'error': 'No file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        national_code = list(request.FILES.keys())[0]
+        resume_file = request.FILES[national_code]
+        manager = Manager.objects.filter(national_code=national_code).first()
+        if not manager:
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        resume = Resume(file=resume_file, manager=manager)
+        resume.save()
+        print(resume)
+        return Response({'message': True }, status=status.HTTP_200_OK)
+

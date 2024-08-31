@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import ManagerViewset , ManagerAdminViewset , ResumeViewset
+from.views import ManagerViewset , ManagerAdminViewset , ResumeViewset , ResumeAdminViewset
 
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path('manager/admin/', ManagerAdminViewset.as_view(), name='manager-list-admin'),
     path('manager/admin/<int:id>/', ManagerAdminViewset.as_view(), name='manager-update-admin'),
     path('resume/', ResumeViewset.as_view(), name='resume'),
+    path('resume/admin/', ResumeAdminViewset.as_view(), name='resume-admin'),
 ]
