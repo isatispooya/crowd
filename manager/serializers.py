@@ -20,16 +20,25 @@ class CartWithManagersSerializer(serializers.ModelSerializer):
         model = models.Cart
         fields = '__all__'
 
+
+class ShareholderSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = models.Shareholder
+        fields = '__all__'
+
+
+class CartWithShareholderSerializer(serializers.ModelSerializer):
+    shareholder = ShareholderSerializer(many=True, read_only=True, source='shareholder_set')
+    class Meta:
+        model = models.Cart
+        fields = '__all__'
+
 class ResumeSerializer (serializers.ModelSerializer):
     manager = ManagerSerializer(read_only=True)
     class Meta:
         model = models.Resume
         fields = '__all__'
 
-class ShareholderSerializer (serializers.ModelSerializer):
-    class Meta:
-        model = models.Shareholder
-        fields = '__all__'
 
 class ValidationSerializer (serializers.ModelSerializer):
     class Meta:

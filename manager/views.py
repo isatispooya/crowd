@@ -7,6 +7,7 @@ from authentication import fun
 from . import serializers
 from investor import models
 
+
 class ManagerViewset(APIView) :
     def post (self , request , id ):
         Authorization = request.headers.get('Authorization')
@@ -19,9 +20,10 @@ class ManagerViewset(APIView) :
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        
+        manager = Manager.objects.filter(cart=cart)
+        if manager :
+            manager.delete()
         managers_data = request.data.get('managers', [])
-        
         for manager_data in managers_data:
             serializer = serializers.ManagerSerializer(data={**manager_data, 'cart': cart.id})
             if not serializer.is_valid():
@@ -49,29 +51,33 @@ class ManagerViewset(APIView) :
     
 
 
-    def patch (self,request , id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        if id is None:
-            return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            manager = Manager.objects.get(id=id)
-        except Manager.DoesNotExist:
-            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-        manager.delete()
-        request.data['id'] = id
-        serializer = serializers.ManagerSerializer(data=request.data)
+    # def patch (self,request , id) :
+    #     Authorization = request.headers.get('Authorization')
+    #     if not Authorization:
+    #         return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #     user = fun.decryptionUser(Authorization)
+    #     if not user:
+    #         return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+    #     user = user.first()
+    #     if id is None:
+    #         return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #     cart  = models.Cart.objects.filter(id=id).first()
+    #     try:
+    #         manager = Manager.objects.filter(cart=cart)
+  
+    #     except Manager.DoesNotExist:
+    #         return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+    #     manager.delete()
+    #     request.data['id'] = id
+    #     serializer = serializers.ManagerSerializer(data=request.data)
  
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     if not serializer.is_valid():
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        serializer.save()
-        return Response({'message': 'Manager updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
+    #     serializer.save()
+    #     return Response({'message': 'Manager updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
+    
+    
 
 
 class ManagerAdminViewset(APIView):
@@ -91,7 +97,7 @@ class ManagerAdminViewset(APIView):
         serializer = serializers.ManagerSerializer(managers, many=True)
         return Response({'message': True ,  'data': serializer.data }, status=status.HTTP_200_OK)
 
-    def patch (self,request , id) :
+    def post (self , request , id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -101,24 +107,56 @@ class ManagerAdminViewset(APIView):
         admin = admin.first()
         if id is None:
             return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            manager = Manager.objects.get(id=id)
-        except Manager.DoesNotExist:
-            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-        manager.delete()
-        request.data['id'] = id
-        serializer = serializers.ManagerSerializer(data=request.data)
+        cart =  models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager = Manager.objects.filter(cart=cart)
+        if manager :
+            manager.delete()
+        managers_data = request.data.get('managers', [])
+        for manager_data in managers_data:
+            serializer = serializers.ManagerSerializer(data={**manager_data, 'cart': cart.id})
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save(cart=cart)
+        serializer = serializers.CartWithManagersSerializer(cart)
+        return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+    
+
+
+
+
+
+
+    # def patch (self,request , id) :
+    #     Authorization = request.headers.get('Authorization')
+    #     if not Authorization:
+    #         return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #     admin = fun.decryptionadmin(Authorization)
+    #     if not admin:
+    #         return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+    #     admin = admin.first()
+    #     if id is None:
+    #         return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #     cart =  models.Cart.objects.filter(id=id).first()
+    #     try:
+    #         manager = Manager.objects.filter(cart=cart)
+    #     except Manager.DoesNotExist:
+    #         return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+    #     manager.delete()
+    #     request.data['id'] = id
+    #     serializer = serializers.ManagerSerializer(data=request.data)
  
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     if not serializer.is_valid():
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        serializer.save()
-        return Response({'message': 'Manager updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
+    #     serializer.save()
+    #     return Response({'message': 'Manager updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
 
 
 
 class ResumeViewset(APIView):
-    def post (self,request) :
+    def post (self,request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -129,15 +167,20 @@ class ResumeViewset(APIView):
         
         if not request.FILES:
             return Response({'error': 'No file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        cart = models.Cart.objects.filter(id=id)
+        if len(cart) == 0:
+            return Response({'error': 'not found cart'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cart = cart.first()
 
-        national_code = list(request.FILES.keys())[0]
-        resume_file = request.FILES[national_code]
-        manager = Manager.objects.filter(national_code=national_code).first()
-        if not manager:
-            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        resume = Resume(file=resume_file, manager=manager)
-        resume.save()
+        for i in request.FILES:
+            print(i)
+            manager = Manager.objects.filter(national_code=i,cart=cart)
+            if len(manager)==0:
+                return Response({'error': 'not found managment'}, status=status.HTTP_400_BAD_REQUEST)
+            manager = manager.first()
+            resume = Resume(file=request.FILES[i],manager=manager)
+            resume.save()
         return Response({'message': True }, status=status.HTTP_200_OK)
     
 
@@ -261,4 +304,128 @@ class ResumeAdminViewset(APIView) :
         resume.save()
         print(resume)
         return Response({'message': True }, status=status.HTTP_200_OK)
+
+class ShareholderViewset(APIView):
+    def post(self, request,id):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        shareholder = Shareholder.objects.filter(cart=cart)
+        if shareholder :
+            shareholder.delete()
+
+        shareholder  = request.data.get('shareholder', [])
+        all_serialized = [] 
+
+        for shareholder in shareholder:
+            serializer = serializers.ShareholderSerializer(data={**shareholder, 'cart': cart.id})
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save(cart=cart)
+            all_serialized.append(serializer.data)  # اضافه کردن داده‌های سریالایز شده به لیست
+
+        return Response({'message': True, 'data': all_serialized}, status=status.HTTP_200_OK)
+
+
+
+
+    def get (self, request , id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        shareholder = Shareholder.objects.filter(cart=cart)
+        serializer = serializers.ShareholderSerializer(shareholder, many=True)
+        return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+    
+    # def patch(self, request,id) :
+    #     Authorization = request.headers.get('Authorization')
+    #     if not Authorization:
+    #         return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #     user = fun.decryptionUser(Authorization)
+    #     if not user:
+    #         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    #     user = user.first()
+    #     if id is None:
+    #         return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #     cart  = models.Cart.objects.filter(id=id).first()
+    #     try:
+    #         shareholder = Shareholder.objects.filter(cart=cart)
+  
+    #     except Manager.DoesNotExist:
+    #         return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+    #     shareholder.delete()
+    #     request.data['id'] = id
+    #     serializer = serializers.ShareholderSerializer(data=request.data)
+ 
+    #     if not serializer.is_valid():
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    #     serializer.save()
+    #     return Response({'message': 'shareholder updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
+    
+
+class ShareholderAdminViewset(APIView) :
+    def get (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        shareholder = Shareholder.objects.filter(cart=cart)
+        serializer = serializers.ShareholderSerializer(shareholder, many=True)
+        return Response({'message': True ,  'data': serializer.data }, status=status.HTTP_200_OK)
+
+    
+    def post(self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        if id is None:
+            return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        shareholder = Shareholder.objects.filter(cart=cart)
+        if shareholder :
+            shareholder.delete()
+
+        shareholder  = request.data.get('shareholder', [])
+        all_serialized = [] 
+
+        for shareholder in shareholder:
+            serializer = serializers.ShareholderSerializer(data={**shareholder, 'cart': cart.id})
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save(cart=cart)
+            all_serialized.append(serializer.data)   
+        return Response({'message': True, 'data': all_serialized}, status=status.HTTP_200_OK)
+
+        
+
+
 
