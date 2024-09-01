@@ -50,9 +50,11 @@ class Cart (models.Model) :
 
     code = models.CharField(max_length = 5, blank = True, null = True)
     OPTION_STATUS = [
-        ('1','در انتظار تایید'),
-        ('2','نیاز به تکمیل'),
-        ('3','تایید شده'),
+        ('1','بررسی شرکت'),
+        ('2','بررسی مدیران'),
+        ('3','بررسی رزومه'),
+        ('4','بررسی سهامدارن'),
+        ('5','بررسی اعتبار سینجی'),
     ]
     status = models.CharField(max_length = 20 , choices = OPTION_STATUS , default = 'waiting')
 
@@ -105,4 +107,4 @@ class Message(models.Model):
     cart  = models.ForeignKey(Cart , on_delete=models.CASCADE)
     message = models.CharField(max_length=512 )
     def __str__(self):
-        return self.cart
+        return self.cart.__str__() + self.message

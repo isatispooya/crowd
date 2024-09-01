@@ -174,7 +174,6 @@ class ResumeViewset(APIView):
         cart = cart.first()
 
         for i in request.FILES:
-            print(i)
             manager = Manager.objects.filter(national_code=i,cart=cart)
             if len(manager)==0:
                 return Response({'error': 'not found managment'}, status=status.HTTP_400_BAD_REQUEST)
@@ -185,7 +184,7 @@ class ResumeViewset(APIView):
     
 
 
-    def get (self,request) :
+    def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -193,21 +192,30 @@ class ResumeViewset(APIView):
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        national_code = request.query_params.get('national_code')
-
-        if not national_code:
-            return Response({'error': 'National code is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        manager = Manager.objects.filter(national_code=national_code).first()
-
-        if not manager:
+        cart = models.Cart.objects.filter(user=user,id=id)
+        if not cart.exists():
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart = cart.first()
+        manager = Manager.objects.filter(cart=cart)
+        if not manager.exists():
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-        resumes = Resume.objects.filter(manager=manager)
+        resume_list = []
+        for i in manager:
+            resume = Resume.objects.filter(manager=i)
+            national_code = i.national_code
+            name = i.name
+            lock = False
+            file = ''
+            if resume.exists():
+              resume = resume.first()
+              resume = serializers.ResumeSerializer(resume).data
+              lock = resume['lock']
+              file = resume['file']
+              
+              
+            resume_list.append({'national_code': national_code,'lock': lock,'file': file,'name':name})
 
-        if not resumes.exists():
-            return Response({'error': 'No resumes found for this manager'}, status=status.HTTP_404_NOT_FOUND)
-        resume_files = [{'file': resume.file.url} for resume in resumes]
-
-        return Response({'manager': manager.national_code, 'resumes': resume_files}, status=status.HTTP_200_OK)
+        return Response({'manager': resume_list}, status=status.HTTP_200_OK)
 
 
     def patch (self,request) :
@@ -240,14 +248,13 @@ class ResumeViewset(APIView):
 
         resume = Resume(file=resume_file, manager=manager)
         resume.save()
-        print(resume)
         return Response({'message': True }, status=status.HTTP_200_OK)
 
 
 
 
 class ResumeAdminViewset(APIView) :
-    def get(self, request) :
+    def get(self, request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -255,56 +262,65 @@ class ResumeAdminViewset(APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-        national_code = request.query_params.get('national_code')
-
-        if not national_code:
-            return Response({'error': 'National code is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        manager = Manager.objects.filter(national_code=national_code).first()
-
-        if not manager:
+        cart = models.Cart.objects.filter(id=id)
+        if not cart.exists():
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart = cart.first()
+        manager = Manager.objects.filter(cart=cart)
+        if not manager.exists():
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-        resumes = Resume.objects.filter(manager=manager)
+        resume_list = []
+        for i in manager:
+            resume = Resume.objects.filter(manager=i)
+            national_code = i.national_code
+            name = i.name
+            lock = False
+            file = ''
+            if resume.exists():
+              resume = resume.first()
+              resume = serializers.ResumeSerializer(resume).data
+              lock = resume['lock']
+              file = resume['file']
+              
+              
+            resume_list.append({'national_code': national_code,'lock': lock,'file': file,'name':name})
 
-        if not resumes.exists():
-            return Response({'error': 'No resumes found for this manager'}, status=status.HTTP_404_NOT_FOUND)
-        resume_files = [{'file': resume.file.url} for resume in resumes]
+        return Response({'manager': resume_list}, status=status.HTTP_200_OK)
 
-        return Response({'manager': manager.national_code, 'resumes': resume_files}, status=status.HTTP_200_OK)
-
-
-    def patch(self,request) :
+    def post(self, request, id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first() 
-        national_code = request.query_params.get('national_code')
-        if not national_code:
-            return Response({'error': 'National code is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        manager = Manager.objects.filter(national_code=national_code).first()
-        if not manager:
-            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        resume = Resume.objects.filter(manager=manager).first()     
-        if resume:
-            resume.delete()   
+            return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
 
         if not request.FILES:
             return Response({'error': 'No file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
         
-        national_code = list(request.FILES.keys())[0]
-        resume_file = request.FILES[national_code]
-        manager = Manager.objects.filter(national_code=national_code).first()
-        if not manager:
-            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        cart = models.Cart.objects.filter(id=id)
+        if len(cart) == 0:
+            return Response({'error': 'Not found cart'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        cart = cart.first()
 
-        resume = Resume(file=resume_file, manager=manager)
-        resume.save()
-        print(resume)
-        return Response({'message': True }, status=status.HTTP_200_OK)
+        for i in request.FILES:
+            manager = Manager.objects.filter(national_code=i, cart=cart)
+            if len(manager) == 0:
+                return Response({'error': 'Not found management'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            manager = manager.first()
 
+            existing_resumes = Resume.objects.filter(manager=manager)
+            if existing_resumes.exists():
+                existing_resumes.delete()
+
+            resume = Resume(file=request.FILES[i], manager=manager)
+            resume.save()
+
+        return Response({'message': True}, status=status.HTTP_200_OK)
 class ShareholderViewset(APIView):
     def post(self, request,id):
         Authorization = request.headers.get('Authorization')
