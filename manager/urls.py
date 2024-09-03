@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import ManagerViewset , ManagerAdminViewset , ResumeViewset , ResumeAdminViewset , ShareholderViewset , ShareholderAdminViewset
+from.views import ManagerViewset , ManagerAdminViewset , ResumeViewset , ResumeAdminViewset , ShareholderViewset , ShareholderAdminViewset , ValidationViewset , ValidationAdminViewset
 
 
 urlpatterns = [
@@ -11,4 +11,6 @@ urlpatterns = [
     path('resume/admin/<int:id>/', ResumeAdminViewset.as_view(), name='resume-admin'),
     path('shareholder/<int:id>/', ShareholderViewset.as_view(), name='shareholder'),
     path('shareholder/admin/<int:id>/', ShareholderAdminViewset.as_view(), name='shareholder-admin'),
+    path('validation/<int:id>/', ValidationViewset.as_view(), name='validation'),
+    path('validation/admin/<int:id>/', ValidationAdminViewset.as_view(), name='validation-admin'),
 ]

@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import RequestViewset , DetailCartViewset , CartAdmin , DetailCartAdminViewset , MessageAdminViewSet , MessageUserViewSet
+from.views import RequestViewset , DetailCartViewset , CartAdmin , DetailCartAdminViewset , MessageAdminViewSet , MessageUserViewSet , SetStatusViesset , SetStatusAdminViesset
 
 
 urlpatterns = [
@@ -11,4 +11,7 @@ urlpatterns = [
     path('cart/detail/admin/<int:id>/', DetailCartAdminViewset.as_view(), name='cart-admin'),
     path('message/admin/<int:id>/', MessageAdminViewSet.as_view(), name='message-admin'),
     path('message/<int:id>/', MessageUserViewSet.as_view(), name='message-user'),
+    path('setstatus/<int:id>/', SetStatusViesset.as_view(), name='set-status'),
+    path('setstatus/admin/<int:id>/', SetStatusAdminViesset.as_view(), name='set-status-admin'),
+    path('setstatus/admin/', SetStatusAdminViesset.as_view(), name='set-status-admin'),
 ]

@@ -15,3 +15,10 @@ class MessageSerializer (serializers.ModelSerializer):
     class Meta:
         model = models.Message
         fields = '__all__'
+
+
+class SetStatusSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = models.SetStatus
+        fields = '__all__'
+

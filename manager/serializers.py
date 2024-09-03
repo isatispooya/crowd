@@ -44,3 +44,4 @@ class ValidationSerializer (serializers.ModelSerializer):
     class Meta:
         model = models.Validation
         fields = '__all__'
+
