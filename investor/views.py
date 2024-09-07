@@ -557,41 +557,46 @@ class PdfViewset(APIView) :
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        # ایجاد پوشه برای ذخیره فایل‌های PDF
         pdf_folder = os.path.join(settings.MEDIA_ROOT, 'pdf')
         os.makedirs(pdf_folder, exist_ok=True)
-
+        # نام فایل PDF
         pdf_filename = f'cart-{cart.id}.pdf'
         pdf_path = os.path.join(pdf_folder, pdf_filename)
         try:
+            # ایجاد canvas با سایز A4
             pdf_canvas = canvas.Canvas(pdf_path, pagesize=A4)
+            # سایز صفحه A4
             width, height = A4
             font_path = os.path.join(settings.BASE_DIR, 'fonts', 'IRANSans.ttf')  
             pdfmetrics.registerFont(TTFont('Persian', font_path))
             pdf_canvas.setFont('Persian', 12)
+            # متن فارسی (نیاز به معکوس کردن و شکل‌دهی)
             text = "این فایل جهت ساخت قرارداد است"
-            reshaped_text = arabic_reshaper.reshape(text)    
-            bidi_text = get_display(reshaped_text) 
-
+            reshaped_text = arabic_reshaper.reshape(text)    # شکل‌دهی متن فارسی
+            bidi_text = get_display(reshaped_text) # معکوس کردن برای پشتیبانی از راست به چپ
+            # اضافه کردن متن به PDF
             pdf_canvas.drawString(200, 750, bidi_text)
-            pdf_canvas.setStrokeColor(colors.black)  
+            # کشیدن یک خط مشکی در کل عرض صفحه در 1/5 نهایی صفحه
+            pdf_canvas.setStrokeColor(colors.black)   # تنظیم ضخامت خط برای بولد کردن
             pdf_canvas.setLineWidth(3)   
-            y_position = height * 0.2   
+            y_position = height * 0.2   # یک‌پنجم نهایی صفحه
             pdf_canvas.line(0, y_position, width, y_position)    
-
+            # نوشتن متن "محل درج" بالای خط با معکوس کردن متن
             place_text = "محل درج  مهر و امضا"
             reshaped_place_text = arabic_reshaper.reshape(place_text)
             bidi_place_text = get_display(reshaped_place_text)
-            pdf_canvas.drawString(450, y_position - 20, bidi_place_text)
+            pdf_canvas.drawString(450, y_position - 20, bidi_place_text) # خط کل عرض صفحه را پوشش می‌دهد
 
             # اضافه کردن شماره صفحه در پایین صفحه با معکوس کردن متن
             page_number_text = f"صفحه {pdf_canvas.getPageNumber()}"
             reshaped_page_text = arabic_reshaper.reshape(page_number_text)
             bidi_page_text = get_display(reshaped_page_text)
-            pdf_canvas.drawCentredString(width / 2, 15, bidi_page_text)
+            pdf_canvas.drawCentredString(width / 2, 15, bidi_page_text)  # شماره صفحه در پایین و مرکز صفحه
+            # ذخیره فایل PDF
             pdf_canvas.save()
 
-       
+            # ایجاد لینک فایل PDF
             pdf_url = f'{settings.MEDIA_URL}pdf/{pdf_filename}'
             return Response({'link': pdf_url}, status=status.HTTP_200_OK)
 
