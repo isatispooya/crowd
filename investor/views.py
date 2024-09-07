@@ -1,13 +1,14 @@
 from django.shortcuts import render
 import datetime
 from . import serializers
-from .models import Cart , Message , SetStatus
+from .models import Cart , Message , SetStatus , AddInformation
 from rest_framework import status 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from authentication import fun
 from django.http import HttpResponse, HttpResponseNotAllowed
 import random
+from manager import models
 
 class RequestViewset(APIView):
     def post (self,request):
@@ -415,3 +416,123 @@ class SetStatusAdminViesset(APIView) :
 
 
     
+
+
+
+
+class AddInformationViewset (APIView) :
+    def post (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        addinformation = AddInformation.objects.filter(cart=cart).first()
+        if addinformation:
+            addinformation.delete()
+
+        data = {
+            'announcement_of_changes_managers': request.FILES.get('announcement_of_changes_managers'),
+            'announcement_of_changes_capital': request.FILES.get('announcement_of_changes_capital'),
+            'bank_account_turnover': request.FILES.get('bank_account_turnover'),
+            'statutes': request.FILES.get('statutes'),
+            'assets_and_liabilities': request.FILES.get('assets_and_liabilities'),
+            'latest_insurance_staf': request.FILES.get('latest_insurance_staf'),
+            'claims_status': request.FILES.get('claims_status'),
+            'cart': cart.id
+        }
+
+        serializer = serializers.AddInformationSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response ({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response ({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        addinformation = AddInformation.objects.filter(cart=cart).first()
+        if not addinformation:
+            return Response({'error': 'information not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = serializers.AddInformationSerializer(addinformation)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+class AddInfromationAdminViewset (APIView) :
+    def post (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        addinformation = AddInformation.objects.filter(cart=cart).first()
+        if addinformation:
+            addinformation.delete()
+
+        data = {
+            'announcement_of_changes_managers': request.FILES.get('announcement_of_changes_managers'),
+            'announcement_of_changes_capital': request.FILES.get('announcement_of_changes_capital'),
+            'bank_account_turnover': request.FILES.get('bank_account_turnover'),
+            'statutes': request.FILES.get('statutes'),
+            'assets_and_liabilities': request.FILES.get('assets_and_liabilities'),
+            'latest_insurance_staf': request.FILES.get('latest_insurance_staf'),
+            'claims_status': request.FILES.get('claims_status'),
+            'cart': cart.id
+        }
+
+
+        serializer = serializers.AddInformationSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    def get (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        addinformation = AddInformation.objects.filter(cart=cart).first()
+        if not addinformation:
+            return Response({'error': 'information not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = serializers.AddInformationSerializer(addinformation)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+

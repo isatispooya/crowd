@@ -22,3 +22,9 @@ class SetStatusSerializer (serializers.ModelSerializer):
         model = models.SetStatus
         fields = '__all__'
 
+
+class AddInformationSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = models.AddInformation
+        fields = '__all__'
+

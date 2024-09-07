@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Manager ,  Resume , Validation , Shareholder
+from .models import Manager ,  Resume , Validation , Shareholder , History
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -554,5 +554,127 @@ class ValidationAdminViewset (APIView) :
         
         serializer = serializers.ValidationSerializer(validation)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+class HistoryViewset (APIView) :
+    def post (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager = Manager.objects.filter(cart=cart).first()
+        if not manager:
+            return Response({'error': 'Manager not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+
+        history = History.objects.filter(cart=cart).first()
+        print(history)
+        if history:
+            history.delete()
+
+        data = {
+            'file': request.FILES.get('file'),
+            'manager': manager.id,
+            'cart': cart.id
+        }
+
+        serializer = serializers.HistorySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    def get (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response ({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response ({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        history = History.objects.filter(cart=cart).first()
+        if not history:
+            return Response({'error': 'history not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = serializers.HistorySerializer(history)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+class HistoryAdminViewset (APIView) :
+    def post (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager = Manager.objects.filter(cart=cart).first()
+        if not manager:
+            return Response({'error': 'Manager not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+
+        history = History.objects.filter(cart=cart).first()
+        if history:
+            history.delete()
+
+        data = {
+            'file': request.FILES.get('file'),
+            'manager': manager.id,
+            'cart': cart.id
+        }
+
+        serializer = serializers.HistorySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    def get (self, request, id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        history = History.objects.filter(cart=cart).first()
+        if not history:
+            return Response({'error': 'history not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = serializers.HistorySerializer(history)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 

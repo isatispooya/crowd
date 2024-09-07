@@ -51,3 +51,14 @@ class Validation (models.Model) :
     lock = models.BooleanField(default=False)
     def __str__(self):
         return  f"Validation for Cart ID: {self.cart.id}"
+
+
+
+class History (models.Model) :
+    file = models.FileField(upload_to  ='static/')
+    manager = models.ForeignKey(Manager,  on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    lock = models.BooleanField(default=False)
+    def __str__(self):
+        return  f"Histiry for Cart ID: {self.cart.id}"
+

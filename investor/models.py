@@ -90,27 +90,7 @@ class Cart (models.Model) :
 
     alignment_6columns_yearold = models.FileField(upload_to='static/' ,  blank = True, null = True,validators=[validate_file_size])
     Lock_alignment_6columns_yearold = models.BooleanField(default=False)
-    
-    announcement_of_changes_managers = models.FileField(upload_to='static/' ,  blank = True, null = True) # اگهی اخرین تغیرات مدیران 
-    lock_announcement_of_changes_managers = models.BooleanField(default=False)
-    
-    announcement_of_changes_capital  = models.FileField(upload_to='static/' ,  blank = True, null = True) # اگهی اخرین تغیرات سرمایه ای 
-    lock_announcement_of_changes_capital = models.BooleanField(default=False)
-    
-    bank_account_turnover = models.FileField(upload_to='static/' ,  blank = True, null = True) # گردش حساب بانکی
-    lock_bank_account_turnover = models.BooleanField(default=False)
-    
-    statutes = models.FileField(upload_to='static/' ,  blank = True, null = True) #اساسنامه
-    lock_statutes = models.BooleanField(default=False)
-    
-    assets_and_liabilities = models.FileField(upload_to='static/' ,  blank = True, null = True) #لیست دارایی ها و بدهی ها 
-    lock_assets_and_liabilities = models.BooleanField(default=False)
-    
-    latest_insurance_staf  =models.FileField(upload_to='static/' ,  blank = True, null = True) #اخرین لیست بیمه کارکنان 
-    lock_insurance_staf = models.BooleanField(default=False)
-    
-    claims_status = models.FileField(upload_to='static/' ,  blank = True, null = True) # وضعیت دعاوی
-    lock_claims_status = models.BooleanField(default=False)
+
     creat = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.company_name
@@ -140,3 +120,28 @@ class SetStatus (models.Model):
 
 
 
+class AddInformation (models.Model):
+    announcement_of_changes_managers = models.FileField(upload_to='static/' ,  blank = True, null = True) # اگهی اخرین تغیرات مدیران 
+    lock_announcement_of_changes_managers = models.BooleanField(default=False)
+    
+    announcement_of_changes_capital  = models.FileField(upload_to='static/' ,  blank = True, null = True) # اگهی اخرین تغیرات سرمایه ای 
+    lock_announcement_of_changes_capital = models.BooleanField(default=False)
+    
+    bank_account_turnover = models.FileField(upload_to='static/' ,  blank = True, null = True) # گردش حساب بانکی
+    lock_bank_account_turnover = models.BooleanField(default=False)
+    
+    statutes = models.FileField(upload_to='static/' ,  blank = True, null = True) #اساسنامه
+    lock_statutes = models.BooleanField(default=False)
+    
+    assets_and_liabilities = models.FileField(upload_to='static/' ,  blank = True, null = True) #لیست دارایی ها و بدهی ها 
+    lock_assets_and_liabilities = models.BooleanField(default=False)
+    
+    latest_insurance_staf  =models.FileField(upload_to='static/' ,  blank = True, null = True) #اخرین لیست بیمه کارکنان 
+    lock_insurance_staf = models.BooleanField(default=False)
+    
+    claims_status = models.FileField(upload_to='static/' ,  blank = True, null = True) # وضعیت دعاوی
+    lock_claims_status = models.BooleanField(default=False)
+
+    cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
+    def __str__(self):
+        return self.cart.__str__ () 
