@@ -145,3 +145,15 @@ class AddInformation (models.Model):
     cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
     def __str__(self):
         return self.cart.__str__ () 
+    
+
+
+
+
+
+class SignatureCompany(models.Model) :
+    name = models.CharField(max_length=150)
+    national_code = models.CharField(max_length=10)
+    cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
+    def __str__(self):
+        return self.name

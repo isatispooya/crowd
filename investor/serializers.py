@@ -28,3 +28,7 @@ class AddInformationSerializer (serializers.ModelSerializer):
         model = models.AddInformation
         fields = '__all__'
 
+class SignatureCompanySerializer (serializers.ModelSerializer):
+    class Meta :
+        model = models.SignatureCompany
+        fields = ['name', 'national_code', 'cart']

@@ -13,6 +13,7 @@ class Manager (models.Model):
     is_obliged = models.BooleanField(default=False,  null=True , blank=True) #موظف
     representative = models.CharField(max_length=100,  null=True , blank=True)
     cart = models.ForeignKey(Cart,  on_delete=models.CASCADE)
+    signature = models.BooleanField(default=False)
     lock = models.BooleanField(default=False)
 
     def __str__(self):

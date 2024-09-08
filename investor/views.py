@@ -1,7 +1,7 @@
 from django.shortcuts import render
 import datetime
 from . import serializers
-from .models import Cart , Message , SetStatus , AddInformation
+from .models import Cart , Message , SetStatus , AddInformation , SignatureCompany
 from rest_framework import status 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -442,7 +442,25 @@ class AddInformationViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         addinformation = AddInformation.objects.filter(cart=cart).first()
         if addinformation:
-            addinformation.delete()
+            # دریافت داده‌های ارسال شده در فایل‌ها (در صورتی که هر کدام ارسال شده باشند)
+            if 'announcement_of_changes_managers' in request.FILES:
+                addinformation.announcement_of_changes_managers = request.FILES.get('announcement_of_changes_managers')
+            if 'announcement_of_changes_capital' in request.FILES:
+                addinformation.announcement_of_changes_capital = request.FILES.get('announcement_of_changes_capital')
+            if 'bank_account_turnover' in request.FILES:
+                addinformation.bank_account_turnover = request.FILES.get('bank_account_turnover')
+            if 'statutes' in request.FILES:
+                addinformation.statutes = request.FILES.get('statutes')
+            if 'assets_and_liabilities' in request.FILES:
+                addinformation.assets_and_liabilities = request.FILES.get('assets_and_liabilities')
+            if 'latest_insurance_staf' in request.FILES:
+                addinformation.latest_insurance_staf = request.FILES.get('latest_insurance_staf')
+            if 'claims_status' in request.FILES:
+                addinformation.claims_status = request.FILES.get('claims_status')
+
+            # ذخیره تغییرات
+            addinformation.save()
+            return Response({'message': 'Information updated successfully'}, status=status.HTTP_200_OK)
 
         data = {
             'announcement_of_changes_managers': request.FILES.get('announcement_of_changes_managers'),
@@ -499,7 +517,25 @@ class AddInfromationAdminViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         addinformation = AddInformation.objects.filter(cart=cart).first()
         if addinformation:
-            addinformation.delete()
+            # دریافت داده‌های ارسال شده در فایل‌ها (در صورتی که هر کدام ارسال شده باشند)
+            if 'announcement_of_changes_managers' in request.FILES:
+                addinformation.announcement_of_changes_managers = request.FILES.get('announcement_of_changes_managers')
+            if 'announcement_of_changes_capital' in request.FILES:
+                addinformation.announcement_of_changes_capital = request.FILES.get('announcement_of_changes_capital')
+            if 'bank_account_turnover' in request.FILES:
+                addinformation.bank_account_turnover = request.FILES.get('bank_account_turnover')
+            if 'statutes' in request.FILES:
+                addinformation.statutes = request.FILES.get('statutes')
+            if 'assets_and_liabilities' in request.FILES:
+                addinformation.assets_and_liabilities = request.FILES.get('assets_and_liabilities')
+            if 'latest_insurance_staf' in request.FILES:
+                addinformation.latest_insurance_staf = request.FILES.get('latest_insurance_staf')
+            if 'claims_status' in request.FILES:
+                addinformation.claims_status = request.FILES.get('claims_status')
+
+            # ذخیره تغییرات
+            addinformation.save()
+            return Response({'message': 'Information updated successfully'}, status=status.HTTP_200_OK)
 
         data = {
             'announcement_of_changes_managers': request.FILES.get('announcement_of_changes_managers'),
@@ -602,3 +638,31 @@ class PdfViewset(APIView) :
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+
+
+
+
+
+class SignatureViewset (APIView):
+    def post (self,request,id):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        signature, created = SignatureCompany.objects.get_or_create(cart=cart)
+        data = request.data
+        signature_serializer = serializers.SignatureCompanySerializer(instance=signature, data=data)
+        if signature_serializer.is_valid():
+            signature_serializer.save()
+            return Response(signature_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(signature_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
