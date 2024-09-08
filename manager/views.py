@@ -50,33 +50,6 @@ class ManagerViewset(APIView) :
         return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
     
 
-
-    # def patch (self,request , id) :
-    #     Authorization = request.headers.get('Authorization')
-    #     if not Authorization:
-    #         return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-    #     user = fun.decryptionUser(Authorization)
-    #     if not user:
-    #         return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     user = user.first()
-    #     if id is None:
-    #         return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
-    #     cart  = models.Cart.objects.filter(id=id).first()
-    #     try:
-    #         manager = Manager.objects.filter(cart=cart)
-  
-    #     except Manager.DoesNotExist:
-    #         return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     manager.delete()
-    #     request.data['id'] = id
-    #     serializer = serializers.ManagerSerializer(data=request.data)
- 
-    #     if not serializer.is_valid():
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     serializer.save()
-    #     return Response({'message': 'Manager updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
-    
     
 
 
@@ -124,34 +97,6 @@ class ManagerAdminViewset(APIView):
     
 
 
-
-
-
-
-    # def patch (self,request , id) :
-    #     Authorization = request.headers.get('Authorization')
-    #     if not Authorization:
-    #         return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-    #     admin = fun.decryptionadmin(Authorization)
-    #     if not admin:
-    #         return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     admin = admin.first()
-    #     if id is None:
-    #         return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
-    #     cart =  models.Cart.objects.filter(id=id).first()
-    #     try:
-    #         manager = Manager.objects.filter(cart=cart)
-    #     except Manager.DoesNotExist:
-    #         return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     manager.delete()
-    #     request.data['id'] = id
-    #     serializer = serializers.ManagerSerializer(data=request.data)
- 
-    #     if not serializer.is_valid():
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     serializer.save()
-    #     return Response({'message': 'Manager updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
 
 
 
@@ -368,32 +313,6 @@ class ShareholderViewset(APIView):
         serializer = serializers.ShareholderSerializer(shareholder, many=True)
         return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
     
-    # def patch(self, request,id) :
-    #     Authorization = request.headers.get('Authorization')
-    #     if not Authorization:
-    #         return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-    #     user = fun.decryptionUser(Authorization)
-    #     if not user:
-    #         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     user = user.first()
-    #     if id is None:
-    #         return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
-    #     cart  = models.Cart.objects.filter(id=id).first()
-    #     try:
-    #         shareholder = Shareholder.objects.filter(cart=cart)
-  
-    #     except Manager.DoesNotExist:
-    #         return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     shareholder.delete()
-    #     request.data['id'] = id
-    #     serializer = serializers.ShareholderSerializer(data=request.data)
- 
-    #     if not serializer.is_valid():
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     serializer.save()
-    #     return Response({'message': 'shareholder updated successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
-    
 
 class ShareholderAdminViewset(APIView) :
     def get (self, request, id) :
@@ -478,21 +397,7 @@ class ValidationViewset (APIView) :
             })
 
         return Response({'managers': manager_list}, status=status.HTTP_200_OK)
-        #     if existing_validation:
-        #         existing_validation.delete()
-        #     data = {
-        #         'file_manager': request.FILES.get(i),
-        #         # 'file_validation': request.FILES.get('file_validation'), 
-        #         'manager': manager.id,
-        #         'cart': cart.id
-        #     }
-        #     serializer = serializers.ValidationSerializer(data=data)
-        #     if serializer.is_valid():
-        #         serializer.save()
-        #     else:
-        #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # return Response({'message': 'Validation data saved for all managers' , 'data' :serializer.data}, status=status.HTTP_201_CREATED)
-
+  
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -597,29 +502,7 @@ class ValidationAdminViewset (APIView) :
             })
 
         return Response({'manager': manager_list}, status=status.HTTP_200_OK)
-        # managers = Manager.objects.filter(cart=cart)
-        # if not managers.exists():
-        #     return Response({'error': 'No managers found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-
-        # manager_data = []
-        # for manager in managers:
-        #     validation = Validation.objects.filter(cart=cart, manager=manager).first()
-        #     validation_data = {
-        #         'file_manager': validation.file_manager.url if validation and validation.file_manager else None,
-        #         # 'file_validation': validation.file_validation.url if validation and validation.file_validation else None,
-        #     } if validation else None
-
-        #     manager_data.append({
-        #         'manager_name': manager.name,
-        #         'manager_national_code': manager.national_code,
-        #         'validation': validation_data
-        #     })
-
-        # return Response(manager_data, status=status.HTTP_200_OK)
-
-
-
-
+    
 
 
 class HistoryViewset (APIView) :
@@ -792,4 +675,8 @@ class SetSignatureViewset(APIView) :
         admin = admin.first()
         cart = models.Cart.objects.filter(id=id).first()
         print(cart)
+        manager = Manager.objects.filter(cart=cart)
+
         return Response ({'success': True}, status=status.HTTP_200_OK)
+    
+

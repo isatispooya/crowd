@@ -27,7 +27,7 @@ class Resume (models.Model):
     lock = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.file)
+        return str(self.manager.name)
     
 
 
