@@ -205,7 +205,7 @@ class ResumeViewset(APIView):
             national_code = i.national_code
             name = i.name
             lock = False
-            file = ''
+            file = None
             if resume.exists():
               resume = resume.first()
               resume = serializers.ResumeSerializer(resume).data
@@ -275,7 +275,7 @@ class ResumeAdminViewset(APIView) :
             national_code = i.national_code
             name = i.name
             lock = False
-            file = ''
+            file = None
             if resume.exists():
               resume = resume.first()
               resume = serializers.ResumeSerializer(resume).data
@@ -459,29 +459,39 @@ class ValidationViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         if not request.FILES:
             return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        manager_list = []
 
         for i in request.FILES:
-            manager = Manager.objects.filter(cart=cart)
+            manager = Manager.objects.filter(national_code=i, cart=cart)
             if len(manager) == 0:
                 return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
             manager = manager.first()
 
-            existing_validation = Validation.objects.filter(cart=cart, manager=manager).first()
-            if existing_validation:
-                existing_validation.delete()
-            data = {
-                'file_manager': request.FILES.get(i),
-                'file_validation': request.FILES.get('file_validation'), 
-                'manager': manager.id,
-                'cart': cart.id
-            }
-            serializer = serializers.ValidationSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'Validation data saved for all managers' , 'data' :serializer.data}, status=status.HTTP_201_CREATED)
+            existing_validation = Validation.objects.create(file_manager=request.FILES[i], manager=manager, cart=cart)
+            existing_validation.save()
+
+            manager_list.append({
+                'national_code': manager.national_code,
+                'name': manager.name,
+                'file_manager': existing_validation.file_manager.url if existing_validation.file_manager else None,
+            })
+
+        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
+        #     if existing_validation:
+        #         existing_validation.delete()
+        #     data = {
+        #         'file_manager': request.FILES.get(i),
+        #         # 'file_validation': request.FILES.get('file_validation'), 
+        #         'manager': manager.id,
+        #         'cart': cart.id
+        #     }
+        #     serializer = serializers.ValidationSerializer(data=data)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #     else:
+        #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # return Response({'message': 'Validation data saved for all managers' , 'data' :serializer.data}, status=status.HTTP_201_CREATED)
 
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
@@ -494,15 +504,28 @@ class ValidationViewset (APIView) :
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        validation = Validation.objects.filter(cart=cart).first()
-        if not validation:
-            return Response({'error': 'Validation not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = serializers.ValidationSerializer(validation)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        manager = Manager.objects.filter(cart=cart)
+        if not manager.exists():
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager_list = []
+        for i in manager:
+            validation = Validation.objects.filter(manager=i)
+            national_code = i.national_code
+            name = i.name
+            file_manager = None
+            
+            if validation.exists():
+                validation = validation.first()
+                validation = serializers.ValidationSerializer(validation).data
+                file_manager = validation['file_manager']
+            
+            manager_list.append({
+                'national_code': national_code,
+                'file_manager': file_manager,
+                'name': name
+            })
 
-
+        return Response({'manager': manager_list}, status=status.HTTP_200_OK)
 
 class ValidationAdminViewset (APIView) :
     def post (self, request, id) :
@@ -518,30 +541,27 @@ class ValidationAdminViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         if not request.FILES:
             return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.FILES:
+            return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        manager_list = []
 
         for i in request.FILES:
-            manager = Manager.objects.filter(cart=cart)
+            manager = Manager.objects.filter(national_code=i, cart=cart)
             if len(manager) == 0:
                 return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
             manager = manager.first()
 
-            existing_validation = Validation.objects.filter(cart=cart, manager=manager).first()
-            if existing_validation:
-                existing_validation.delete()
-            data = {
-                'file_manager': request.FILES.get(i),
-                'file_validation': request.FILES.get('file_validation'), 
-                'manager': manager.id,
-                'cart': cart.id
-            }
-            serializer = serializers.ValidationSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'Validation data saved for all managers'}, status=status.HTTP_201_CREATED)
+            existing_validation = Validation.objects.create(file_manager=request.FILES[i], manager=manager, cart=cart)
+            existing_validation.save()
 
+            manager_list.append({
+                'national_code': manager.national_code,
+                'name': manager.name,
+                'file_manager': existing_validation.file_manager.url if existing_validation.file_manager else None,
+            })
+
+        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
 
 
     def get (self, request, id) :
@@ -555,15 +575,47 @@ class ValidationAdminViewset (APIView) :
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        validation = Validation.objects.filter(cart=cart).first()
-        if not validation:
-            return Response({'error': 'Validation not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = serializers.ValidationSerializer(validation)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        manager = Manager.objects.filter(cart=cart)
+        if not manager.exists():
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager_list = []
+        for i in manager:
+            validation = Validation.objects.filter(manager=i)
+            national_code = i.national_code
+            name = i.name
+            file_manager = None
+            
+            if validation.exists():
+                validation = validation.first()
+                validation = serializers.ValidationSerializer(validation).data
+                file_manager = validation['file_manager']
+            
+            manager_list.append({
+                'national_code': national_code,
+                'file_manager': file_manager,
+                'name': name
+            })
 
+        return Response({'manager': manager_list}, status=status.HTTP_200_OK)
+        # managers = Manager.objects.filter(cart=cart)
+        # if not managers.exists():
+        #     return Response({'error': 'No managers found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
+        # manager_data = []
+        # for manager in managers:
+        #     validation = Validation.objects.filter(cart=cart, manager=manager).first()
+        #     validation_data = {
+        #         'file_manager': validation.file_manager.url if validation and validation.file_manager else None,
+        #         # 'file_validation': validation.file_validation.url if validation and validation.file_validation else None,
+        #     } if validation else None
+
+        #     manager_data.append({
+        #         'manager_name': manager.name,
+        #         'manager_national_code': manager.national_code,
+        #         'validation': validation_data
+        #     })
+
+        # return Response(manager_data, status=status.HTTP_200_OK)
 
 
 
@@ -584,28 +636,27 @@ class HistoryViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         if not request.FILES:
             return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.FILES:
+            return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        manager_list = []
 
         for i in request.FILES:
-            manager = Manager.objects.filter(cart=cart)
+            manager = Manager.objects.filter(national_code=i, cart=cart)
             if len(manager) == 0:
                 return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
             manager = manager.first()
 
-            existing_history = History.objects.filter(cart=cart, manager=manager).first()
-            if existing_history:
-                existing_history.delete()
-            data = {
-                'file': request.FILES.get(i),
-                'manager': manager.id,
-                'cart': cart.id
-            }
-            serializer = serializers.HistorySerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'history data saved for all managers' ,'data' :serializer.data}, status=status.HTTP_201_CREATED)
+            existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart)
+            existing_history.save()
+
+            manager_list.append({
+                'national_code': manager.national_code,
+                'name': manager.name,
+                'file': existing_history.file.url if existing_history.file else None,
+            })
+
+        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
 
 
 
@@ -620,13 +671,31 @@ class HistoryViewset (APIView) :
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        history = History.objects.filter(cart=cart).first()
-        if not history:
-            return Response({'error': 'history not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = serializers.HistorySerializer(history)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        manager = Manager.objects.filter(cart=cart)
+        if not manager.exists():
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager_list = []
+        for i in manager:
+            history = History.objects.filter(manager=i)
+            national_code = i.national_code
+            name = i.name
+            lock = False
+            file = None
+            
+            if history.exists():
+                history = history.first()
+                history = serializers.HistorySerializer(history).data
+                lock = history['lock']
+                file = history['file']
+            
+            manager_list.append({
+                'national_code': national_code,
+                'lock': lock,
+                'file': file,
+                'name': name
+            })
+
+        return Response({'manager': manager_list}, status=status.HTTP_200_OK)
 
 
 
@@ -648,27 +717,26 @@ class HistoryAdminViewset (APIView) :
         if not request.FILES:
             return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
+        manager_list = []
+
         for i in request.FILES:
-            manager = Manager.objects.filter(cart=cart)
+            manager = Manager.objects.filter(national_code=i, cart=cart)
             if len(manager) == 0:
                 return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
             manager = manager.first()
 
-            existing_history = History.objects.filter(cart=cart, manager=manager).first()
-            if existing_history:
-                existing_history.delete()
-            data = {
-                'file': request.FILES.get(i),
-                'manager': manager.id,
-                'cart': cart.id
-            }
-            serializer = serializers.HistorySerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'history data saved for all managers' ,'data' :serializer.data}, status=status.HTTP_201_CREATED)
+            existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart)
+            existing_history.save()
+
+            manager_list.append({
+                'national_code': manager.national_code,
+                'name': manager.name,
+                'file': existing_history.file.url if existing_history.file else None,
+            })
+
+        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
+
 
 
 
@@ -684,13 +752,44 @@ class HistoryAdminViewset (APIView) :
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        history = History.objects.filter(cart=cart).first()
-        if not history:
-            return Response({'error': 'history not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = serializers.HistorySerializer(history)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        manager = Manager.objects.filter(cart=cart)
+        if not manager.exists():
+            return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        manager_list = []
+        for i in manager:
+            history = History.objects.filter(manager=i)
+            national_code = i.national_code
+            name = i.name
+            lock = False
+            file = None
+            
+            if history.exists():
+                history = history.first()
+                history = serializers.HistorySerializer(history).data
+                lock = history['lock']
+                file = history['file']
+            
+            manager_list.append({
+                'national_code': national_code,
+                'lock': lock,
+                'file': file,
+                'name': name
+            })
+
+        return Response({'manager': manager_list}, status=status.HTTP_200_OK)
 
 
 
+
+class SetSignatureViewset(APIView) :
+    def post (self,request,id):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        print(cart)
+        return Response ({'success': True}, status=status.HTTP_200_OK)

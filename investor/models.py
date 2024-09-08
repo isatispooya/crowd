@@ -156,4 +156,4 @@ class SignatureCompany(models.Model) :
     national_code = models.CharField(max_length=10)
     cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
     def __str__(self):
-        return self.name
+        return self.cart.__str__()
