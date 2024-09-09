@@ -95,11 +95,15 @@ class RequestViewset(APIView):
             if 'claims_status' in request.FILES:
                 serializer.uploaded_file3 = request.FILES['claims_status']
 
+            if 'logo' in request.FILES:
+                serializer.uploaded_file3 = request.FILES['logo']
+
             code = random.randint(10000,99999)
             serializer.code= code
             serializer.save()
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            response_data = serializer.data
+            response_data['id'] = cart.id
+            return Response(response_data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -135,8 +139,11 @@ class DetailCartViewset(APIView):
         if not cart:
             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
         cart_serializer = serializers.CartSerializer(cart)
+        cart_serializer = cart_serializer.data
+        cart_serializer['id'] = cart.id
+
     
-        return Response({'message': True, 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
+        return Response({'message': True, 'cart': cart_serializer}, status=status.HTTP_200_OK)
     
 
     
@@ -163,24 +170,24 @@ class DetailCartViewset(APIView):
         return Response(cart_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-    def delete(self, request, id):
-            Authorization = request.headers.get('Authorization')
+    # def delete(self, request, id):
+    #         Authorization = request.headers.get('Authorization')
             
-            if not Authorization:
-                return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+    #         if not Authorization:
+    #             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
-            user = fun.decryptionUser(Authorization)
+    #         user = fun.decryptionUser(Authorization)
 
-            if not user:
-                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-            user = user.first()
+    #         if not user:
+    #             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    #         user = user.first()
 
-            cart = Cart.objects.filter(id=id).first()
-            if not cart:
-                return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+    #         cart = Cart.objects.filter(id=id).first()
+    #         if not cart:
+    #             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            cart.delete()
-            return Response({'message': 'Cart deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    #         cart.delete()
+    #         return Response({'message': 'Cart deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
 
 

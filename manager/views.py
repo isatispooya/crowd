@@ -366,109 +366,157 @@ class ShareholderAdminViewset(APIView) :
 
 class ValidationViewset (APIView) :
     def post (self, request, id) :
+        try:
+            Authorization = request.headers.get('Authorization')
+            if not Authorization:
+                return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            user = fun.decryptionUser(Authorization)
+            if not user:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            user = user.first()
+            cart = models.Cart.objects.filter(id=id).first()
+            if not cart:
+                return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+            if not request.FILES:
+                return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+            file_validation = request.FILES.get('file_validation')
+            if not file_validation:
+                return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            manager_list = []
+
+            for i in request.FILES:
+                if i == 'file_validation':   
+                    continue
+                manager = Manager.objects.filter(national_code=i, cart=cart )
+                if len(manager) == 0:
+                    return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+
+                manager = manager.first()
+
+                existing_validation = Validation.objects.create(file_manager=request.FILES[i], manager=manager, cart=cart)
+                existing_validation.save()
+
+                manager_list.append({
+                    'national_code': manager.national_code,
+                    'name': manager.name,
+                    'file_manager': existing_validation.file_manager.url if existing_validation.file_manager else None,
+                })
+            validation = Validation.objects.create(file_validation=file_validation, cart=cart , manager = manager)
+
+            print(validation)
+
+            validation.save()
+            response_data = {
+                'file_validation': validation.file_validation.url if validation.file_validation else None,
+                'managers': manager_list
+            }
+
+
+
+            return Response({'data': response_data}, status=status.HTTP_200_OK)
+        except Exception as e:
+                print(f"An error occurred: {e}")
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def get(self, request, id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
         user = fun.decryptionUser(Authorization)
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         user = user.first()
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        if not request.FILES:
-            return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        manager_list = []
-
-        for i in request.FILES:
-            manager = Manager.objects.filter(national_code=i, cart=cart)
-            if len(manager) == 0:
-                return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-
-            manager = manager.first()
-
-            existing_validation = Validation.objects.create(file_manager=request.FILES[i], manager=manager, cart=cart)
-            existing_validation.save()
-
-            manager_list.append({
-                'national_code': manager.national_code,
-                'name': manager.name,
-                'file_manager': existing_validation.file_manager.url if existing_validation.file_manager else None,
-            })
-
-        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
-  
-    def get (self, request, id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response ({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response ({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        cart = models.Cart.objects.filter(id=id).first()
-        if not cart:
-            return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         manager = Manager.objects.filter(cart=cart)
         if not manager.exists():
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         manager_list = []
+        
+        validation = Validation.objects.filter(cart=cart).first()
+        file_validation = None
+        if validation:
+            file_validation = validation.file_validation.url if validation.file_validation else None
+
         for i in manager:
-            validation = Validation.objects.filter(manager=i)
+            validation_manager = Validation.objects.filter(manager=i)
             national_code = i.national_code
             name = i.name
             file_manager = None
-            
-            if validation.exists():
-                validation = validation.first()
-                validation = serializers.ValidationSerializer(validation).data
-                file_manager = validation['file_manager']
-            
+
+            if validation_manager.exists():
+                validation_instance = validation_manager.first()
+                file_manager = validation_instance.file_manager.url if validation_instance.file_manager else None
+
             manager_list.append({
                 'national_code': national_code,
                 'file_manager': file_manager,
                 'name': name
             })
 
-        return Response({'manager': manager_list}, status=status.HTTP_200_OK)
+        return Response({
+            'file_validation': file_validation,
+            'managers': manager_list
+        }, status=status.HTTP_200_OK)
+
 
 class ValidationAdminViewset (APIView) :
     def post (self, request, id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        cart = models.Cart.objects.filter(id=id).first()
-        if not cart:
-            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        if not request.FILES:
-            return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        if not request.FILES:
-            return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        manager_list = []
+        try :
+            Authorization = request.headers.get('Authorization')
+            if not Authorization:
+                return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            admin = fun.decryptionadmin(Authorization)
+            if not admin:
+                return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            admin = admin.first()
+            cart = models.Cart.objects.filter(id=id).first()
+            if not cart:
+                return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+            if not request.FILES:
+                return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+            file_validation = request.FILES.get('file_validation')
+            if not file_validation:
+                return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            manager_list = []
 
-        for i in request.FILES:
-            manager = Manager.objects.filter(national_code=i, cart=cart)
-            if len(manager) == 0:
-                return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+            for i in request.FILES:
+                if i == 'file_validation':   
+                    continue
+                manager = Manager.objects.filter(national_code=i, cart=cart )
+                if len(manager) == 0:
+                    return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
-            manager = manager.first()
+                manager = manager.first()
 
-            existing_validation = Validation.objects.create(file_manager=request.FILES[i], manager=manager, cart=cart)
-            existing_validation.save()
+                existing_validation = Validation.objects.create(file_manager=request.FILES[i], manager=manager, cart=cart)
+                existing_validation.save()
 
-            manager_list.append({
-                'national_code': manager.national_code,
-                'name': manager.name,
-                'file_manager': existing_validation.file_manager.url if existing_validation.file_manager else None,
-            })
+                manager_list.append({
+                    'national_code': manager.national_code,
+                    'name': manager.name,
+                    'file_manager': existing_validation.file_manager.url if existing_validation.file_manager else None,
+                })
+            validation = Validation.objects.create(file_validation=file_validation, cart=cart , manager = manager)
 
-        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
+            print(validation)
 
-
+            validation.save()
+            response_data = {
+                'file_validation': validation.file_validation.url if validation.file_validation else None,
+                'managers': manager_list
+            }
+            return Response({'data': response_data}, status=status.HTTP_200_OK)
+        except Exception as e:
+                print(f"An error occurred: {e}")
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -479,30 +527,39 @@ class ValidationAdminViewset (APIView) :
         admin = admin.first()
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
-            return Response ({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         manager = Manager.objects.filter(cart=cart)
         if not manager.exists():
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         manager_list = []
+        
+        validation = Validation.objects.filter(cart=cart).first()
+        file_validation = None
+        if validation:
+            file_validation = validation.file_validation.url if validation.file_validation else None
+
         for i in manager:
-            validation = Validation.objects.filter(manager=i)
+            validation_manager = Validation.objects.filter(manager=i)
             national_code = i.national_code
             name = i.name
             file_manager = None
-            
-            if validation.exists():
-                validation = validation.first()
-                validation = serializers.ValidationSerializer(validation).data
-                file_manager = validation['file_manager']
-            
+
+            if validation_manager.exists():
+                validation_instance = validation_manager.first()
+                file_manager = validation_instance.file_manager.url if validation_instance.file_manager else None
+
             manager_list.append({
                 'national_code': national_code,
                 'file_manager': file_manager,
                 'name': name
             })
 
-        return Response({'manager': manager_list}, status=status.HTTP_200_OK)
-    
+        return Response({
+            'file_validation': file_validation,
+            'managers': manager_list
+        }, status=status.HTTP_200_OK)
 
 
 class HistoryViewset (APIView) :

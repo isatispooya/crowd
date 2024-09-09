@@ -92,6 +92,8 @@ class Cart (models.Model) :
     Lock_alignment_6columns_yearold = models.BooleanField(default=False)
 
     creat = models.DateTimeField(default=timezone.now)
+    logo = models.FileField(upload_to='static/' ,  blank = True, null = True,validators=[validate_file_size])
+    
     def __str__(self):
         return self.company_name
     
