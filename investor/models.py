@@ -93,7 +93,21 @@ class Cart (models.Model) :
 
     creat = models.DateTimeField(default=timezone.now)
     logo = models.FileField(upload_to='static/' ,  blank = True, null = True,validators=[validate_file_size])
-
+    city = models.CharField(max_length=100 , null=True , blank=True)
+    address = models.CharField(max_length=1000, null=True , blank=True)
+    postal_code = models.CharField(max_length=15, null=True , blank=True)
+    newspaper = models.CharField(max_length=20, null=True , blank=True)   #روزنامه رسمی
+    date_newspaper = models.CharField(max_length=20, null=True , blank=True)    #تاریخ روزنامه
+    otc_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد فرابورس
+    publication_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد انتشار
+    dervice_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد ارائه خدمات
+    design_cost = models.CharField(max_length=150, null=True , blank=True)   #کارمزد طراحی
+    percentage_total_amount = models.CharField(max_length=150, null=True , blank=True) #درصد مبلغ کل تامین مالی
+    payback_period = models.IntegerField(null=True , blank=True) #دوره بازپرداخت
+    swimming_percentage = models.FloatField(null=True, blank=True) # درصد تامین مالی شناور
+    partnership_interest = models.CharField(max_length=150, null=True , blank=True) # سود مشارکت اسمی
+    guarantee = models.CharField(max_length=150, null=True , blank=True) # ضمانت نامه
+    
     def __str__(self):
         return self.company_name
     
@@ -163,22 +177,3 @@ class SignatureCompany(models.Model) :
 
 
 
-class Contract(models.Model) :
-    cart = models.ForeignKey(Cart , on_delete= models.CASCADE)
-    city = models.CharField(max_length=100 , null=True , blank=True)
-    address = models.CharField(max_length=1000, null=True , blank=True)
-    postal_code = models.CharField(max_length=15, null=True , blank=True)
-    newspaper = models.CharField(max_length=20, null=True , blank=True)   #روزنامه رسمی
-    date_newspaper = models.CharField(max_length=20, null=True , blank=True)    #تاریخ روزنامه
-    otc_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد فرابورس
-    publication_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد انتشار
-    dervice_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد ارائه خدمات
-    design_cost = models.CharField(max_length=150, null=True , blank=True)   #کارمزد طراحی
-    percentage_total_amount = models.CharField(max_length=150, null=True , blank=True) #درصد مبلغ کل تامین مالی
-    payback_period = models.IntegerField(null=True , blank=True) #دوره بازپرداخت
-    swimming_percentage = models.FloatField(null=True, blank=True) # درصد تامین مالی شناور
-    partnership_interest = models.CharField(max_length=150, null=True , blank=True) # سود مشارکت اسمی
-    guarantee = models.CharField(max_length=150, null=True , blank=True) # ضمانت نامه
-    
-    def __str__(self):
-        return self.cart.__str__()
