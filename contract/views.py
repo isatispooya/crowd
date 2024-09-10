@@ -54,6 +54,33 @@ class SetSignatureViewset(APIView) :
         managers.update(signature= True)  
         return Response ({'success': True}, status=status.HTTP_200_OK)
     
+# لیست مدیران مشتری که حق امضای فعال دارند براساس کارت منتخب 
+    def get(self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        manager = models.Manager.objects.filter(cart=cart)
+        if not manager  :
+            return Response ({'error':'manager not found'},status=self.HTTP_404_NOT_FOUND)
+        manager_info = []
+        
+        for i in manager :
+            if i.signature == True :
+                manager_info.append({
+                    'national_code': i.national_code,
+                    'name': i.name,
+                    'signature' : i.signature
+                    }) 
+
+        return Response ({'managers informations' :manager_info }, status=status.HTTP_200_OK)
+
+
+
 
 
 
