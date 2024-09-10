@@ -82,8 +82,6 @@ class SetSignatureViewset(APIView) :
 
 
 
-
-
 # وارد کردن اطلاعات قرارداد عاملیت توسط ادمین
 class SetCartAdminViewset(APIView) :
     def post (self,request,id) :

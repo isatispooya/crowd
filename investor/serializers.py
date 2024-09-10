@@ -17,10 +17,10 @@ class MessageSerializer (serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SetStatusSerializer (serializers.ModelSerializer):
-    class Meta:
-        model = models.SetStatus
-        fields = '__all__'
+# class SetStatusSerializer (serializers.ModelSerializer):
+#     class Meta:
+#         model = models.SetStatus
+#         fields = '__all__'
 
 
 class AddInformationSerializer (serializers.ModelSerializer):

@@ -147,18 +147,18 @@ class Message(models.Model):
 
 
 
-class SetStatus (models.Model):
-    cart = models.ForeignKey(Cart , on_delete=models.CASCADE)
-    OPTION_STATUS = [
-            ('1','بررسی شرکت'),
-            ('2','بررسی مدیران'),
-            ('3','بررسی رزومه'),
-            ('4','بررسی سهامدارن'),
-            ('5','بررسی اعتبار سینجی'),
-        ]
-    status = models.CharField(max_length = 20 , choices = OPTION_STATUS , default = '1')
-    def __str__(self):
-            return self.cart.__str__ () + self.status
+# class SetStatus (models.Model):
+#     cart = models.ForeignKey(Cart , on_delete=models.CASCADE)
+#     OPTION_STATUS = [
+#             ('1','بررسی شرکت'),
+#             ('2','بررسی مدیران'),
+#             ('3','بررسی رزومه'),
+#             ('4','بررسی سهامدارن'),
+#             ('5','بررسی اعتبار سینجی'),
+#         ]
+#     status = models.CharField(max_length = 20 , choices = OPTION_STATUS , default = '1')
+#     def __str__(self):
+#             return self.cart.__str__ () + self.status
 
 
 

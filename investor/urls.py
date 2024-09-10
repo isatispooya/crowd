@@ -1,7 +1,8 @@
 from django.urls import path
-from.views import RequestViewset , DetailCartViewset , CartAdmin , DetailCartAdminViewset, PdfViewset,MessageAdminViewSet , MessageUserViewSet , SetStatusViesset , SetStatusAdminViesset, AddInformationViewset , AddInfromationAdminViewset
+from.views import RequestViewset , DetailCartViewset , CartAdmin , DetailCartAdminViewset, PdfViewset,MessageAdminViewSet , MessageUserViewSet , AddInformationViewset , AddInfromationAdminViewset
 from django.conf import settings
 from django.conf.urls.static import static
+# from.views import SetStatusViesset , SetStatusAdminViesset
 
 urlpatterns = [
     path('cart/', RequestViewset.as_view(), name='cart'),
@@ -12,9 +13,9 @@ urlpatterns = [
     path('cart/detail/admin/<int:id>/', DetailCartAdminViewset.as_view(), name='cart-admin'),
     path('message/admin/<int:id>/', MessageAdminViewSet.as_view(), name='message-admin'),
     path('message/<int:id>/', MessageUserViewSet.as_view(), name='message-user'),
-    path('setstatus/<int:id>/', SetStatusViesset.as_view(), name='set-status'),
-    path('setstatus/admin/<int:id>/', SetStatusAdminViesset.as_view(), name='set-status-admin'),
-    path('setstatus/admin/', SetStatusAdminViesset.as_view(), name='set-status-admin'),
+    # path('setstatus/<int:id>/', SetStatusViesset.as_view(), name='set-status'),
+    # path('setstatus/admin/<int:id>/', SetStatusAdminViesset.as_view(), name='set-status-admin'),
+    # path('setstatus/admin/', SetStatusAdminViesset.as_view(), name='set-status-admin'),
     path('addinformation/<int:id>/', AddInformationViewset.as_view(), name='add-information'),
     path('addinformation/admin/<int:id>/', AddInfromationAdminViewset.as_view(), name='add-information-admin'),
     path('pdf/<int:id>/', PdfViewset.as_view(), name='pdf'),

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 import datetime
 from . import serializers
-from .models import Cart , Message , SetStatus , AddInformation 
+from .models import Cart , Message  , AddInformation 
 from rest_framework import status 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -332,101 +332,101 @@ class MessageUserViewSet(APIView):
 
 
 
-class SetStatusViesset(APIView) :
-    def post(self , request, id) :
-        Authorization = request.headers.get('Authorization')     
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        data = request.data.copy()
-        cart = Cart.objects.filter(id=id).first()
-        if not cart:
-            return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        print(cart)
-        set_status = SetStatus.objects.filter(cart=cart).first()
-        print(set_status)
-        if set_status :
-            set_status.delete()
-        data['cart'] = cart.id   
-        serializer = serializers.SetStatusSerializer(data=data)
-        if serializer.is_valid():
-            set_status = serializer.save()
-            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
-        else:
-            print(serializer.errors)
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+# class SetStatusViesset(APIView) :
+#     def post(self , request, id) :
+#         Authorization = request.headers.get('Authorization')     
+#         if not Authorization:
+#             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+#         user = fun.decryptionUser(Authorization)
+#         if not user:
+#             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+#         user = user.first()
+#         data = request.data.copy()
+#         cart = Cart.objects.filter(id=id).first()
+#         if not cart:
+#             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
+#         print(cart)
+#         set_status = SetStatus.objects.filter(cart=cart).first()
+#         print(set_status)
+#         if set_status :
+#             set_status.delete()
+#         data['cart'] = cart.id   
+#         serializer = serializers.SetStatusSerializer(data=data)
+#         if serializer.is_valid():
+#             set_status = serializer.save()
+#             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+#         else:
+#             print(serializer.errors)
+#             return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
 
-    def get(self , request, id) :
-        Authorization = request.headers.get('Authorization')     
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_400_BAD_REQUEST)
-        user = user.first()
-        cart = Cart.objects.filter(id=id).first()
-        if not cart:
-            return Response({'error': 'cart not found'}, status=status.HTTP_400_BAD_REQUEST)
-        set_status = SetStatus.objects.filter(cart=cart).first()
-        if not set_status:
-            return Response({'error' : 'status not found'}, status=status.HTTP_400_BAD_REQUEST)
-        print(set_status)
-        serializer = serializers.SetStatusSerializer(set_status)
-        return Response({'message' : serializer.data}, status=status.HTTP_200_OK)
+#     def get(self , request, id) :
+#         Authorization = request.headers.get('Authorization')     
+#         if not Authorization:
+#             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+#         user = fun.decryptionUser(Authorization)
+#         if not user:
+#             return Response({'error': 'user not found'}, status=status.HTTP_400_BAD_REQUEST)
+#         user = user.first()
+#         cart = Cart.objects.filter(id=id).first()
+#         if not cart:
+#             return Response({'error': 'cart not found'}, status=status.HTTP_400_BAD_REQUEST)
+#         set_status = SetStatus.objects.filter(cart=cart).first()
+#         if not set_status:
+#             return Response({'error' : 'status not found'}, status=status.HTTP_400_BAD_REQUEST)
+#         print(set_status)
+#         serializer = serializers.SetStatusSerializer(set_status)
+#         return Response({'message' : serializer.data}, status=status.HTTP_200_OK)
     
 
 
-class SetStatusAdminViesset(APIView) :
-    def post(self , request, id) :
-        Authorization = request.headers.get('Authorization')     
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        data = request.data.copy()
-        cart = Cart.objects.filter(id=id).first()
-        print(cart)
-        set_status = SetStatus.objects.filter(cart=cart).first()
-        print(set_status)
-        if set_status :
-            set_status.delete()
-        data['cart'] = cart.id   
-        serializer = serializers.SetStatusSerializer(data=data)
-        if serializer.is_valid():
-            set_status = serializer.save()
-            return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
-        else:
-            print(serializer.errors)
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+# class SetStatusAdminViesset(APIView) :
+#     def post(self , request, id) :
+#         Authorization = request.headers.get('Authorization')     
+#         if not Authorization:
+#             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+#         admin = fun.decryptionadmin(Authorization)
+#         if not admin:
+#             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+#         admin = admin.first()
+#         data = request.data.copy()
+#         cart = Cart.objects.filter(id=id).first()
+#         print(cart)
+#         set_status = SetStatus.objects.filter(cart=cart).first()
+#         print(set_status)
+#         if set_status :
+#             set_status.delete()
+#         data['cart'] = cart.id   
+#         serializer = serializers.SetStatusSerializer(data=data)
+#         if serializer.is_valid():
+#             set_status = serializer.save()
+#             return Response({'message': serializer.data}, status=status.HTTP_201_CREATED)
+#         else:
+#             print(serializer.errors)
+#             return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
 
-    def get(self,request) :
-        Authorization = request.headers.get('Authorization')     
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()  
-        carts = Cart.objects.all()
-        if not carts:
-            return Response({'error': 'cart not found'}, status=status.HTTP_400_BAD_REQUEST)
-        response_data = []
-        for cart in carts:
-            set_status = SetStatus.objects.filter(cart=cart).first()
-            status_serializer = serializers.SetStatusSerializer(set_status)
-            cart_data = {
-                'status': status_serializer.data if set_status else None
-            }
-            response_data.append(cart_data)
+#     def get(self,request) :
+#         Authorization = request.headers.get('Authorization')     
+#         if not Authorization:
+#             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+#         admin = fun.decryptionadmin(Authorization)
+#         if not admin:
+#             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+#         admin = admin.first()  
+#         carts = Cart.objects.all()
+#         if not carts:
+#             return Response({'error': 'cart not found'}, status=status.HTTP_400_BAD_REQUEST)
+#         response_data = []
+#         for cart in carts:
+#             set_status = SetStatus.objects.filter(cart=cart).first()
+#             status_serializer = serializers.SetStatusSerializer(set_status)
+#             cart_data = {
+#                 'status': status_serializer.data if set_status else None
+#             }
+#             response_data.append(cart_data)
 
-        return Response({'carts': response_data}, status=status.HTTP_200_OK)
+#         return Response({'carts': response_data}, status=status.HTTP_200_OK)
         
 
 
