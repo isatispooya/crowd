@@ -93,20 +93,46 @@ class Cart (models.Model) :
 
     creat = models.DateTimeField(default=timezone.now)
     logo = models.FileField(upload_to='static/' ,  blank = True, null = True,validators=[validate_file_size])
+    lock_logo =  models.BooleanField(default=False)
+
     city = models.CharField(max_length=100 , null=True , blank=True)
-    address = models.CharField(max_length=1000, null=True , blank=True)
+    lock_city =  models.BooleanField(default=False)
+
     postal_code = models.CharField(max_length=15, null=True , blank=True)
+    lock_postal_code =  models.BooleanField(default=False)
+
     newspaper = models.CharField(max_length=20, null=True , blank=True)   #روزنامه رسمی
+    lock_newspaper =  models.BooleanField(default=False)
+
     date_newspaper = models.CharField(max_length=20, null=True , blank=True)    #تاریخ روزنامه
+    lock_date_newspaper =  models.BooleanField(default=False)
+
     otc_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد فرابورس
+    lock_otc_fee = models.BooleanField(default=False)
+
     publication_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد انتشار
+    lock_publication_fee = models.BooleanField(default=False)
+
     dervice_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد ارائه خدمات
+    lock_dervice_fee = models.BooleanField(default=False)
+
     design_cost = models.CharField(max_length=150, null=True , blank=True)   #کارمزد طراحی
+    lock_v = models.BooleanField(default=False)
+
     percentage_total_amount = models.CharField(max_length=150, null=True , blank=True) #درصد مبلغ کل تامین مالی
+    lock_percentage_total_amount = models.BooleanField(default=False)
+
     payback_period = models.IntegerField(null=True , blank=True) #دوره بازپرداخت
+    lock_payback_period = models.BooleanField(default=False)
+
     swimming_percentage = models.FloatField(null=True, blank=True) # درصد تامین مالی شناور
+    lock_swimming_percentage = models.BooleanField(default=False)
+
     partnership_interest = models.CharField(max_length=150, null=True , blank=True) # سود مشارکت اسمی
+    lock_partnership_interest = models.BooleanField(default=False)
+
     guarantee = models.CharField(max_length=150, null=True , blank=True) # ضمانت نامه
+    lock_guarantee = models.BooleanField(default=False)
     
     def __str__(self):
         return self.company_name
@@ -163,17 +189,6 @@ class AddInformation (models.Model):
         return self.cart.__str__ () 
     
 
-
-
-
-
-class SignatureCompany(models.Model) :
-    name = models.CharField(max_length=150)
-    national_code = models.CharField(max_length=10)
-    cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
-    def __str__(self):
-        return self.cart.__str__()
-    
 
 
 

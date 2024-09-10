@@ -721,19 +721,3 @@ class HistoryAdminViewset (APIView) :
 
 
 
-class SetSignatureViewset(APIView) :
-    def post (self,request,id):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        cart = models.Cart.objects.filter(id=id).first()
-        print(cart)
-        manager = Manager.objects.filter(cart=cart)
-
-        return Response ({'success': True}, status=status.HTTP_200_OK)
-    
-

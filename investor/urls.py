@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import RequestViewset , DetailCartViewset , CartAdmin , DetailCartAdminViewset, SignatureViewset, PdfViewset,MessageAdminViewSet , MessageUserViewSet , SetStatusViesset , SetStatusAdminViesset, AddInformationViewset , AddInfromationAdminViewset
+from.views import RequestViewset , DetailCartViewset , CartAdmin , DetailCartAdminViewset, PdfViewset,MessageAdminViewSet , MessageUserViewSet , SetStatusViesset , SetStatusAdminViesset, AddInformationViewset , AddInfromationAdminViewset
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -18,5 +18,4 @@ urlpatterns = [
     path('addinformation/<int:id>/', AddInformationViewset.as_view(), name='add-information'),
     path('addinformation/admin/<int:id>/', AddInfromationAdminViewset.as_view(), name='add-information-admin'),
     path('pdf/<int:id>/', PdfViewset.as_view(), name='pdf'),
-    path('signature/<int:id>/', SignatureViewset.as_view(), name='signature-company'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

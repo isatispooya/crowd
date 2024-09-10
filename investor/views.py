@@ -1,7 +1,7 @@
 from django.shortcuts import render
 import datetime
 from . import serializers
-from .models import Cart , Message , SetStatus , AddInformation , SignatureCompany
+from .models import Cart , Message , SetStatus , AddInformation 
 from rest_framework import status 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -647,29 +647,3 @@ class PdfViewset(APIView) :
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
-
-
-
-
-
-
-class SignatureViewset (APIView):
-    def post (self,request,id):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        cart = Cart.objects.filter(id=id).first()
-        if not cart:
-            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        signature, created = SignatureCompany.objects.get_or_create(cart=cart)
-        data = request.data
-        signature_serializer = serializers.SignatureCompanySerializer(instance=signature, data=data)
-        if signature_serializer.is_valid():
-            signature_serializer.save()
-            return Response(signature_serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(signature_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
