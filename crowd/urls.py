@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/', include('investor.urls')),
     path('api/', include('manager.urls')),
     path('api/', include('contract.urls')),
+    path('api/', include('plan.urls')),
 
 ]
 
