@@ -104,7 +104,7 @@ class Cart (models.Model) :
     newspaper = models.CharField(max_length=20, null=True , blank=True)   #روزنامه رسمی
     lock_newspaper =  models.BooleanField(default=False)
 
-    date_newspaper = models.CharField(max_length=20, null=True , blank=True)    #تاریخ روزنامه
+    date_newspaper = models.DateField(null=True , blank=True)    #تاریخ روزنامه
     lock_date_newspaper =  models.BooleanField(default=False)
 
     otc_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد فرابورس
@@ -188,7 +188,6 @@ class AddInformation (models.Model):
     def __str__(self):
         return self.cart.__str__ () 
     
-
 
 
 
