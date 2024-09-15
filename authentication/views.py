@@ -471,3 +471,20 @@ class LoginAdminViewset(APIView) :
         otp_obj.delete()
         token = fun.encryptionadmin(admin)
         return Response({'access': token} , status=status.HTTP_200_OK)
+
+
+
+
+
+class UserListViewset (APIView) :
+    def get (self, request) :
+        Authorization = request.headers.get('Authorization')    
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        privateperson = privatePerson.objects.all()
+        serializer = serializers.privatePersonSerializer(privateperson, many=True)
+        return Response ({'success' : True , 'users' : serializer.data}, status=status.HTTP_200_OK)

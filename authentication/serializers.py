@@ -39,6 +39,7 @@ class accountsSerializer(serializers.ModelSerializer):
     another_field = serializers.IntegerField(required=False, allow_null=True)
 
 class privatePersonSerializer(serializers.ModelSerializer):
+    uniqueIdentifier = serializers.CharField(source='user.uniqueIdentifier', read_only=True)    
     class Meta :
         model = models.privatePerson
         fields = '__all__'
