@@ -78,30 +78,13 @@ class WalletViewset(APIView) :
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()   
-        wallet = Wallet.objects.filter(user=user)
-        serializer = serializers.WalletSerializer(wallet , many=True)
+        wallet = Wallet.objects.filter(user=user).first()
+        serializer = serializers.WalletSerializer(wallet)
         if serializer :
             return Response({'wallet': serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class Wallet2ViewSet(APIView):
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()   
-        wallet = Wallet.objects.filter(id=id , user=user).first()
-        if wallet is None :
-            return Response({'error': 'wallet not found for this user'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.WalletSerializer(wallet )
-        if serializer :
-            return Response({'wallet': serializer.data}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
 
 

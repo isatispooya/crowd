@@ -10,6 +10,7 @@ import datetime
 from . import fun
 import json
 import random
+from accounting.models import Wallet
 
 class CaptchaViewset(APIView) :
     def get (self,request):
@@ -99,8 +100,8 @@ class SignUpViewset(APIView):
             return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
         if data == None :
             return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
-        print(data)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+        
         if  not new_user :
             new_user  =User(
                 agent = data ['agent'],
@@ -259,7 +260,18 @@ class SignUpViewset(APIView):
             new_financialInfo.save()
         else:
             return Response({'error': 'Invalid data format for financialInfo'}, status=status.HTTP_400_BAD_REQUEST)
-
+        wallet = Wallet.objects.filter(user = new_user).first()
+        print(wallet)
+        if  wallet is None :
+            wallet = Wallet(
+                remaining = 0 ,
+                adjustment_balance = 0,
+                credit = 0,
+                status = False,
+                user = new_user
+            )
+            wallet.save()
+        print(wallet)
         token = fun.encryptionUser(new_user)
 
         return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)
