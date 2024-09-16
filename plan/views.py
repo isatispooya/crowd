@@ -125,7 +125,7 @@ class Plan2Viewset(APIView):
 
 
 
-class DocumentationViewset(APIView) :
+class DocumentationAdminViewset(APIView) :
     def post (self,request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -163,9 +163,22 @@ class DocumentationViewset(APIView) :
         serializer = serializers.DocumentationSerializer(ducumentation)
         return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
 
-
-
-class AppendicesViewset(APIView) :
+class DocumentationViewset(APIView):
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(id=id).first()
+        documentation = DocumentationFiles.objects.filter(plan=plan)
+        serializer = serializers.DocumentationSerializer(documentation , many = True)
+        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
+    
+    
+class AppendicesAdminViewset(APIView) :
     def post (self,request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -205,4 +218,20 @@ class AppendicesViewset(APIView) :
         if not appendices :
             return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.AppendicesSerializer(appendices)
+        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
+
+
+
+class AppendicesViewset(APIView):
+    def get (self,request,id):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(id=id).first()
+        appendices = Appendices.objects.filter(plan=plan)
+        serializer = serializers.AppendicesSerializer(appendices , many = True)
         return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
