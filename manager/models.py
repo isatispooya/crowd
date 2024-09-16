@@ -45,9 +45,8 @@ class Shareholder (models.Model):
 
 
 class Validation (models.Model) :
-    file_validation = models.FileField(upload_to ='static/')
     file_manager = models.FileField(upload_to ='static/')
-    manager = models.ForeignKey(Manager,  on_delete=models.CASCADE)
+    manager = models.CharField(max_length=14)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
     def __str__(self):
