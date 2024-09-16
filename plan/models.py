@@ -31,7 +31,7 @@ class Plan(models.Model):
         return self.plan_name
     
 
-class DocumentationFiles(models.Model):
+class DocumentationFiles(models.Model): #فایل های مستندات
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     title = models.CharField(max_length=150 , blank=True , null=True) 
     file = models.FileField(upload_to = 'static/', null=True , blank=True)
@@ -40,10 +40,12 @@ class DocumentationFiles(models.Model):
     
 
     
-class Appendices(models.Model):
+class Appendices(models.Model): #تضامین 
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     title = models.CharField(max_length=150 , blank=True , null=True) 
     file = models.FileField(upload_to = 'static/', null=True , blank=True)
     def __str__(self) :
         return self.title
     
+
+

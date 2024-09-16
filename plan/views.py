@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Plan
+from .models import Plan , DocumentationFiles ,Appendices
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -122,3 +122,87 @@ class Plan2Viewset(APIView):
 
         return Response({'success': True,'data': serializer.data}, status=status.HTTP_200_OK)
 
+
+
+
+class DocumentationViewset(APIView) :
+    def post (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        ducumentation = DocumentationFiles.objects.filter(plan = plan).first()
+        serializer = serializers.DocumentationSerializer(ducumentation,data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            serializer.uploaded_file = request.FILES['file']
+        serializer.save()
+        return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
+    
+
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        ducumentation = DocumentationFiles.objects.filter(plan=plan).first()
+        serializer = serializers.DocumentationSerializer(ducumentation)
+        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
+
+
+
+class AppendicesViewset(APIView) :
+    def post (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        appendices = Appendices.objects.filter(plan = plan).first()
+        if not appendices :
+            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.AppendicesSerializer(appendices,data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            serializer.uploaded_file = request.FILES['file']
+        serializer.save()
+        return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
+    
+
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        appendices = Appendices.objects.filter(plan=plan).first()
+        if not appendices :
+            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.AppendicesSerializer(appendices)
+        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
