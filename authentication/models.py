@@ -10,6 +10,7 @@ class User(models.Model):
     status = models.CharField(max_length=150 , null=True, blank=True)
     type = models.CharField(max_length=200)
     uniqueIdentifier = models.CharField(max_length=150 , unique=True)
+    referal = models.CharField(max_length=14,  null=True, blank=True , unique=True) # معرف : کدملی معرف 
 
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
@@ -130,12 +131,9 @@ class Admin(models.Model):
     uniqueIdentifier = models.CharField(max_length=10)
 
 
-
-
-
-
-
-
-
-
-
+class Reagent(models.Model):
+    reference = models.ForeignKey(User,to_field='referal', on_delete=models.CASCADE , related_name='reagent_references') # معرفی کننده
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE , related_name='reagent_referrers') # معرفی شده
+    date_created = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f'Reagent between {self.referrer} and {self.reference}'

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework import status 
 import requests
-from .models import User , Otp , Admin , accounts ,addresses , financialInfo , jobInfo , privatePerson ,tradingCodes 
+from .models import User , Otp , Admin , accounts ,addresses , financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent
 from . import serializers
 import datetime
 from . import fun
@@ -80,6 +80,8 @@ class SignUpViewset(APIView):
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
+        reference = request.data.get('reference')  
+
         if not uniqueIdentifier or not otp:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -113,8 +115,16 @@ class SignUpViewset(APIView):
                 status = data ['status'],
                 type = data ['type'],
                 uniqueIdentifier = data ['uniqueIdentifier'],
+                referal = data ['uniqueIdentifier'],
             )
             new_user.save()
+            # if reference:
+            #     # new_user.referal = reference   
+            #     reference_code = Reagent.objects.filter(User=new_user).first() 
+            #     print('code',reference_code)
+            #     print("معرف تایید شد:", reference)
+            # else:
+            #     print("معرف مورد تایید نیست")
 
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
