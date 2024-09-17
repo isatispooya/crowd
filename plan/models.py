@@ -1,4 +1,6 @@
 from django.db import models
+from authentication.models import User
+from accounting.models import Wallet
 
 class Plan(models.Model):
     plan_name = models.CharField(max_length=100 , null=True , blank=True )
@@ -49,3 +51,35 @@ class Appendices(models.Model): #تضامین
     
 
 
+class Comment(models.Model):
+    comment = models.CharField(max_length=2000 , null= True, blank = True) 
+    status = models.BooleanField(default=False)
+    known =  models.BooleanField(default=False)
+    user = models.ForeignKey(User , on_delete=models.CASCADE)
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    def __str__(self) :
+        return self.user.uniqueIdentifier
+    
+
+
+class PaymentGateway(models.Model) :
+    wallet = models.ForeignKey(Wallet , on_delete=models.CASCADE)
+    user = models.ForeignKey(User , on_delete=models.CASCADE)
+    payment_id = models.CharField(max_length=30 , null=True, blank=True)
+    amount = models.CharField(max_length=100 , null=True, blank=True)
+    description = models.CharField(max_length=2500 , null=True, blank=True)
+    code = models.CharField(max_length=2500 , null=True, blank=True)
+    cart_number =  models.CharField(max_length=50 , null=True, blank=True)
+    cart_hashpan =  models.CharField(max_length=50 , null=True, blank=True)
+
+    def __str__(self) :
+            return self.user.uniqueIdentifier
+        
+
+class Participant (models.Model):
+    participant = models.ForeignKey(User , on_delete=models.CASCADE)
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    amount = models.CharField(max_length=200 , null=True, blank=True)
+    def __str__(self) :
+            return self.participant.uniqueIdentifier
+        
