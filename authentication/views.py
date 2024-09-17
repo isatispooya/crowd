@@ -118,14 +118,15 @@ class SignUpViewset(APIView):
                 referal = data ['uniqueIdentifier'],
             )
             new_user.save()
-            # if reference:
-            #     # new_user.referal = reference   
-            #     reference_code = Reagent.objects.filter(User=new_user).first() 
-            #     print('code',reference_code)
-            #     print("معرف تایید شد:", reference)
-            # else:
-            #     print("معرف مورد تایید نیست")
 
+            if reference:
+                try :
+                   reference_user = User.objects.get(uniqueIdentifier=reference)
+                   Reagent.objects.create(reference=reference_user, referrer=new_user)
+                   print("رکورد Reagent با موفقیت ساخته شد")
+                except User.DoesNotExist:
+                    print("معرف مورد تایید نیست")
+                
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
                 new_accounts = accounts(
