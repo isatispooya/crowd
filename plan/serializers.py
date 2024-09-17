@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from . import models
-
+from authentication.serializers import UserSerializer
 
 
 
@@ -30,5 +30,13 @@ class ParticipantSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(many=True, read_only=True, source='plan_set')
     class Meta:
         model = models.Participant
+        fields = '__all__'
+
+
+class CommenttSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
+    user = UserSerializer(many=True, read_only=True, source='user_set')
+    class Meta:
+        model = models.Comment
         fields = '__all__'
 

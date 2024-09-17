@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Plan , DocumentationFiles ,Appendices ,Participant
+from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -311,3 +311,60 @@ class ParticipantAdminViewset(APIView):
         serializer = serializers.ParticipantSerializer(participants , many = True)
         return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
     
+
+class CommentAdminViewset (APIView) :
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()     
+        plan = Plan.objects.filter(id=id).first()
+        comment = Comment.objects.filter(plan=plan)
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CommenttSerializer(comment , many=True)
+        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
+    
+
+    def patch (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()     
+        comment = Comment.objects.filter(id=id).first()
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CommenttSerializer(comment, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+    
+
+
+class CommentViewset (APIView):
+    def post (self,request,id):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()      
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        comment = Comment.objects.filter(plan=plan , user=user).first()
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CommenttSerializer(comment , data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response({'data':serializer.data}, status=status.HTTP_200_OK)
