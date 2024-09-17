@@ -25,3 +25,10 @@ class AppendicesSerializer(serializers.ModelSerializer):
         model = models.Appendices
         fields = '__all__'
 
+
+class ParticipantSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
+    class Meta:
+        model = models.Participant
+        fields = '__all__'
+

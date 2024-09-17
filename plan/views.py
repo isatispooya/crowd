@@ -1,11 +1,11 @@
 from django.shortcuts import render
-from .models import Plan , DocumentationFiles ,Appendices
+from .models import Plan , DocumentationFiles ,Appendices ,Participant
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
-
+from accounting.models import Wallet
 class PlanAdminViewset(APIView):
     def post(self, request):
         Authorization = request.headers.get('Authorization')
@@ -235,3 +235,79 @@ class AppendicesViewset(APIView):
         appendices = Appendices.objects.filter(plan=plan)
         serializer = serializers.AppendicesSerializer(appendices , many = True)
         return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
+    
+
+
+class ParticipantViewset(APIView):
+    def post(self,request,id):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()      
+        plan = Plan.objects.filter(id=id).first()
+        amount = request.data.get('amount')
+        try:
+            amount = int(amount)  
+        except ValueError:
+            return Response({'error': 'Invalid amount value, it should be an integer'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            nominal_price = plan.nominal_price_certificate
+            total_amount = amount * int(nominal_price)
+            print(total_amount)
+        except AttributeError:
+            return Response({'error': 'Plan does not have nominal_price_certificate'}, status=status.HTTP_400_BAD_REQUEST)
+        participant = Participant.objects.filter(plan=plan, participant=user).first()
+        if not participant:
+            participant = Participant.objects.create(plan=plan, participant=user, amount=amount, total_amount=total_amount)
+        serializer_data = {
+            'amount': amount,
+            'total_amount': total_amount,
+            'plan':plan
+        }
+        serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        wallet = Wallet.objects.filter(user=user).first()
+        if not wallet :
+            return Response({'error': 'Wallet does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        if  total_amount >= wallet.remaining :
+            return Response({'error' : 'کیف پول شما شارژ نیست'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+    
+
+
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()      
+        plan = Plan.objects.filter(id=id).first()
+        participants = Participant.objects.filter(plan=plan)
+        serializer = serializers.ParticipantSerializer(participants , many = True)
+        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
+    
+
+
+class ParticipantAdminViewset(APIView):
+    
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()     
+        plan = Plan.objects.filter(id=id).first()
+        participants = Participant.objects.filter(plan=plan)
+        serializer = serializers.ParticipantSerializer(participants , many = True)
+        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
+    

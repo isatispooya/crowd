@@ -26,7 +26,7 @@ class Plan(models.Model):
     symbol = models.CharField(max_length=100 , null=True , blank=True)
     farabours_link = models.CharField(max_length=500, null=True , blank=True)
     applicant_funding_percentage = models.FloatField(null=True , blank=True) #درصد تامین متقاضی
-    nominal_price_certificate = models.CharField(max_length=1000, null=True , blank=True) #قیمت اسمی هر گواهی 
+    nominal_price_certificate = models.IntegerField( null=True , blank=True) #قیمت اسمی هر گواهی 
 
     
     def __str__(self) :
@@ -79,7 +79,8 @@ class PaymentGateway(models.Model) :
 class Participant (models.Model):
     participant = models.ForeignKey(User , on_delete=models.CASCADE)
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
-    amount = models.CharField(max_length=200 , null=True, blank=True)
+    amount = models.BigIntegerField( null=True, blank=True)
+    total_amount = models.BigIntegerField( null=True , blank=True)
     def __str__(self) :
             return self.participant.uniqueIdentifier
         
