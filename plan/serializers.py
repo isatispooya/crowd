@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from . import models
-from authentication.serializers import UserSerializer
-
+from authentication.models import User , privatePerson
 
 
 class PlanSerializer(serializers.ModelSerializer):
@@ -32,11 +31,26 @@ class ParticipantSerializer(serializers.ModelSerializer):
         model = models.Participant
         fields = '__all__'
 
-
+        
 class CommenttSerializer(serializers.ModelSerializer):
-    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
-    user = UserSerializer(many=True, read_only=True, source='user_set')
+    firstName = serializers.SerializerMethodField()  # فیلد firstName از privatePerson
+    lastName = serializers.SerializerMethodField()   # فیلد lastName از privatePerson
+    mobile = serializers.CharField(source='user.mobile')
+    uniqueIdentifier = serializers.CharField(source='user.uniqueIdentifier')
+    referal = serializers.CharField(source='user.referal')
+
     class Meta:
         model = models.Comment
-        fields = '__all__'
+        fields = ['id', 'comment', 'status', 'known', 'firstName', 'lastName', 'mobile', 'uniqueIdentifier', 'referal']
 
+    def get_firstName(self, obj):
+        private_person = privatePerson.objects.filter(user=obj.user).first()
+        if private_person:
+            return private_person.firstName
+        return None
+
+    def get_lastName(self, obj):
+        private_person = privatePerson.objects.filter(user=obj.user).first()
+        if private_person:
+            return private_person.lastName
+        return None

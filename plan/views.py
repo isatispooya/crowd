@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
 from accounting.models import Wallet
+from authentication.models import privatePerson
 class PlanAdminViewset(APIView):
     def post(self, request):
         Authorization = request.headers.get('Authorization')
@@ -368,3 +369,32 @@ class CommentViewset (APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response({'data':serializer.data}, status=status.HTTP_200_OK)
+
+
+
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        private_person = privatePerson.objects.filter(user=user).first()
+        if not private_person:
+            return Response({'error': 'privatePerson not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        comments = Comment.objects.filter(plan=plan, status=True)
+        if not comments.exists():
+            return Response({'error': 'Comments not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = serializers.CommenttSerializer(comments, many=True)
+
+        response_data = {
+            'comments': serializer.data, 
+        }
+        return Response({'data': response_data}, status=status.HTTP_200_OK)
