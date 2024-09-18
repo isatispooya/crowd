@@ -312,10 +312,9 @@ class ParticipantViewset(APIView):
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()      
         plan = Plan.objects.filter(id=id).first()
-        participants = Participant.objects.filter(plan=plan)
-        serializer = serializers.ParticipantSerializer(participants , many = True)
-        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
-    
+        participants = Participant.objects.filter(plan=plan)    
+        serializer = serializers.ParticipantSerializer(participants, many=True)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
 
 
 class ParticipantAdminViewset(APIView):

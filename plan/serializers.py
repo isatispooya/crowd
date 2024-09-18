@@ -27,21 +27,33 @@ class AppendicesSerializer(serializers.ModelSerializer):
 
 class ParticipantSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(many=True, read_only=True, source='plan_set')
+    firstName = serializers.SerializerMethodField()  # فیلد firstName از privatePerson
+    lastName = serializers.SerializerMethodField()   # فیلد lastName از privatePerson
+
     class Meta:
         model = models.Participant
-        fields = '__all__'
+        fields = ['total_amount', 'amount', 'plan', 'id', 'firstName', 'lastName']
+
+    def get_firstName(self, obj):
+        private_person = privatePerson.objects.filter(user=obj.participant).first()
+        if private_person:
+            return private_person.firstName
+        return None
+
+    def get_lastName(self, obj):
+        private_person = privatePerson.objects.filter(user=obj.participant).first()
+        if private_person:
+            return private_person.lastName
+        return None
 
         
 class CommenttSerializer(serializers.ModelSerializer):
     firstName = serializers.SerializerMethodField()  # فیلد firstName از privatePerson
     lastName = serializers.SerializerMethodField()   # فیلد lastName از privatePerson
-    mobile = serializers.CharField(source='user.mobile')
-    uniqueIdentifier = serializers.CharField(source='user.uniqueIdentifier')
-    referal = serializers.CharField(source='user.referal')
 
     class Meta:
         model = models.Comment
-        fields = ['id', 'comment', 'status', 'known', 'firstName', 'lastName', 'mobile', 'uniqueIdentifier', 'referal']
+        fields = ['id', 'comment', 'status', 'known', 'firstName', 'lastName']
 
     def get_firstName(self, obj):
         private_person = privatePerson.objects.filter(user=obj.user).first()
