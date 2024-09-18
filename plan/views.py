@@ -58,6 +58,26 @@ class PlanAdmin2Viewset(APIView):
         serializer.save()
         return Response({'success': True,'data': serializer.data}, status=status.HTTP_201_CREATED)
 
+# ارسال عکس برای پلن 
+    def post (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(id=id).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        if 'picture' not in request.FILES:
+            return Response({'error': 'No picture file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        picture = request.FILES['picture']
+        plan.picture = picture
+        plan.save()
+        return Response({'success': True, 'message': 'Picture updated successfully'}, status=status.HTTP_200_OK)
+
+
 
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -140,12 +160,14 @@ class DocumentationAdminViewset(APIView) :
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
         ducumentation = DocumentationFiles.objects.filter(plan = plan).first()
-        serializer = serializers.DocumentationSerializer(ducumentation,data=data)
+        if ducumentation :
+            ducumentation.delete()
+        serializer = serializers.DocumentationSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
             serializer.uploaded_file = request.FILES['file']
-        serializer.save()
+        serializer.save(plan=plan)
         return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
     
 
@@ -191,16 +213,16 @@ class AppendicesAdminViewset(APIView) :
         plan = Plan.objects.filter(id=id).first()
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        data = request.data.copy()
         appendices = Appendices.objects.filter(plan = plan).first()
-        if not appendices :
-            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.AppendicesSerializer(appendices,data=data)
+        if appendices :
+            appendices.delete()
+        data = request.data.copy()
+        serializer = serializers.AppendicesSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
             serializer.uploaded_file = request.FILES['file']
-        serializer.save()
+        serializer.save(plan=plan)
         return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
     
 
@@ -271,7 +293,6 @@ class ParticipantViewset(APIView):
         serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         serializer.save()
         wallet = Wallet.objects.filter(user=user).first()
         if not wallet :
