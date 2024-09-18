@@ -27,8 +27,8 @@ class AppendicesSerializer(serializers.ModelSerializer):
 
 class ParticipantSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(many=True, read_only=True, source='plan_set')
-    firstName = serializers.SerializerMethodField()  # فیلد firstName از privatePerson
-    lastName = serializers.SerializerMethodField()   # فیلد lastName از privatePerson
+    firstName = serializers.SerializerMethodField()  
+    lastName = serializers.SerializerMethodField()   
 
     class Meta:
         model = models.Participant
@@ -48,8 +48,8 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
         
 class CommenttSerializer(serializers.ModelSerializer):
-    firstName = serializers.SerializerMethodField()  # فیلد firstName از privatePerson
-    lastName = serializers.SerializerMethodField()   # فیلد lastName از privatePerson
+    firstName = serializers.SerializerMethodField()  
+    lastName = serializers.SerializerMethodField() 
 
     class Meta:
         model = models.Comment
