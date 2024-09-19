@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,LoginAdminViewset,SignUpViewset , InformationViewset, UserListViewset
+from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,LoginAdminViewset,SignUpViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset
 
 urlpatterns = [
     path('captcha/', CaptchaViewset.as_view(), name='captcha'),
@@ -10,4 +10,6 @@ urlpatterns = [
     path('login/admin/', LoginAdminViewset.as_view(), name='login-admin'),
     path('otp/admin/', OtpAdminViewset.as_view(), name='otp-admin'),
     path('listuser/admin/', UserListViewset.as_view(), name='list-user-admin'),
+    path('otp/update/', OtpUpdateViewset.as_view(), name='otp-update-profile'),
+    path('update/profile/', UpdateInformationViewset.as_view(), name='update-profile'),
 ]

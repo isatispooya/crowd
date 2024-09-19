@@ -511,3 +511,195 @@ class UserListViewset (APIView) :
         privateperson = privatePerson.objects.all()
         serializer = serializers.privatePersonSerializer(privateperson, many=True)
         return Response ({'success' : True , 'users' : serializer.data}, status=status.HTTP_200_OK)
+    
+
+
+
+class OtpUpdateViewset(APIView) :
+    def post (self,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        uniqueIdentifier = user.uniqueIdentifier
+        if not uniqueIdentifier :
+            return Response ({'errot' : 'uniqueIdentifier not found '} ,  status=status.HTTP_400_BAD_REQUEST) 
+
+        if user:
+            url = "http://31.40.4.92:8870/otp"
+            payload = json.dumps({
+            "uniqueIdentifier": uniqueIdentifier
+            })
+            headers = {
+            'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+            'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            if response.status_code >=300 :
+                return Response ({'message' :'سجام هم گردنت نمیگیره '} , status=status.HTTP_400_BAD_REQUEST)
+            return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
+
+        return Response({'registered' : False , 'message' : 'سیستم قطع است خداحافظ'},status=status.HTTP_400_BAD_REQUEST)   
+                
+
+
+class UpdateInformationViewset(APIView) :
+    def patch(self, request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        user = user.first()
+        
+        otp = request.data.get('otp')
+        uniqueIdentifier = user.uniqueIdentifier
+        if not otp:
+            return Response({'error': 'otp not found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        url = "http://31.40.4.92:8870/information"
+        payload = json.dumps({
+            "uniqueIdentifier": uniqueIdentifier,
+            "otp": otp
+        })
+        headers = {
+            'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.request("POST", url, headers=headers, data=payload)
+        response = json.loads(response.content)
+        try:
+            data = response['data']
+        except:
+            return Response({'message': 'دوباره تلاش کن'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if data is None:
+            return Response({'message': 'بیشتر تلاش کن'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+        
+        if new_user:
+            new_user.agent = data.get('agent', new_user.agent)
+            new_user.email = data.get('email', new_user.email)
+            new_user.legalPerson = data.get('legalPerson', new_user.legalPerson)
+            new_user.legalPersonShareholders = data.get('legalPersonShareholders', new_user.legalPersonShareholders)
+            new_user.legalPersonStakeholders = data.get('legalPersonStakeholders', new_user.legalPersonStakeholders)
+            new_user.mobile = data.get('mobile', new_user.mobile)
+            new_user.status = data.get('status', new_user.status)
+            new_user.type = data.get('type', new_user.type)
+            new_user.referal = data.get('uniqueIdentifier', new_user.referal)
+            new_user.save()
+
+            if len(data['accounts']) > 0:
+                for account_data in data['accounts']:
+                    account_obj, created = accounts.objects.update_or_create(
+                        user=new_user,
+                        accountNumber=account_data['accountNumber'],
+                        defaults={
+                            'bank': account_data['bank']['name'],
+                            'branchCity': account_data['branchCity']['name'],
+                            'branchCode': account_data['branchCode'],
+                            'branchName': account_data['branchName'],
+                            'isDefault': account_data['isDefault'],
+                            'modifiedDate': account_data['modifiedDate'],
+                            'type': account_data['type'],
+                            'sheba': account_data['sheba']
+                        }
+                    )
+            
+            if len(data['addresses']) > 0:
+                for address_data in data['addresses']:
+                    address_obj, created = addresses.objects.update_or_create(
+                        user=new_user,
+                        postalCode=address_data['postalCode'],
+                        defaults={
+                            'alley': address_data.get('alley', ''),
+                            'city': address_data['city']['name'],
+                            'cityPrefix': address_data.get('cityPrefix', ''),
+                            'country': address_data['country']['name'],
+                            'countryPrefix': address_data.get('countryPrefix', ''),
+                            'email': address_data.get('email', ''),
+                            'emergencyTel': address_data.get('emergencyTel', ''),
+                            'emergencyTelCityPrefix': address_data.get('emergencyTelCityPrefix', ''),
+                            'emergencyTelCountryPrefix': address_data.get('emergencyTelCountryPrefix', ''),
+                            'fax': address_data.get('fax', ''),
+                            'faxPrefix': address_data.get('faxPrefix', ''),
+                            'mobile': address_data.get('mobile', ''),
+                            'plaque': address_data.get('plaque', ''),
+                            'province': address_data['province']['name'],
+                            'remnantAddress': address_data.get('remnantAddress', ''),
+                            'section': address_data['section']['name'],
+                            'tel': address_data.get('tel', ''),
+                            'website': address_data.get('website', '')
+                        }
+                    )
+
+            jobInfo_data = data.get('jobInfo')
+            if isinstance(jobInfo_data, dict):
+                jobInfo_obj, created = jobInfo.objects.update_or_create(
+                    user=new_user,
+                    defaults={
+                        'companyAddress': jobInfo_data.get('companyAddress', ''),
+                        'companyCityPrefix': jobInfo_data.get('companyCityPrefix', ''),
+                        'companyEmail': jobInfo_data.get('companyEmail', ''),
+                        'companyFax': jobInfo_data.get('companyFax', ''),
+                        'companyFaxPrefix': jobInfo_data.get('companyFaxPrefix', ''),
+                        'companyName': jobInfo_data.get('companyName', ''),
+                        'companyPhone': jobInfo_data.get('companyPhone', ''),
+                        'companyPostalCode': jobInfo_data.get('companyPostalCode', ''),
+                        'companyWebSite': jobInfo_data.get('companyWebSite', ''),
+                        'employmentDate': jobInfo_data.get('employmentDate', ''),
+                        'job': jobInfo_data.get('job', {}).get('title', ''),
+                        'jobDescription': jobInfo_data.get('jobDescription', ''),
+                        'position': jobInfo_data.get('position', '')
+                    }
+                )
+            
+            privatePerson_data = data.get('privatePerson')
+            if isinstance(privatePerson_data, dict):
+                privatePerson_obj, created = privatePerson.objects.update_or_create(
+                    user=new_user,
+                    defaults={
+                        'birthDate': privatePerson_data.get('birthDate', ''),
+                        'fatherName': privatePerson_data.get('fatherName', ''),
+                        'firstName': privatePerson_data.get('firstName', ''),
+                        'gender': privatePerson_data.get('gender', ''),
+                        'lastName': privatePerson_data.get('lastName', ''),
+                        'placeOfBirth': privatePerson_data.get('placeOfBirth', ''),
+                        'placeOfIssue': privatePerson_data.get('placeOfIssue', ''),
+                        'seriSh': privatePerson_data.get('seriSh', ''),
+                        'serial': privatePerson_data.get('serial', ''),
+                        'shNumber': privatePerson_data.get('shNumber', ''),
+                        'signatureFile': privatePerson_data.get('signatureFile', None)
+                    }
+                )
+
+            financialInfo_data = data.get('financialInfo')
+            if isinstance(financialInfo_data, dict):
+                financialInfo_obj, created = financialInfo.objects.update_or_create(
+                    user=new_user,
+                    defaults={
+                        'assetsValue': financialInfo_data.get('assetsValue', ''),
+                        'cExchangeTransaction': financialInfo_data.get('cExchangeTransaction', ''),
+                        'companyPurpose': financialInfo_data.get('companyPurpose', ''),
+                        'financialBrokers': financialInfo_data.get('financialBrokers', ''),
+                        'inComingAverage': financialInfo_data.get('inComingAverage', ''),
+                        'outExchangeTransaction': financialInfo_data.get('outExchangeTransaction', ''),
+                        'rate': financialInfo_data.get('rate', ''),
+                        'rateDate': financialInfo_data.get('rateDate', ''),
+                        'referenceRateCompany': financialInfo_data.get('referenceRateCompany', ''),
+                        'sExchangeTransaction': financialInfo_data.get('sExchangeTransaction', ''),
+                        'tradingKnowledgeLevel': financialInfo_data.get('tradingKnowledgeLevel', None),
+                        'transactionLevel': financialInfo_data.get('transactionLevel', None)
+                    }
+                )
+
+
+        return Response({'success': True}, status=status.HTTP_404_NOT_FOUND)
