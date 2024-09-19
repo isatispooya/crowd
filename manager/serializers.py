@@ -34,11 +34,15 @@ class CartWithShareholderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ResumeSerializer (serializers.ModelSerializer):
-    manager = ManagerSerializer(read_only=True)
+    # manager = ManagerSerializer(read_only=True)
     class Meta:
         model = models.Resume
-        fields = '__all__'
-
+        fields = ['file', 'manager' , 'lock']
+    def create(self, validated_data):
+            manager = validated_data.get('manager')
+            file = validated_data.get('file')
+            resume = models.Resume.objects.create(manager=manager, file=file)
+            return resume
 
 class ValidationSerializer (serializers.ModelSerializer):
     class Meta:

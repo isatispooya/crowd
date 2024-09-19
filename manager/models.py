@@ -60,5 +60,5 @@ class History (models.Model) :
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
     def __str__(self):
-        return  f"Histiry for Cart ID: {self.cart.id}"
+        return  f"Histiry for Cart ID: {self.manager.name}"
 
