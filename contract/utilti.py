@@ -63,7 +63,7 @@ class ContarctCreator():
     def Cover(self):
         company = Cart.objects.get(id=self.id)
         company_name = company.company_name
-        base_text = f'{'قرارداد عاملیت شرکت'} {company_name}'
+        base_text = f'قرارداد عاملیت شرکت {company_name}'
         x, y, text = self.text(base_text,y=800)
         self.pdf_canvas.drawString(x, y, text)
 

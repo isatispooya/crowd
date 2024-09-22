@@ -353,11 +353,11 @@ class ValidationViewset (APIView) :
             if not cart:
                 return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            if not request.FILES:
-                return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+            validation_existing = Validation.objects.filter(cart=cart, manager='1').first()
 
             file_manager = request.FILES.get('1')
-            if not file_manager:
+
+            if not file_manager and not validation_existing:
                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
             manager_list = []
@@ -372,8 +372,8 @@ class ValidationViewset (APIView) :
 
                 existing_validation = Validation.objects.filter(manager=manager.national_code, cart=cart).first()
                 if existing_validation:
-                    existing_validation.file_manager.delete()  
-                    existing_validation.delete()  
+                    existing_validation.file_manager.delete()
+                    existing_validation.delete()
 
                 new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart)
                 new_validation.save()
@@ -384,14 +384,25 @@ class ValidationViewset (APIView) :
                     'file_manager': new_validation.file_manager.url if new_validation.file_manager else None,
                 })
 
-            validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1')
-            validation.save()
+            if file_manager:
+                if validation_existing:
+                    validation_existing.file_manager.delete()
+                    validation_existing.delete()
 
-            manager_list.append({
-                'national_code': '1',
-                'name': 'شرکت',
-                'file_manager': validation.file_manager.url if validation.file_manager else None
-            })
+                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1')
+                validation.save()
+
+                manager_list.append({
+                    'national_code': '1',
+                    'name': 'شرکت',
+                    'file_manager': validation.file_manager.url if validation.file_manager else None
+                })
+            else:
+                manager_list.append({
+                    'national_code': '1',
+                    'name': 'شرکت',
+                    'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None
+                })
 
             response_data = {
                 'managers': manager_list
@@ -402,7 +413,7 @@ class ValidationViewset (APIView) :
         except Exception as e:
             print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
 
 
     def get(self, request, id):
@@ -435,12 +446,11 @@ class ValidationViewset (APIView) :
                 })
 
             company_validation = Validation.objects.filter(manager='1', cart=cart).first()
-            if company_validation:
-                manager_list.append({
-                    'national_code': '1',
-                    'name': 'شرکت',
-                    'file_manager': company_validation.file_manager.url if company_validation.file_manager else None,
-                })
+            manager_list.append({
+                'national_code': '1',
+                'name': 'شرکت',
+                'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
+            })
 
             response_data = {
                 'managers': manager_list
