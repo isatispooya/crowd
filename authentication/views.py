@@ -276,8 +276,7 @@ class SignUpViewset(APIView):
         if  wallet is None :
             wallet = Wallet(
                 remaining = 0 ,
-                adjustment_balance = 0,
-                credit = 0,
+                description_transaction = "" ,
                 status = False,
                 user = new_user
             )
@@ -286,6 +285,9 @@ class SignUpViewset(APIView):
         token = fun.encryptionUser(new_user)
 
         return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)
+
+
+
 
 
 class InformationViewset (APIView) :
