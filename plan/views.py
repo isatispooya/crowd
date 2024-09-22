@@ -418,3 +418,12 @@ class CommentViewset (APIView):
             'comments': serializer.data, 
         }
         return Response({'data': response_data}, status=status.HTTP_200_OK)
+    
+
+
+
+class DocumationRecieveViewset(APIView) :
+    def post (self, request, id) :
+
+    
+        pass

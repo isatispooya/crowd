@@ -84,3 +84,14 @@ class Participant (models.Model):
     def __str__(self) :
             return self.participant.uniqueIdentifier
         
+
+
+
+class DocumentationRecieve (models.Model):
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    type = models.CharField(max_length=20 , blank=True , null= True , choices =[('1','اصل پول') , ('2','سود')])
+    amount = models.BigIntegerField( null=True, blank=True)
+    date = models.DateTimeField(auto_now_add=True)
+    def __str__(self) :
+            return self.plan.plan_name
+        
