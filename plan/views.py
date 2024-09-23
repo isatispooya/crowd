@@ -9,6 +9,8 @@ from accounting.models import Wallet
 from authentication.models import privatePerson
 import datetime
 from persiantools.jdatetime import JalaliDate
+from dateutil.relativedelta import relativedelta
+
 
 class PlanAdminViewset(APIView):
     def post(self, request):
@@ -437,13 +439,20 @@ class DocumationRecieveViewset(APIView) :
         plan = Plan.objects.filter(id=id).first()
         if plan.plan_status != '5' :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        timestamp = request.data.get('timestamp', None)
+        if not timestamp:
+            return Response({'error': 'Timestamp is required'}, status=status.HTTP_400_BAD_REQUEST)
         
+        try:
+            # تبدیل timestamp به datetime
+            start_date = datetime.datetime.fromtimestamp(int(timestamp))
+        except ValueError:
+            return Response({'error': 'Invalid timestamp format'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
         # تعداد چک 
         number = int(plan.total_time / plan.payment_period)
-        # تاریخ اتمام چک
-
         # مبلغ چک اصل پول
         amount_of_payment = plan.funded_amount
         # مبلغ هر چک سود 
@@ -451,25 +460,42 @@ class DocumationRecieveViewset(APIView) :
 
 
         list = []
-        for _ in range(number):
+        
+        # محاسبه تاریخ اولین چک سود: start_date + دوره پرداخت
+        first_profit_date = start_date + relativedelta(months=plan.payment_period)
+
+        # ایجاد چک‌های سود
+        for i in range(number):
+            # محاسبه تاریخ هر چک سود
+            check_date = first_profit_date + relativedelta(months=i * plan.payment_period)
+            
+            # ایجاد شیء DocumentationRecieve برای چک سود
             documation = DocumentationRecieve.objects.create(plan=plan, type='2', amount=amount_of_profit) 
-            date = JalaliDate(documation.date)
+            
+            # تبدیل تاریخ به جلالی برای نمایش
+            jalali_date = JalaliDate(check_date)
             list.append({
                 'type': documation.type,
-                'amount': documation.amount,
-                'date': str(date),
-                'plan' :documation.plan.id
-                })
-        documation = DocumentationRecieve.objects.create(plan=plan, type='1', amount= amount_of_payment) 
-        date = JalaliDate(documation.date)
+                'amount': amount_of_profit,
+                'date': str(jalali_date),
+                'plan': documation.plan.id
+            })
+
+        # اضافه کردن یک چک برای اصل پول: start_date + total_time
+        final_check_date = start_date + relativedelta(months=plan.total_time)  # آخرین چک
+        documation = DocumentationRecieve.objects.create(plan=plan, type='1', amount=amount_of_payment)
+        jalali_date = JalaliDate(final_check_date)
         list.append({
             'type': documation.type,
-            'amount': documation.amount,
-            'date': str(date),
-            'plan' :documation.plan.id
+            'amount': amount_of_payment,
+            'date': str(jalali_date),
+            'plan': documation.plan.id
         })
-        return Response ({'message': '5 DocumentationRecieve created','list': list }, status=status.HTTP_200_OK)        
-    
+
+        return Response({
+            'message': f'{number+1} DocumentationRecieve created',
+            'list': list
+        }, status=status.HTTP_200_OK)
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
