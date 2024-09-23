@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment
+from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment , DocumentationRecieve
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -7,6 +7,9 @@ from authentication import fun
 from . import serializers
 from accounting.models import Wallet
 from authentication.models import privatePerson
+import datetime
+from persiantools.jdatetime import JalaliDate
+
 class PlanAdminViewset(APIView):
     def post(self, request):
         Authorization = request.headers.get('Authorization')
@@ -424,6 +427,73 @@ class CommentViewset (APIView):
 
 class DocumationRecieveViewset(APIView) :
     def post (self, request, id) :
-
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        plan = Plan.objects.filter(id=id).first()
+        if plan.plan_status == '5' :
+            list = []
+            for _ in range(4):
+                documation = DocumentationRecieve.objects.create(plan=plan, type='2', amount=None) 
+                date = JalaliDate(documation.date)
+                list.append({
+                    'type': documation.type,
+                    'amount': documation.amount,
+                    'date': str(date),
+                    'plan' :documation.plan.id
+                    })
+            documation = DocumentationRecieve.objects.create(plan=plan, type='1', amount= None) 
+            date = JalaliDate(documation.date)
+            list.append({
+                'type': documation.type,
+                'amount': documation.amount,
+                'date': str(date),
+                'plan' :documation.plan.id
+            })
+            return Response ({'message': '5 DocumentationRecieve created','list': list }, status=status.HTTP_200_OK)        
+        return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)    
     
-        pass
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        plan = Plan.objects.filter(id=id).first()  
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+        documation = DocumentationRecieve.objects.filter(plan=plan)
+        if not documation:
+            return Response({'error': 'documation not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = []
+        for doc in documation:
+            jalali_date = str(JalaliDate(doc.date))  
+            serialized_doc = serializers.DocumationRecieveSerializer(doc).data  
+            serialized_doc['date_jalali'] = jalali_date   
+            serializer.append(serialized_doc)
+        return Response ({'data': serializer},status=status.HTTP_200_OK)
+    # این متود کامل نیست
+    def patch (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        plan = Plan.objects.filter(id=id).first()  
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+        documation = DocumentationRecieve.objects.filter(plan=plan)
+        if not documation:
+            return Response({'error': 'documation not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response ({'success': True}, status=status.HTTP_200_OK)

@@ -66,3 +66,9 @@ class CommenttSerializer(serializers.ModelSerializer):
         if private_person:
             return private_person.lastName
         return None
+
+
+class DocumationRecieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DocumentationRecieve
+        fields = '__all__'
