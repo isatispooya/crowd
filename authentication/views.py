@@ -276,7 +276,6 @@ class SignUpViewset(APIView):
         if  wallet is None :
             wallet = Wallet(
                 remaining = 0 ,
-                description_transaction = "" ,
                 status = False,
                 user = new_user
             )

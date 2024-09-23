@@ -4,7 +4,6 @@ from authentication.models import User
 
 class Wallet (models.Model):
     remaining = models.IntegerField(null=True , blank=True) #مانده
-    description_transaction = models.CharField(max_length=250 , null=True , blank= True) #شرح تراکنش
     status = models.BooleanField(default=False)
     user = models.ForeignKey(User , on_delete=models.CASCADE )
     def __str__(self):
@@ -22,5 +21,9 @@ class Transaction (models.Model):
     credit_amount = models.IntegerField(null=True, blank=True) # مقدار بستانکاری
     debt_amount = models.IntegerField (null=True, blank=True) # مقدار بدهکاری
     status = models.BooleanField(default=False)
+    description_transaction = models.CharField(max_length=250 , null=True , blank= True) #شرح تراکنش
+    image_receipt = models.FileField(upload_to = 'static/', null=True , blank=True) #تصویر فیش
+    document_number = models.CharField(max_length=100 , null=True , blank= True) #شماره سند
+
     def __str__(self):
         return self.method
