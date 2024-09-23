@@ -435,27 +435,40 @@ class DocumationRecieveViewset(APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first() 
         plan = Plan.objects.filter(id=id).first()
-        if plan.plan_status == '5' :
-            list = []
-            for _ in range(4):
-                documation = DocumentationRecieve.objects.create(plan=plan, type='2', amount=None) 
-                date = JalaliDate(documation.date)
-                list.append({
-                    'type': documation.type,
-                    'amount': documation.amount,
-                    'date': str(date),
-                    'plan' :documation.plan.id
-                    })
-            documation = DocumentationRecieve.objects.create(plan=plan, type='1', amount= None) 
+        if plan.plan_status != '5' :
+            return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+        # تعداد چک 
+        number = int(plan.total_time / plan.payment_period)
+        # تاریخ اتمام چک
+
+        # مبلغ چک اصل پول
+        amount_of_payment = plan.funded_amount
+        # مبلغ هر چک سود 
+        amount_of_profit  = (plan.funded_amount * int(plan.profit)) / number
+
+
+        list = []
+        for _ in range(number):
+            documation = DocumentationRecieve.objects.create(plan=plan, type='2', amount=amount_of_profit) 
             date = JalaliDate(documation.date)
             list.append({
                 'type': documation.type,
                 'amount': documation.amount,
                 'date': str(date),
                 'plan' :documation.plan.id
-            })
-            return Response ({'message': '5 DocumentationRecieve created','list': list }, status=status.HTTP_200_OK)        
-        return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)    
+                })
+        documation = DocumentationRecieve.objects.create(plan=plan, type='1', amount= amount_of_payment) 
+        date = JalaliDate(documation.date)
+        list.append({
+            'type': documation.type,
+            'amount': documation.amount,
+            'date': str(date),
+            'plan' :documation.plan.id
+        })
+        return Response ({'message': '5 DocumentationRecieve created','list': list }, status=status.HTTP_200_OK)        
     
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -479,6 +492,7 @@ class DocumationRecieveViewset(APIView) :
             serialized_doc['date_jalali'] = jalali_date   
             serializer.append(serialized_doc)
         return Response ({'data': serializer},status=status.HTTP_200_OK)
+    
     # این متود کامل نیست
     def patch (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -488,12 +502,55 @@ class DocumationRecieveViewset(APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first() 
-        plan = Plan.objects.filter(id=id).first()  
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-        documation = DocumentationRecieve.objects.filter(plan=plan)
-        if not documation:
-            return Response({'error': 'documation not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        plan = Plan.objects.filter(id=id).first()
+        if plan.plan_status != '5' :
+            return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)    
         
-        return Response ({'success': True}, status=status.HTTP_200_OK)
+        data_list = request.data  
+        if not isinstance(data_list, list):
+            return Response({'error': 'Invalid input data format'}, status=status.HTTP_400_BAD_REQUEST)
+
+        updated_list = []
+        documation = DocumentationRecieve.objects.filter(plan=plan)
+        if len(data_list) != documation.count():
+            return Response({'error': 'Number of records does not match with the input data'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        for documation, doc_data in zip(documation, data_list):
+            documation.type = doc_data.get('type', documation.type)
+            documation.amount = doc_data.get('amount', documation.amount)
+            documation.save()
+            date_jalali = JalaliDate(documation.date)
+            updated_list.append({
+                'type': documation.type,
+                'amount': documation.amount,
+                'date': str(date_jalali),
+                'plan': documation.plan.id
+            })
+
+        return Response({
+            'message': f'{len(updated_list)} DocumentationRecieve records updated','list': updated_list}, status=status.HTTP_200_OK)
+
+# گواهی مشارکت 
+class CertificateViewset (APIView) :
+    def get (self, request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        participant = Participant.objects.filter (participant = user)
+        if not participant:
+            return Response({'error': 'participant not found'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.ParticipantSerializer(participant , many = True)
+        data = serializer.data
+        for i in data :
+            i ['link'] = 'www.isatispooya.com'
+
+        return Response({'data': data}, status=status.HTTP_200_OK)
+    
+
+
+
