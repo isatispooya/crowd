@@ -277,6 +277,7 @@ class ParticipantViewset(APIView):
         user = user.first()      
         plan = Plan.objects.filter(id=id).first()
         amount = request.data.get('amount')
+        name_status = request.data.get('status')
         try:
             amount = int(amount)  
         except ValueError:
@@ -284,16 +285,16 @@ class ParticipantViewset(APIView):
         try:
             nominal_price = plan.nominal_price_certificate
             total_amount = amount * int(nominal_price)
-            print(total_amount)
         except AttributeError:
             return Response({'error': 'Plan does not have nominal_price_certificate'}, status=status.HTTP_400_BAD_REQUEST)
         participant = Participant.objects.filter(plan=plan, participant=user).first()
         if not participant:
-            participant = Participant.objects.create(plan=plan, participant=user, amount=amount, total_amount=total_amount)
+            participant = Participant.objects.create(plan=plan, participant=user, amount=amount, total_amount=total_amount , name_status =name_status)
         serializer_data = {
             'amount': amount,
             'total_amount': total_amount,
-            'plan':plan
+            'plan':plan,
+            'name_status' : name_status
         }
         serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
         if not serializer.is_valid():
@@ -316,10 +317,22 @@ class ParticipantViewset(APIView):
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()      
+
         plan = Plan.objects.filter(id=id).first()
-        participants = Participant.objects.filter(plan=plan)    
-        serializer = serializers.ParticipantSerializer(participants, many=True)
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        participants = Participant.objects.filter(plan=plan)  
+        if not participants:
+            return Response({'error': 'participants not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = serializers.ParticipantSerializer(participants, many = True)
         return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+
+
+
+
+
 
 
 class ParticipantAdminViewset(APIView):

@@ -28,11 +28,12 @@ class AppendicesSerializer(serializers.ModelSerializer):
 class ParticipantSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(many=True, read_only=True, source='plan_set')
     firstName = serializers.SerializerMethodField()  
-    lastName = serializers.SerializerMethodField()   
+    lastName = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Participant
-        fields = ['total_amount', 'amount', 'plan', 'id', 'firstName', 'lastName']
+        fields = ['total_amount', 'amount', 'plan', 'id', 'firstName', 'lastName' ,'name_status' , 'name']
 
     def get_firstName(self, obj):
         private_person = privatePerson.objects.filter(user=obj.participant).first()
@@ -46,6 +47,13 @@ class ParticipantSerializer(serializers.ModelSerializer):
             return private_person.lastName
         return None
 
+    def get_name(self, obj):
+        if obj.name_status:
+            private_person = privatePerson.objects.filter(user=obj.participant).first()
+            if private_person:
+                return f"{private_person.firstName} {private_person.lastName}"
+        return 'نامشخص'
+    
         
 class CommenttSerializer(serializers.ModelSerializer):
     firstName = serializers.SerializerMethodField()  

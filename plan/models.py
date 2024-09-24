@@ -81,6 +81,7 @@ class Participant (models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     amount = models.BigIntegerField( null=True, blank=True)
     total_amount = models.BigIntegerField( null=True , blank=True)
+    name_status = models.BooleanField (default=False)
     def __str__(self) :
             return self.participant.uniqueIdentifier
         
