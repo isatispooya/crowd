@@ -139,17 +139,40 @@ class TransactionAdmin2Viewset(APIView):
         transaction =  Transaction.objects.filter(id=id).first()
         if not transaction :
             return Response({'error': 'transaction not found'}, status=status.HTTP_404_NOT_FOUND)
-        data = request.data.copy()
-        serializer = serializers.TransactionSerializer(transaction , data = data , partial = True) 
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'transaction updated successfully', 'transaction': serializer.data}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        wallet = Wallet.objects.filter(user=transaction.wallet.user).first()
 
+        data = request.data.get('status')
+        update_data = {'status': data }
 
+        if data == True :
+            credit_amount = transaction.credit_amount
+            remaining = wallet.remaining
+            remaining_amount = str(credit_amount + remaining)
+            wallet.remaining =remaining_amount 
+            wallet.save()
+            serializer = serializers.TransactionSerializer(transaction, data=update_data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'The amount was added to the wallet', 'transaction': serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        if data != True :
+            credit_amount = transaction.credit_amount
+            remaining = wallet.remaining
+            remaining_amount = str(remaining - credit_amount)
+            wallet.remaining =remaining_amount 
+            wallet.save()
+            serializer = serializers.TransactionSerializer(transaction, data=update_data, partial=True)
 
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'The amount was deducted from the wallet', 'transaction': serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        if data is None:
+            return Response({'error': 'status field is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+   
 
 
 
@@ -168,6 +191,36 @@ class TransactionViewset(APIView) :
         if serializer :
             return Response({'transaction': serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def post (self, request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        wallet = Wallet.objects.filter(user=user).first()
+        if not wallet:
+            return Response({'error': 'Wallet not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not request.FILES.get('image_receipt' , 'document_number'):
+            return Response({'error': 'هیچی نیست'}, status=status.HTTP_400_BAD_REQUEST)
+        image_receipt = request.FILES['image_receipt']
+        
+        transaction = Transaction.objects.create (
+            wallet = wallet , 
+            method = '2' , 
+            description_transaction  ='واریز فیش بانکی' , 
+            image_receipt = image_receipt , 
+            document_number = request.data['document_number'] ,
+            credit_amount = request.data['credit_amount'] , 
+            debt_amount = 0
+            )
+        
+        serializer = serializers.TransactionSerializer(transaction)
+        return Response ({'transaction' : serializer.data } ,  status=status.HTTP_200_OK)
     
 
 class Transaction2Viewset(APIView):

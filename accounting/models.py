@@ -12,7 +12,7 @@ class Wallet (models.Model):
 
 class Transaction (models.Model):
     wallet = models.ForeignKey(Wallet , on_delete=models.CASCADE)
-    transaction_date = models.DateTimeField(null=True, blank=True) # تاریخ تراکنش
+    transaction_date = models.DateTimeField(auto_now= True) # تاریخ تراکنش
     method_option = [
         ('1','درگاه انلاین'),
         ('2','فیش'),
@@ -26,4 +26,4 @@ class Transaction (models.Model):
     document_number = models.CharField(max_length=100 , null=True , blank= True) #شماره سند
 
     def __str__(self):
-        return self.method
+        return f"Transaction ID: {self.id} for Wallet ID: {self.wallet.id}"
