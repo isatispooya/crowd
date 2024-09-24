@@ -456,6 +456,14 @@ class AddInformationViewset (APIView) :
                 addinformation.latest_insurance_staf = request.FILES.get('latest_insurance_staf')
             if 'claims_status' in request.FILES:
                 addinformation.claims_status = request.FILES.get('claims_status')
+            if 'product_catalog' in request.FILES:
+                addinformation.claims_status = request.FILES.get('product_catalog')
+            if 'licenses' in request.FILES:
+                addinformation.claims_status = request.FILES.get('licenses')
+            if 'auditor_representative' in request.FILES:
+                addinformation.claims_status = request.FILES.get('auditor_representative')
+            if 'announcing_account_number' in request.FILES:
+                addinformation.claims_status = request.FILES.get('announcing_account_number')
 
             # ذخیره تغییرات
             addinformation.save()
@@ -469,6 +477,10 @@ class AddInformationViewset (APIView) :
             'assets_and_liabilities': request.FILES.get('assets_and_liabilities'),
             'latest_insurance_staf': request.FILES.get('latest_insurance_staf'),
             'claims_status': request.FILES.get('claims_status'),
+            'product_catalog': request.FILES.get('product_catalog'),
+            'licenses': request.FILES.get('licenses'),
+            'auditor_representative': request.FILES.get('auditor_representative'),
+            'announcing_account_number': request.FILES.get('announcing_account_number'),
             'cart': cart.id
         }
 
@@ -478,6 +490,7 @@ class AddInformationViewset (APIView) :
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
@@ -531,7 +544,14 @@ class AddInfromationAdminViewset (APIView) :
                 addinformation.latest_insurance_staf = request.FILES.get('latest_insurance_staf')
             if 'claims_status' in request.FILES:
                 addinformation.claims_status = request.FILES.get('claims_status')
-
+            if 'product_catalog' in request.FILES:
+                addinformation.claims_status = request.FILES.get('product_catalog')
+            if 'licenses' in request.FILES:
+                addinformation.claims_status = request.FILES.get('licenses')
+            if 'auditor_representative' in request.FILES:
+                addinformation.claims_status = request.FILES.get('auditor_representative')
+            if 'announcing_account_number' in request.FILES:
+                addinformation.claims_status = request.FILES.get('auditor_representative')
             # ذخیره تغییرات
             addinformation.save()
             return Response({'message': 'Information updated successfully'}, status=status.HTTP_200_OK)
@@ -544,6 +564,10 @@ class AddInfromationAdminViewset (APIView) :
             'assets_and_liabilities': request.FILES.get('assets_and_liabilities'),
             'latest_insurance_staf': request.FILES.get('latest_insurance_staf'),
             'claims_status': request.FILES.get('claims_status'),
+            'product_catalog': request.FILES.get('product_catalog'),
+            'licenses': request.FILES.get('licenses'),
+            'auditor_representative': request.FILES.get('auditor_representative'),
+            'announcing_account_number': request.FILES.get('announcing_account_number'),
             'cart': cart.id
         }
 

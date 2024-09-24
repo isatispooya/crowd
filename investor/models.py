@@ -134,9 +134,15 @@ class Cart (models.Model) :
     guarantee = models.CharField(max_length=150, null=True , blank=True) # ضمانت نامه
     lock_guarantee = models.BooleanField(default=False)
     
-    amount_of_registered_capital = models.IntegerField( null=True , blank=True) # تعداد سرمایه ثبتی 
-    lock_amount_of_registered_capital = models.BooleanField(default=False) 
+    amount_of_registered_shares = models.IntegerField( null=True , blank=True) # تعداد سهام ثبتی 
+    lock_amount_of_registered_shares = models.BooleanField(default=False) 
     
+    exchange_code =  models.CharField(max_length=150, null=True , blank=True) #کد بورسی
+    lock_exchange_code = models.BooleanField(default=False) 
+
+    year_of_establishment = models.IntegerField( null=True , blank=True) # سال تاسیس
+    lock_year_of_establishment = models.BooleanField(default=False) 
+
     def __str__(self):
         return self.company_name
     
@@ -186,6 +192,19 @@ class AddInformation (models.Model):
     
     claims_status = models.FileField(upload_to='static/' ,  blank = True, null = True) # وضعیت دعاوی
     lock_claims_status = models.BooleanField(default=False)
+    
+    
+    product_catalog = models.FileField(upload_to='static/' ,  blank = True, null = True) # کاتالوگ محصولات
+    lock_product_catalog = models.BooleanField(default=False)
+    
+    licenses = models.FileField(upload_to='static/' ,  blank = True, null = True) # مجوز ها
+    lock_licenses = models.BooleanField(default=False)
+    
+    auditor_representative = models.FileField(upload_to='static/' ,  blank = True, null = True) # معرف حسابرس
+    lock_auditor_representative = models.BooleanField(default=False)
+    
+    announcing_account_number = models.FileField(upload_to='static/' ,  blank = True, null = True) # اعلام شماره حساب
+    lock_announcing_account_number = models.BooleanField(default=False)
 
     cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
     def __str__(self):
