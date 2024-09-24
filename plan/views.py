@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
 from accounting.models import Wallet
+from investor.models import Cart
 from authentication.models import privatePerson
 import datetime
 from persiantools.jdatetime import JalaliDate
@@ -590,6 +591,38 @@ class CertificateViewset (APIView) :
 
         return Response({'data': data}, status=status.HTTP_200_OK)
     
+
+
+class RoadMapViewset(APIView) :
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        cart = Cart.objects.filter(user=user).first()
+        if not cart :
+            return Response ({'error': 'Cart not found'}, status=status.HTTP_400_BAD_REQUEST)
+        plan = Plan.objects.filter(id=id).first()
+        if not plan :
+            return Response ({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        date_cart = cart.creat
+        date_plan = None
+        date_end_plan = None
+        date_contract = None
+        list = [{
+            'date_cart' : date_cart,
+            'date_plan' : date_plan,
+            'date_end_plan' : date_end_plan,
+            'date_contract' : date_contract
+        }
+            
+        ]
+
+        return Response({'data': list}, status=status.HTTP_200_OK)
+
 
 
 
