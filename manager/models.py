@@ -49,6 +49,8 @@ class Validation (models.Model) :
     manager = models.CharField(max_length=14)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True) 
+
     def __str__(self):
         return  f"Validation for Cart ID: {self.cart.id}"
 
@@ -59,6 +61,7 @@ class History (models.Model) :
     manager = models.ForeignKey(Manager,  on_delete=models.CASCADE)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
+    date = models.DateTimeField(auto_now_add=True) 
     def __str__(self):
         return  f"Histiry for Cart ID: {self.manager.name}"
 

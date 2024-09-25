@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
 from investor import models
-
+import datetime
 
 class ManagerViewset(APIView) :
     def post (self , request , id ):
@@ -383,6 +383,7 @@ class ValidationViewset (APIView) :
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': new_validation.file_manager.url if new_validation.file_manager else None,
+                    'date' : new_validation.date
                 })
 
             if file_manager:
@@ -396,13 +397,15 @@ class ValidationViewset (APIView) :
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
-                    'file_manager': validation.file_manager.url if validation.file_manager else None
+                    'file_manager': validation.file_manager.url if validation.file_manager else None,
+                    'date' : new_validation.date
                 })
             else:
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
-                    'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None
+                    'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None , 
+                    'date' : new_validation.date
                 })
 
             response_data = {
@@ -440,17 +443,29 @@ class ValidationViewset (APIView) :
             for manager in managers:
                 validation = Validation.objects.filter(manager=manager.national_code, cart=cart).first()
 
+                if validation:
+                  date = validation.date
+                else:
+                    date = datetime.datetime.now()
+
+
+
+
                 manager_list.append({
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': validation.file_manager.url if validation and validation.file_manager else None,
+                    'date' : date
                 })
 
             company_validation = Validation.objects.filter(manager='1', cart=cart).first()
+
             manager_list.append({
                 'national_code': '1',
                 'name': 'شرکت',
                 'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
+                'date' : validation.date
+
             })
 
             response_data = {
@@ -507,6 +522,7 @@ class ValidationAdminViewset (APIView) :
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': new_validation.file_manager.url if new_validation.file_manager else None,
+                    'date' : new_validation.date
                 })
 
             if file_manager:
@@ -520,13 +536,15 @@ class ValidationAdminViewset (APIView) :
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
-                    'file_manager': validation.file_manager.url if validation.file_manager else None
+                    'file_manager': validation.file_manager.url if validation.file_manager else None,
+                    'daet' : validation.date
                 })
             else:
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
-                    'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None
+                    'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None,
+
                 })
 
             response_data = {
@@ -559,11 +577,17 @@ class ValidationAdminViewset (APIView) :
             manager_list = []
             for manager in managers:
                 validation = Validation.objects.filter(manager=manager.national_code, cart=cart).first()
+                if validation:
+                  date = validation.date
+                else:
+                    date = datetime.datetime.now()
+
 
                 manager_list.append({
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': validation.file_manager.url if validation and validation.file_manager else None,
+                    'date' : date
                 })
 
             company_validation = Validation.objects.filter(manager='1', cart=cart).first()
@@ -571,6 +595,7 @@ class ValidationAdminViewset (APIView) :
                 'national_code': '1',
                 'name': 'شرکت',
                 'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
+                'date' : validation.date
             })
 
             response_data = {
@@ -614,6 +639,7 @@ class HistoryViewset (APIView) :
                 'national_code': manager.national_code,
                 'name': manager.name,
                 'file': new_history.file.url if new_history.file else None,
+                'date' : new_history.date
             })
         return Response({'managers': manager_list}, status=status.HTTP_200_OK)
 
@@ -640,18 +666,22 @@ class HistoryViewset (APIView) :
             name = i.name
             lock = False
             file = None
+
             
             if history.exists():
                 history = history.first()
                 history = serializers.HistorySerializer(history).data
                 lock = history['lock']
                 file = history['file']
+                date = history ['date']
             
             manager_list.append({
                 'national_code': national_code,
                 'lock': lock,
                 'file': file,
-                'name': name
+                'name': name ,
+                'date' : date
+
             })
 
         return Response({'manager': manager_list}, status=status.HTTP_200_OK)
@@ -692,6 +722,8 @@ class HistoryAdminViewset (APIView) :
                 'national_code': manager.national_code,
                 'name': manager.name,
                 'file': existing_history.file.url if existing_history.file else None,
+                'date' : existing_history.date
+
             })
 
         return Response({'managers': manager_list}, status=status.HTTP_200_OK)
@@ -727,12 +759,14 @@ class HistoryAdminViewset (APIView) :
                 history = serializers.HistorySerializer(history).data
                 lock = history['lock']
                 file = history['file']
+                date = history ['date']
             
             manager_list.append({
                 'national_code': national_code,
                 'lock': lock,
                 'file': file,
-                'name': name
+                'name': name,
+                'date' : date
             })
 
         return Response({'manager': manager_list}, status=status.HTTP_200_OK)
