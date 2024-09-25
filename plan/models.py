@@ -77,13 +77,13 @@ class PaymentGateway(models.Model) :
         
 
 class Participant (models.Model):
-    participant = models.ForeignKey(User , on_delete=models.CASCADE)
+    participant = models.CharField(max_length=20)
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     amount = models.BigIntegerField( null=True, blank=True)
     total_amount = models.BigIntegerField( null=True , blank=True)
     name_status = models.BooleanField (default=False)
     def __str__(self) :
-            return self.participant.uniqueIdentifier
+            return self.participant
         
 
 

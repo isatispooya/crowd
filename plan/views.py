@@ -279,6 +279,7 @@ class ParticipantViewset(APIView):
         plan = Plan.objects.filter(id=id).first()
         amount = request.data.get('amount')
         name_status = request.data.get('status')
+        participant = request.data.get('participant')
         try:
             amount = int(amount)  
         except ValueError:
@@ -288,14 +289,15 @@ class ParticipantViewset(APIView):
             total_amount = amount * int(nominal_price)
         except AttributeError:
             return Response({'error': 'Plan does not have nominal_price_certificate'}, status=status.HTTP_400_BAD_REQUEST)
-        participant = Participant.objects.filter(plan=plan, participant=user).first()
+        participant = Participant.objects.filter(plan=plan, participant=participant).first()
         if not participant:
-            participant = Participant.objects.create(plan=plan, participant=user, amount=amount, total_amount=total_amount , name_status =name_status)
+            participant = Participant.objects.create(plan=plan, participant=participant, amount=amount, total_amount=total_amount , name_status =name_status)
         serializer_data = {
             'amount': amount,
             'total_amount': total_amount,
             'plan':plan,
-            'name_status' : name_status
+            'name_status' : name_status,
+            'participant' : participant,
         }
         serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
         if not serializer.is_valid():
@@ -614,9 +616,9 @@ class RoadMapViewset(APIView) :
         date_contract = None
         list = {
             'date_cart' : date_cart,
-            'date_plan' : date_plan,
-            'date_end_plan' : date_end_plan,
-            'date_contract' : date_contract
+            'date_plan' : '2024-09-24T08:44:41.701688Z',
+            'date_end_plan' : '2024-09-24T08:44:41.701688Z',
+            'date_contract' : '2024-09-24T08:44:41.701688Z'
         }
             
         

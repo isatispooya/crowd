@@ -357,6 +357,7 @@ class ValidationViewset (APIView) :
             validation_existing = Validation.objects.filter(cart=cart, manager='1').first()
 
             file_manager = request.FILES.get('1')
+            date_manager = request.data.copy()
 
             if not file_manager and not validation_existing:
                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -375,8 +376,10 @@ class ValidationViewset (APIView) :
                 if existing_validation:
                     existing_validation.file_manager.delete()
                     existing_validation.delete()
+                date = int(date_manager[f'{national_code}_date'])/1000
+                date = datetime.datetime.fromtimestamp(date)
 
-                new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart)
+                new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart, date=date)
                 new_validation.save()
 
                 manager_list.append({
@@ -390,22 +393,23 @@ class ValidationViewset (APIView) :
                 if validation_existing:
                     validation_existing.file_manager.delete()
                     validation_existing.delete()
-
-                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1')
+                date = int(date_manager['1_date'])/1000
+                date = datetime.datetime.fromtimestamp(date)
+                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1',date=date)
                 validation.save()
 
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
                     'file_manager': validation.file_manager.url if validation.file_manager else None,
-                    'date' : new_validation.date
+                    'date' : validation.date
                 })
             else:
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
                     'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None , 
-                    'date' : new_validation.date
+                    'date' : validation.date
                 })
 
             response_data = {
@@ -442,14 +446,16 @@ class ValidationViewset (APIView) :
             manager_list = []
             for manager in managers:
                 validation = Validation.objects.filter(manager=manager.national_code, cart=cart).first()
+                
+                print(validation)
 
                 if validation:
-                  date = validation.date
+                    date = validation.date
                 else:
                     date = datetime.datetime.now()
 
-
-
+                print(date)
+                
 
                 manager_list.append({
                     'national_code': manager.national_code,
@@ -458,13 +464,19 @@ class ValidationViewset (APIView) :
                     'date' : date
                 })
 
+
             company_validation = Validation.objects.filter(manager='1', cart=cart).first()
+
+            if company_validation:
+                date = company_validation.date
+            else:
+                date = datetime.datetime.now()
 
             manager_list.append({
                 'national_code': '1',
                 'name': 'شرکت',
                 'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
-                'date' : validation.date
+                'date' : date
 
             })
 
@@ -496,6 +508,7 @@ class ValidationAdminViewset (APIView) :
             validation_existing = Validation.objects.filter(cart=cart, manager='1').first()
 
             file_manager = request.FILES.get('1')
+            date_manager = request.data.copy()
 
             if not file_manager and not validation_existing:
                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -514,8 +527,10 @@ class ValidationAdminViewset (APIView) :
                 if existing_validation:
                     existing_validation.file_manager.delete()
                     existing_validation.delete()
+                date = int(date_manager[f'{national_code}_date'])/1000
+                date = datetime.datetime.fromtimestamp(date)
+                new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart, date=date)
 
-                new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart)
                 new_validation.save()
 
                 manager_list.append({
@@ -529,8 +544,9 @@ class ValidationAdminViewset (APIView) :
                 if validation_existing:
                     validation_existing.file_manager.delete()
                     validation_existing.delete()
-
-                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1')
+                date = int(date_manager['1_date'])/1000
+                date = datetime.datetime.fromtimestamp(date)
+                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1',date=date)
                 validation.save()
 
                 manager_list.append({
@@ -544,7 +560,7 @@ class ValidationAdminViewset (APIView) :
                     'national_code': '1',
                     'name': 'شرکت',
                     'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None,
-
+                    'date' : validation.date
                 })
 
             response_data = {
@@ -591,11 +607,15 @@ class ValidationAdminViewset (APIView) :
                 })
 
             company_validation = Validation.objects.filter(manager='1', cart=cart).first()
+            if company_validation :
+                date = company_validation.date
+            else:
+                date = datetime.datetime.now()
             manager_list.append({
                 'national_code': '1',
                 'name': 'شرکت',
                 'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
-                'date' : validation.date
+                'date' : date
             })
 
             response_data = {
@@ -624,17 +644,31 @@ class HistoryViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         if not request.FILES:
             return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-
+        date_manager = request.data.copy()
         manager_list = []
 
         for file_key, file_value in request.FILES.items():
             manager = Manager.objects.filter(national_code=file_key, cart=cart).first()
             if not manager:
                 return Response({'error': f'Manager with national code {file_key} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+            try:
+                timestamp_key = f'{manager.national_code}_date'  
+                if timestamp_key not in date_manager:
+                    return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                date = int(date_manager[timestamp_key]) / 1000  
+                date = datetime.datetime.fromtimestamp(date)     
+
+                print(f"Date for manager {manager.national_code}: {date}")  
+            except (KeyError, ValueError) as e:
+                return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
+            
             existing_history = History.objects.filter(manager=manager, cart=cart).first()
+            
             if existing_history:
                 existing_history.delete()  
-            new_history = History.objects.create(file=file_value, manager=manager, cart=cart)
+            new_history = History.objects.create(file=file_value, manager=manager, cart=cart , date=date)
+
             manager_list.append({
                 'national_code': manager.national_code,
                 'name': manager.name,
@@ -642,6 +676,7 @@ class HistoryViewset (APIView) :
                 'date' : new_history.date
             })
         return Response({'managers': manager_list}, status=status.HTTP_200_OK)
+
 
 
 
@@ -661,27 +696,31 @@ class HistoryViewset (APIView) :
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
         manager_list = []
         for i in manager:
-            history = History.objects.filter(manager=i)
+            history = History.objects.filter(manager=i.national_code , cart =cart ).first()
+            if history:
+                date = history.date 
+            else:
+                date = datetime.datetime.now()
+                
             national_code = i.national_code
             name = i.name
             lock = False
             file = None
 
             
-            if history.exists():
-                history = history.first()
+            if history:
                 history = serializers.HistorySerializer(history).data
                 lock = history['lock']
                 file = history['file']
                 date = history ['date']
-            
+
+   
             manager_list.append({
                 'national_code': national_code,
                 'lock': lock,
                 'file': file,
                 'name': name ,
-                'date' : date
-
+                'date' : date 
             })
 
         return Response({'manager': manager_list}, status=status.HTTP_200_OK)
@@ -705,17 +744,27 @@ class HistoryAdminViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         if not request.FILES:
             return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-
+        date_manager = request.data.copy()
         manager_list = []
 
         for i in request.FILES:
             manager = Manager.objects.filter(national_code=i, cart=cart)
             if len(manager) == 0:
                 return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-
             manager = manager.first()
 
-            existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart)
+            try:
+                timestamp_key = f'{manager.national_code}_date'  
+                if timestamp_key not in date_manager:
+                    return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                date = int(date_manager[timestamp_key]) / 1000  
+                date = datetime.datetime.fromtimestamp(date)     
+
+            except (KeyError, ValueError) as e:
+                return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart , date=date)
             existing_history.save()
 
             manager_list.append({
@@ -748,25 +797,31 @@ class HistoryAdminViewset (APIView) :
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
         manager_list = []
         for i in manager:
-            history = History.objects.filter(manager=i)
+            history = History.objects.filter(manager=i.national_code , cart =cart ).first()
+            if history:
+                date = history.date 
+            else:
+                date = datetime.datetime.now()
+                
             national_code = i.national_code
             name = i.name
             lock = False
             file = None
+
             
-            if history.exists():
-                history = history.first()
+            if history:
                 history = serializers.HistorySerializer(history).data
                 lock = history['lock']
                 file = history['file']
                 date = history ['date']
-            
+
+   
             manager_list.append({
                 'national_code': national_code,
                 'lock': lock,
                 'file': file,
-                'name': name,
-                'date' : date
+                'name': name ,
+                'date' : date 
             })
 
         return Response({'manager': manager_list}, status=status.HTTP_200_OK)
