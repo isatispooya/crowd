@@ -143,6 +143,27 @@ class Cart (models.Model) :
     year_of_establishment = models.IntegerField( null=True , blank=True) # سال تاسیس
     lock_year_of_establishment = models.BooleanField(default=False) 
 
+    role_141 = models.BooleanField(default=False)  #  ماده 141
+    lock_role_141 = models.BooleanField(default=False) 
+
+    Prohibited = models.BooleanField(default=False)  #  ممنوع العامله
+    lock_Prohibited = models.BooleanField(default=False) 
+
+    criminal_record = models.BooleanField(default=False)  #  سابقه ی کیفری
+    lock_criminal_record = models.BooleanField(default=False) 
+
+    effective_litigation = models.BooleanField(default=False)  #  دعاوی موثر
+    lock_effective_litigation = models.BooleanField(default=False) 
+
+    bounced_check = models.BooleanField(default=False)  #  چک برگشتی
+    lock_bounced_check = models.BooleanField(default=False) 
+
+    non_current_debt = models.BooleanField(default=False)  #   بدهی غیر جاری
+    lock_non_current_debt = models.BooleanField(default=False) 
+
+    minimum_deposit_10= models.BooleanField(default=False)  #   واریز حداقل10درصد
+    lock_minimum_deposit_10= models.BooleanField(default=False) 
+
     def __str__(self):
         return self.company_name
     

@@ -456,7 +456,7 @@ class DocumationRecieveViewset(APIView) :
         timestamp = request.data.get('timestamp', None)
         if not timestamp:
             return Response({'error': 'Timestamp is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        timestamp = int(timestamp)/1000
         try:
             # تبدیل timestamp به datetime
             start_date = datetime.datetime.fromtimestamp(int(timestamp))
@@ -612,14 +612,14 @@ class RoadMapViewset(APIView) :
         date_plan = None
         date_end_plan = None
         date_contract = None
-        list = [{
+        list = {
             'date_cart' : date_cart,
             'date_plan' : date_plan,
             'date_end_plan' : date_end_plan,
             'date_contract' : date_contract
         }
             
-        ]
+        
 
         return Response({'data': list}, status=status.HTTP_200_OK)
 
