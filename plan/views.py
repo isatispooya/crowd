@@ -22,7 +22,24 @@ class PlanAdminViewset(APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-        serializer = serializers.PlanSerializer(data=request.data)
+        data = request.data.copy()
+
+        if 'remaining_date_to' in data : 
+            try : 
+                timestamp = int(data['remaining_date_to'])/1000
+                data['remaining_date_to'] = datetime.datetime.fromtimestamp(timestamp).isoformat()
+            except (ValueError, TypeError):
+                return Response({'error': 'Invalid timestamp for remaining_date_to'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'remaining_from_to' in data : 
+            try : 
+                timestamp = int(data['remaining_from_to'])/1000
+                data['remaining_from_to'] = datetime.datetime.fromtimestamp(timestamp).isoformat()
+            except (ValueError, TypeError):
+                return Response({'error': 'Invalid timestamp for remaining_from_to'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        serializer = serializers.PlanSerializer(data=data)
         if not serializer.is_valid():
             print(serializer.errors) 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
@@ -638,7 +655,4 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
-
-
-
 
