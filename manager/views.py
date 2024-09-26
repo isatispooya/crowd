@@ -696,7 +696,8 @@ class HistoryViewset (APIView) :
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
         manager_list = []
         for i in manager:
-            history = History.objects.filter(manager=i.national_code , cart =cart ).first()
+            history = History.objects.filter(manager=i).first()
+            
             if history:
                 date = history.date 
             else:
@@ -797,7 +798,7 @@ class HistoryAdminViewset (APIView) :
             return Response({'error': 'Manager not found'}, status=status.HTTP_404_NOT_FOUND)
         manager_list = []
         for i in manager:
-            history = History.objects.filter(manager=i.national_code , cart =cart ).first()
+            history = History.objects.filter(manager=i).first()
             if history:
                 date = history.date 
             else:

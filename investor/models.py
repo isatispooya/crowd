@@ -140,7 +140,7 @@ class Cart (models.Model) :
     exchange_code =  models.CharField(max_length=150, null=True , blank=True) #کد بورسی
     lock_exchange_code = models.BooleanField(default=False) 
 
-    year_of_establishment = models.IntegerField( null=True , blank=True) # سال تاسیس
+    year_of_establishment =models.DateTimeField(auto_now_add=True) # سال تاسیس
     lock_year_of_establishment = models.BooleanField(default=False) 
 
     role_141 = models.BooleanField(default=False)  #  ماده 141

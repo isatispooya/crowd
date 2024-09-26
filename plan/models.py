@@ -21,12 +21,16 @@ class Plan(models.Model):
     ]
     plan_status = models.CharField(max_length=50 , choices=status_option, null=True , blank=True)
     activity_field = models.CharField(max_length=150, null=True , blank=True) 
-    remaining_days = models.IntegerField(null=True , blank=True) #روزهای باقی مانده
+    remaining_from_to = models.DateTimeField(null=True, blank=True) #روزهای باقی مانده از
+    remaining_date_to = models.DateTimeField(null=True, blank=True) #روزهای باقی مانده تا 
     marketer  = models.CharField(max_length=150, null=True , blank=True) # بازارگردان
     symbol = models.CharField(max_length=100 , null=True , blank=True)
     farabours_link = models.CharField(max_length=500, null=True , blank=True)
     applicant_funding_percentage = models.FloatField(null=True , blank=True) #درصد تامین متقاضی
     nominal_price_certificate = models.IntegerField( null=True , blank=True) #قیمت اسمی هر گواهی 
+    amount_of_shareholders = models.IntegerField( null=True , blank=True) #تعداد سرمایه گذران
+
+
 
     
     def __str__(self) :
