@@ -279,7 +279,9 @@ class ParticipantViewset(APIView):
         plan = Plan.objects.filter(id=id).first()
         amount = request.data.get('amount')
         name_status = request.data.get('status')
-        participant = request.data.get('participant')
+        participant_new = request.data.get('participant_new')
+        risk_statement = request.data.get('risk_statement')
+        agreement = request.data.get('agreement')
         try:
             amount = int(amount)  
         except ValueError:
@@ -289,27 +291,39 @@ class ParticipantViewset(APIView):
             total_amount = amount * int(nominal_price)
         except AttributeError:
             return Response({'error': 'Plan does not have nominal_price_certificate'}, status=status.HTTP_400_BAD_REQUEST)
-        participant = Participant.objects.filter(plan=plan, participant=participant).first()
+        participant = Participant.objects.filter(plan=plan, participant_new=participant_new).first()
         if not participant:
-            participant = Participant.objects.create(plan=plan, participant=participant, amount=amount, total_amount=total_amount , name_status =name_status)
+            participant = Participant.objects.create(plan=plan, participant_new=participant_new, amount=amount, total_amount=total_amount , name_status =name_status ,risk_statement = risk_statement , agreement =  agreement )
         serializer_data = {
             'amount': amount,
             'total_amount': total_amount,
             'plan':plan,
             'name_status' : name_status,
-            'participant' : participant,
+            'participant_new' : participant_new,
+            'risk_statement' : risk_statement,
+            'agreement' :agreement ,
+            'create_date' : participant.create_date , 
+
         }
-        serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        wallet = Wallet.objects.filter(user=user).first()
+
+        wallet = Wallet.objects.filter(user=user).first() 
         if not wallet :
             return Response({'error': 'Wallet does not exist'}, status=status.HTTP_400_BAD_REQUEST)
         if  total_amount >= wallet.remaining :
             return Response({'error' : 'کیف پول شما شارژ نیست'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+
+        data = serializer.data      
+        data['plan_name'] = plan.plan_name
+        data['nominal_price'] = nominal_price
+
+        return Response({'data': data}, status=status.HTTP_200_OK)
     
+
+
 
 
     def get (self,request,id) :
@@ -402,7 +416,7 @@ class CommentViewset (APIView):
         plan = Plan.objects.filter(id=id).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        comment = Comment.objects.filter(plan=plan , user=user).first()
+        comment = Comment.objects.create(plan=plan , user=user)
         if not comment:
             return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.CommenttSerializer(comment , data=request.data)

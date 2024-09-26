@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import User
 from accounting.models import Wallet
+from django.utils import timezone
 
 class Plan(models.Model):
     plan_name = models.CharField(max_length=100 , null=True , blank=True )
@@ -81,13 +82,17 @@ class PaymentGateway(models.Model) :
         
 
 class Participant (models.Model):
-    participant = models.CharField(max_length=20)
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     amount = models.BigIntegerField( null=True, blank=True)
     total_amount = models.BigIntegerField( null=True , blank=True)
     name_status = models.BooleanField (default=False)
+    create_date =  models.DateTimeField(null=True, blank=True, default=timezone.now) # تاریخ ایجاد مشارکت 
+    risk_statement = models.BooleanField(default=True) # بیانیه ریسک
+    agreement = models.BooleanField(default=True) # موافقت نامه
+    status = models.BooleanField(default=True) # وضعیت تایید سفارش 
+    participant_new = models.CharField(max_length=20 , blank= True , null= True)
     def __str__(self) :
-            return self.participant
+            return self.participant_new
         
 
 

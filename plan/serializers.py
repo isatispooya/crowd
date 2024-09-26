@@ -33,28 +33,27 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Participant
-        fields = ['total_amount', 'amount', 'plan', 'id', 'firstName', 'lastName' ,'name_status' , 'name']
+        fields = ['total_amount', 'amount', 'plan', 'id', 'firstName', 'lastName' ,'name_status' , 'name' , 'participant_new' , 'agreement' , 'risk_statement' , 'create_date' ]
 
     def get_firstName(self, obj):
-        private_person = privatePerson.objects.filter(user=obj.participant).first()
+        private_person = privatePerson.objects.filter(user=obj.participant_new).first()
         if private_person:
             return private_person.firstName
         return None
 
     def get_lastName(self, obj):
-        private_person = privatePerson.objects.filter(user=obj.participant).first()
+        private_person = privatePerson.objects.filter(user=obj.participant_new).first()
         if private_person:
             return private_person.lastName
         return None
 
     def get_name(self, obj):
         if obj.name_status:
-            private_person = privatePerson.objects.filter(user=obj.participant).first()
+            private_person = privatePerson.objects.filter(user=obj.participant_new).first()
             if private_person:
                 return f"{private_person.firstName} {private_person.lastName}"
         return 'نامشخص'
-    
-        
+
 class CommenttSerializer(serializers.ModelSerializer):
     firstName = serializers.SerializerMethodField()  
     lastName = serializers.SerializerMethodField() 
