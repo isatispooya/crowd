@@ -11,8 +11,7 @@ from authentication.models import privatePerson
 import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
-
-
+import pandas as pd
 class PlanAdminViewset(APIView):
     def post(self, request):
         Authorization = request.headers.get('Authorization')
@@ -299,6 +298,7 @@ class ParticipantViewset(APIView):
         participant_new = request.data.get('participant_new')
         risk_statement = request.data.get('risk_statement')
         agreement = request.data.get('agreement')
+        
         try:
             amount = int(amount)  
         except ValueError:
@@ -320,7 +320,7 @@ class ParticipantViewset(APIView):
             'risk_statement' : risk_statement,
             'agreement' :agreement ,
             'create_date' : participant.create_date , 
-
+    
         }
 
         wallet = Wallet.objects.filter(user=user).first() 
@@ -655,4 +655,65 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
+
+
+
+
+class SetFileParticipantViewSet(APIView) :
+    def post (self,request,id) :
+        token = 'xJxZ52n1QmKw6a4'
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = Authorization.split(' ')[1] if len(Authorization.split(' ')) == 2 else None
+        if user != token:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        plan = Plan.objects.filter(id=id).first()
+        if not plan :
+            return Response ({'error' : 'Plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            file = request.FILES['file']
+        else:
+            return Response({'message': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            df = pd.read_excel(file)
+        except Exception as e:
+            return Response({'error': f"Error reading Excel file: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        df = df.fillna(0)
+
+        failed_rows = []
+
+        for index, row in df.iterrows():
+            try:
+                data = {
+
+                    'plan': plan.id,
+                    'participant_new': row['کد ملی'],  
+                    'amount': row['تعداد گواهی'],       
+                    'total_amount': row['مبلغ سفارش'],  
+                    'risk_statement': row['تایید بیانیه ریسک'],  
+                    'agreement': row['تایید قوانین سرمایه گذاری'],  
+                    'status': row['وضعیت سفارش']      
+                
+                }
+
+                
+            except Exception as e:
+                failed_rows.append(index)
+                print(f"Error processing row {index}: {str(e)}")
+
+                serializer = serializers.ParticipantSerializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    failed_rows.append({
+                        'row': index,
+                        'errors': serializer.errors
+                    })
+        return Response({'message': 'File processed successfully' }, status=status.HTTP_200_OK)
+    
+
+
 

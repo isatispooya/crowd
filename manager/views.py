@@ -217,26 +217,42 @@ class ResumeAdminViewset(APIView) :
         admin = admin.first()
         managers_data = []
 
-        if not request.FILES:
-            return Response({'error': 'No file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        data = request.data.copy()
+
         cart = models.Cart.objects.filter(id=id)
         if len(cart) == 0:
             return Response({'error': 'Not found cart'}, status=status.HTTP_400_BAD_REQUEST)
         cart = cart.first()
-        lock = request.data.get('lock') == 'true'
-        for file_key, file in request.FILES.items():
-            manager = Manager.objects.filter(national_code=file_key, cart=cart)
-            if not manager.exists():
-                return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
-            manager = manager.first()
-            existing_resumes = Resume.objects.filter(manager=manager)
-            if existing_resumes.exists():
-                existing_resumes.delete()
-            resume = Resume(file=file, manager=manager, lock=lock)
-            resume.save()
-            serializer = serializers.ResumeSerializer(resume)
-            managers_data.append(serializer.data)
+
+        if request.FILES:
+            for file_key, file in request.FILES.items():
+                lock = False
+                manager = Manager.objects.filter(national_code=file_key, cart=cart)
+                if not manager.exists():
+                    return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
+                manager = manager.first()
+                existing_resumes = Resume.objects.filter(manager=manager)
+                if existing_resumes.exists():
+                    existing_resumes.delete()
+                resume = Resume(file=file, manager=manager, lock=lock)
+                resume.save()
+                serializer = serializers.ResumeSerializer(resume)
+                managers_data.append(serializer.data)
+        for lock_key in request.data.copy():
+            if 'lock' in lock_key:
+                _key = lock_key.split('_')[1]
+                manager = Manager.objects.filter(national_code=_key, cart=cart)
+                if not manager.exists():
+                    return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
+                manager = manager.first()
+                resumes = Resume.objects.filter(manager=manager).first()
+                try :
+                    resumes.lock = request.data.copy()[lock_key] == 'true'
+                    resumes.save()
+                except :
+                    pass
+
+
         return Response({'managers': managers_data }, status=status.HTTP_201_CREATED)
 
 class ShareholderViewset(APIView):
@@ -577,6 +593,10 @@ class ValidationAdminViewset (APIView) :
             print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+
+
+
     def get (self, request, id) :
         try :
             Authorization = request.headers.get('Authorization')
@@ -747,43 +767,88 @@ class HistoryAdminViewset (APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
+        managers_data = []
+        date_manager = request.data.copy()
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
-            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        if not request.FILES:
-            return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        date_manager = request.data.copy()
-        manager_list = []
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)     
+        if request.FILES : 
+            for file_key ,file in request.FILES.items() :
+                lock = False
+                manager = Manager.objects.filter(national_code = file_key , cart = cart)
+                if not manager.exists():
+                    return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
+                manager = manager.first()
+                history = History.objects.filter(file=file, manager=manager, lock=lock).first()
+                if history is None:  
+                    history = History(file=file, manager=manager, lock=lock)
+                history.save()
+                serializer = serializers.HistorySerializer(history)
+                managers_data.append(serializer.data)
 
-        for i in request.FILES:
-            manager = Manager.objects.filter(national_code=i, cart=cart)
-            if len(manager) == 0:
-                return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-            manager = manager.first()
 
-            try:
-                timestamp_key = f'{manager.national_code}_date'  
-                if timestamp_key not in date_manager:
-                    return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        for lock_key in request.data.copy():
+            if 'lock' in lock_key:
+                _key = lock_key.split('_')[1]
+                manager = Manager.objects.filter(national_code=_key, cart=cart)
+                if not manager.exists():
+                    return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
+                manager = manager.first()
+                try:
+                    timestamp_key = f'{manager.national_code}_date'  
+                    if timestamp_key not in date_manager:
+                        return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    date = int(date_manager[timestamp_key]) / 1000  
+                    date = datetime.datetime.fromtimestamp(date)     
+
+                except (KeyError, ValueError) as e:
+                    return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
                 
-                date = int(date_manager[timestamp_key]) / 1000  
-                date = datetime.datetime.fromtimestamp(date)     
+                history = History.objects.filter(manager=manager, date=date).first()
+                if history:
+                    try:
+                        history.lock = request.data.copy()[lock_key] == 'true'
+                        history.save()
+                    except Exception as e:
+                        return Response({'error': f'Failed to update lock status: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
-            except (KeyError, ValueError) as e:
-                return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'managers': managers_data}, status=status.HTTP_200_OK)
+    
+
+        # if not request.FILES:
+        #     return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        # date_manager = request.data.copy()
+        # manager_list = []
+
+        # for i in request.FILES:
+        #     manager = Manager.objects.filter(national_code=i, cart=cart)
+        #     if len(manager) == 0:
+        #         return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
+        #     manager = manager.first()
+
+        #     try:
+        #         timestamp_key = f'{manager.national_code}_date'  
+        #         if timestamp_key not in date_manager:
+        #             return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        #         date = int(date_manager[timestamp_key]) / 1000  
+        #         date = datetime.datetime.fromtimestamp(date)     
+
+        #     except (KeyError, ValueError) as e:
+        #         return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
             
-            existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart , date=date)
-            existing_history.save()
+        #     existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart , date=date)
+        #     existing_history.save()
 
-            manager_list.append({
-                'national_code': manager.national_code,
-                'name': manager.name,
-                'file': existing_history.file.url if existing_history.file else None,
-                'date' : existing_history.date
+        #     manager_list.append({
+        #         'national_code': manager.national_code,
+        #         'name': manager.name,
+        #         'file': existing_history.file.url if existing_history.file else None,
+        #         'date' : existing_history.date
 
-            })
+        #     })
 
-        return Response({'managers': manager_list}, status=status.HTTP_200_OK)
 
 
 

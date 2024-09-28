@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlanAdminViewset , PlanAdmin2Viewset , PlanViewset , Plan2Viewset ,DocumentationAdminViewset , AppendicesAdminViewset ,DocumentationViewset , AppendicesViewset , ParticipantViewset , ParticipantAdminViewset , CommentAdminViewset , CommentViewset , DocumationRecieveViewset , CertificateViewset ,RoadMapViewset 
+from.views import PlanAdminViewset , PlanAdmin2Viewset , PlanViewset , Plan2Viewset ,DocumentationAdminViewset , AppendicesAdminViewset ,DocumentationViewset , AppendicesViewset , ParticipantViewset , ParticipantAdminViewset , CommentAdminViewset , CommentViewset , DocumationRecieveViewset , CertificateViewset ,RoadMapViewset, SetFileParticipantViewSet
 
 
 urlpatterns = [
@@ -18,4 +18,5 @@ urlpatterns = [
     path('comment/<int:id>/', CommentViewset.as_view(), name='comment-user'),
     path('certificate/', CertificateViewset.as_view(), name='certificate-user'),
     path('roadmap/<int:id>/', RoadMapViewset.as_view(), name='roadmap-user'),
+    path('set/participant/<int:id>/', SetFileParticipantViewSet.as_view(), name='set-file-participant-user'),
 ]
