@@ -104,7 +104,7 @@ class Cart (models.Model) :
     newspaper = models.CharField(max_length=20, null=True , blank=True)   #روزنامه رسمی
     lock_newspaper =  models.BooleanField(default=False)
 
-    date_newspaper = models.DateTimeField( auto_now=True ,null=True , blank=True)    #تاریخ روزنامه
+    date_newspaper = models.DateTimeField(null=True , blank=True)    #تاریخ روزنامه
     lock_date_newspaper =  models.BooleanField(default=False)
 
     otc_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد فرابورس
@@ -140,7 +140,7 @@ class Cart (models.Model) :
     exchange_code =  models.CharField(max_length=150, null=True , blank=True) #کد بورسی
     lock_exchange_code = models.BooleanField(default=False) 
 
-    year_of_establishment =models.DateTimeField(auto_now_add=True) # سال تاسیس
+    year_of_establishment = models.DateTimeField(null=True, blank=True)
     lock_year_of_establishment = models.BooleanField(default=False) 
 
     role_141 = models.BooleanField(default=False)  #  ماده 141

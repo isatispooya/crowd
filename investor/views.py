@@ -23,76 +23,59 @@ class RequestViewset(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
 
+        
         data = request.data.copy()
+        if data['date_newspaper'] :
 
-        serializer = serializers.CartSerializer(data=request.data)
+            try:
+                timestamp = (int(data['date_newspaper'])/1000)
+                data['date_newspaper'] = datetime.datetime.fromtimestamp(timestamp)
+            except:
+                try:
+                    date_str = data['date_newspaper'].rstrip('Z')
+                    if '.' in date_str:
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+                    else:
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                    data['date_newspaper'] = date_obj
+                except ValueError:
+                    return Response({'error': 'Invalid timestamp for date_newspaper'}, status=status.HTTP_400_BAD_REQUEST)
+        if data['year_of_establishment']  :
+            try:
+                timestamp = (int(data['year_of_establishment'])/1000)
+                data['year_of_establishment'] = datetime.datetime.fromtimestamp(timestamp)
+            except:
+                try:
+                    date_str = data['year_of_establishment'].rstrip('Z')
+                    if '.' in date_str:
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+                    else:
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                    data['year_of_establishment'] = date_obj
+                except ValueError:
+                    return Response({'error': 'Invalid timestamp for year_of_establishment'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.CartSerializer(data=data)
         if not serializer.is_valid():
-            print(serializer.errors)  # چاپ خطاها برای بررسی
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
-
             cart = serializer.save(user=user)
-            
-            if 'financial_report_thisyear' in request.FILES:
-                serializer.uploaded_file1 = request.FILES['financial_report_thisyear']
-            if 'financial_report_lastyear' in request.FILES:
-                serializer.uploaded_file2 = request.FILES['financial_report_lastyear']
-            if 'financial_report_yearold' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['financial_report_yearold']
-                
 
-            if 'audit_report_thisyear' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['audit_report_thisyear']
-            if 'audit_report_lastyear' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['audit_report_lastyear']
-            if 'audit_report_yearold' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['audit_report_yearold']
-            
+            for file_field in ['financial_report_thisyear', 'financial_report_lastyear', 'financial_report_yearold',
+                               'audit_report_thisyear', 'audit_report_lastyear', 'audit_report_yearold',
+                               'statement_thisyear', 'statement_lastyear', 'statement_yearold',
+                               'alignment_6columns_thisyear', 'alignment_6columns_lastyear', 'alignment_6columns_yearold',
+                               'announcement_of_changes_managers', 'announcement_of_changes_capital',
+                               'bank_account_turnover', 'statutes', 'assets_and_liabilities',
+                               'latest_insurance_staf', 'claims_status', 'logo']:
+                if file_field in request.FILES:
+                    serializer.validated_data[file_field] = request.FILES[file_field]
 
-            if 'statement_thisyear' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['statement_thisyear']
-            if 'statement_lastyear' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['statement_lastyear']
-            if 'statement_yearold' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['statement_yearold']
-
-
-            if 'alignment_6columns_thisyear' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['alignment_6columns_thisyear']
-            if 'alignment_6columns_lastyear' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['alignment_6columns_lastyear']
-            if 'alignment_6columns_yearold' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['alignment_6columns_yearold']
-
-
-            if 'announcement_of_changes_managers' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['announcement_of_changes_managers']
-
-            if 'announcement_of_changes_capital' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['announcement_of_changes_capital']
-
-            if 'bank_account_turnover' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['bank_account_turnover']
-
-            if 'statutes' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['statutes']
-
-            if 'assets_and_liabilities' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['assets_and_liabilities']
-
-            if 'latest_insurance_staf' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['latest_insurance_staf']
-
-            if 'claims_status' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['claims_status']
-
-            if 'logo' in request.FILES:
-                serializer.uploaded_file3 = request.FILES['logo']
-
-            code = random.randint(10000,99999)
-            serializer.code= code
+            code = random.randint(10000, 99999)
+            serializer.code = code
             serializer.save()
+
             response_data = serializer.data
             response_data['id'] = cart.id
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -155,6 +138,39 @@ class DetailCartViewset(APIView):
             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
         data.pop('code', None)
+        if data['date_newspaper'] :
+
+            try:
+                timestamp = (int(data['date_newspaper'])/1000)
+                data['date_newspaper'] = datetime.datetime.fromtimestamp(timestamp)
+            except:
+                try:
+                    date_str = data['date_newspaper'].rstrip('Z')
+                    if '.' in date_str:
+                        # اگر رشته شامل میلی‌ثانیه‌ها باشد
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+                    else:
+                        # اگر رشته شامل میلی‌ثانیه‌ها نباشد
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                    data['date_newspaper'] = date_obj
+                except ValueError:
+                    return Response({'error': 'Invalid timestamp for date_newspaper'}, status=status.HTTP_400_BAD_REQUEST)
+        if data['year_of_establishment'] :
+            try:
+                timestamp = (int(data['year_of_establishment'])/1000)
+                data['year_of_establishment'] = datetime.datetime.fromtimestamp(timestamp)
+            except:
+                try:
+                    date_str = data['year_of_establishment'].rstrip('Z')
+                    if '.' in date_str:
+                        # اگر رشته شامل میلی‌ثانیه‌ها باشد
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+                    else:
+                        # اگر رشته شامل میلی‌ثانیه‌ها نباشد
+                        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                    data['year_of_establishment'] = date_obj
+                except ValueError:
+                    return Response({'error': 'Invalid timestamp for year_of_establishment'}, status=status.HTTP_400_BAD_REQUEST)
         cart_serializer = serializers.CartSerializer(cart, data=data, partial=True)
         if cart_serializer.is_valid():
             cart_serializer.save()
