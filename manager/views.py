@@ -547,7 +547,7 @@ class ValidationAdminViewset (APIView) :
                     validation_existing.delete()
                 date = int(date_manager['1_date'])/1000
                 date = datetime.datetime.fromtimestamp(date)
-                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1',date=date)
+                validation = Validation.objects.create(file_manager=file_manager, cart=cart, manager='1',date=date ,  lock=lock)
                 validation.save()
 
                 manager_list.append({
@@ -607,7 +607,8 @@ class ValidationAdminViewset (APIView) :
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': validation.file_manager.url if validation and validation.file_manager else None,
-                    'date' : date
+                    'date' : date,
+                    'lock' : validation.lock if validation and validation.lock else None
                 })
 
             company_validation = Validation.objects.filter(manager='1', cart=cart).first()
@@ -619,7 +620,9 @@ class ValidationAdminViewset (APIView) :
                 'national_code': '1',
                 'name': 'شرکت',
                 'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
-                'date' : date
+                'date' : date,
+                'lock' : company_validation.lock if company_validation else None
+
             })
 
             response_data = {
