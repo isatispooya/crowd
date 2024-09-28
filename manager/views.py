@@ -126,6 +126,7 @@ class ResumeViewset(APIView):
             data = {
                 'file': file_value,
                 'manager': manager.id,
+                
             }
             serializer = serializers.ResumeSerializer(data = data)
             if not serializer.is_valid():
@@ -214,6 +215,7 @@ class ResumeAdminViewset(APIView) :
         if not admin:
             return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
+        managers_data = []
 
         if not request.FILES:
             return Response({'error': 'No file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
@@ -221,24 +223,22 @@ class ResumeAdminViewset(APIView) :
         cart = models.Cart.objects.filter(id=id)
         if len(cart) == 0:
             return Response({'error': 'Not found cart'}, status=status.HTTP_400_BAD_REQUEST)
-        
         cart = cart.first()
-
-        for i in request.FILES:
-            manager = Manager.objects.filter(national_code=i, cart=cart)
-            if len(manager) == 0:
-                return Response({'error': 'Not found management'}, status=status.HTTP_400_BAD_REQUEST)
-            
+        lock = request.data.get('lock') == 'true'
+        for file_key, file in request.FILES.items():
+            manager = Manager.objects.filter(national_code=file_key, cart=cart)
+            if not manager.exists():
+                return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
             manager = manager.first()
-
             existing_resumes = Resume.objects.filter(manager=manager)
             if existing_resumes.exists():
                 existing_resumes.delete()
-
-            resume = Resume(file=request.FILES[i], manager=manager)
+            resume = Resume(file=file, manager=manager, lock=lock)
             resume.save()
+            serializer = serializers.ResumeSerializer(resume)
+            managers_data.append(serializer.data)
+        return Response({'managers': managers_data }, status=status.HTTP_201_CREATED)
 
-        return Response({'message': True}, status=status.HTTP_200_OK)
 class ShareholderViewset(APIView):
     def post(self, request,id):
         Authorization = request.headers.get('Authorization')
@@ -504,8 +504,8 @@ class ValidationAdminViewset (APIView) :
             cart = models.Cart.objects.filter(id=id).first()
             if not cart:
                 return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-
-            validation_existing = Validation.objects.filter(cart=cart, manager='1').first()
+            lock = request.data.get('lock') == 'true'
+            validation_existing = Validation.objects.filter(cart=cart, manager='1' , lock=lock).first()
 
             file_manager = request.FILES.get('1')
             date_manager = request.data.copy()
@@ -523,13 +523,13 @@ class ValidationAdminViewset (APIView) :
                 if not manager:
                     return Response({'error': f'Manager with national code {national_code} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
 
-                existing_validation = Validation.objects.filter(manager=manager.national_code, cart=cart).first()
+                existing_validation = Validation.objects.filter(manager=manager.national_code, cart=cart , lock = lock).first()
                 if existing_validation:
                     existing_validation.file_manager.delete()
                     existing_validation.delete()
                 date = int(date_manager[f'{national_code}_date'])/1000
                 date = datetime.datetime.fromtimestamp(date)
-                new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart, date=date)
+                new_validation = Validation.objects.create(file_manager=file, manager=manager.national_code, cart=cart, date=date , lock = lock)
 
                 new_validation.save()
 
@@ -537,7 +537,8 @@ class ValidationAdminViewset (APIView) :
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': new_validation.file_manager.url if new_validation.file_manager else None,
-                    'date' : new_validation.date
+                    'date' : new_validation.date,
+                    'lock' : lock
                 })
 
             if file_manager:
@@ -553,14 +554,17 @@ class ValidationAdminViewset (APIView) :
                     'national_code': '1',
                     'name': 'شرکت',
                     'file_manager': validation.file_manager.url if validation.file_manager else None,
-                    'daet' : validation.date
+                    'date' : validation.date,
+                    'lock' : lock
+
                 })
             else:
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
                     'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None,
-                    'date' : validation.date
+                    'date' : validation.date,
+                    'lock' : lock
                 })
 
             response_data = {
