@@ -107,3 +107,8 @@ class DocumentationRecieve (models.Model):
             return self.plan.plan_name
         
 
+class Plans (models.Model):
+    plan_id = models.CharField(max_length=250)
+
+    def __str__(self) :
+         return self.plan_id

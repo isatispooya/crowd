@@ -110,7 +110,7 @@ class SetCartAdminViewset(APIView) :
             'otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
             'percentage_total_amount', 'payback_period', 'swimming_percentage',
             'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record',
-            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 
+            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract'
         ]
         for i in update_fields:
             if i in data:
@@ -131,7 +131,7 @@ class SetCartAdminViewset(APIView) :
         cart = models.Cart.objects.filter(id=id).values('otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
             'percentage_total_amount', 'payback_period', 'swimming_percentage',
             'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record',
-            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', )
+            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract')
         if cart  :
             return Response(cart, status=status.HTTP_200_OK)
         return Response ({'error': 'not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -158,7 +158,7 @@ class SetCartUserViewset(APIView) :
             'otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
             'percentage_total_amount', 'payback_period', 'swimming_percentage',
             'partnership_interest', 'guarantee' , 'role_141' , 'Prohibited', 'criminal_record',
-            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 
+            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract'
         ]
 
         for i in update_fields:

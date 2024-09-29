@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment , DocumentationRecieve
+from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment , DocumentationRecieve , Plans
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -12,6 +12,7 @@ import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
 import pandas as pd
+from .CrowdfundingAPIService import CrowdfundingAPI
 class PlanAdminViewset(APIView):
     def post(self, request):
         Authorization = request.headers.get('Authorization')
@@ -25,15 +26,16 @@ class PlanAdminViewset(APIView):
 
         if 'remaining_date_to' in data : 
             try : 
-                timestamp = int(data['remaining_date_to'])/1000
-                data['remaining_date_to'] = datetime.datetime.fromtimestamp(timestamp).isoformat()
+                timestamp = abs(int(data['remaining_date_to'])/1000)
+                print(timestamp)
+                data['remaining_date_to'] = datetime.datetime.fromtimestamp(timestamp)
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid timestamp for remaining_date_to'}, status=status.HTTP_400_BAD_REQUEST)
 
         if 'remaining_from_to' in data : 
             try : 
-                timestamp = int(data['remaining_from_to'])/1000
-                data['remaining_from_to'] = datetime.datetime.fromtimestamp(timestamp).isoformat()
+                timestamp = abs(int(data['remaining_from_to'])/1000)
+                data['remaining_from_to'] = datetime.datetime.fromtimestamp(timestamp)
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid timestamp for remaining_from_to'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -717,3 +719,17 @@ class SetFileParticipantViewSet(APIView) :
 
 
 
+class  UpdatePlansViewset(APIView) :
+    def get (self, request)  :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()  
+        crowd_founding_api = CrowdfundingAPI()
+        plan_list = crowd_founding_api.get_company_projects()
+        plan = Plans.objects.create(plan_id=plan_list)
+
+        return Response({'success': plan}, status=status.HTTP_200_OK)
