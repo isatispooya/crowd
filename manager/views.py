@@ -542,12 +542,10 @@ class ValidationAdminViewset (APIView) :
             file_manager = request.FILES.get('1')
             date_manager = request.data.copy()
             validation_existing = Validation.objects.filter(cart=cart, manager='1' ).first()
-
             if not file_manager and not validation_existing:
                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
             manager_list = []
-
             for national_code, file in request.FILES.items():
                 if national_code == '1':
                     continue
@@ -575,7 +573,23 @@ class ValidationAdminViewset (APIView) :
                     'date' : new_validation.date,
                     'lock' : lock
                 })
+            for i in request.data.copy():
+                if i not in ['lock_1','1_date']:
+                    if 'lock' in i:
+                        national_code = i.split('_')[1]
+                        validation = Validation.objects.filter(manager=national_code).first()
+                        validation.lock = request.data.get(i, 'false').lower() == 'true'
+                        validation.save()
 
+                    if 'date' in i:
+                        national_code = i.split('_')[0]
+                        validation = Validation.objects.filter(manager=national_code).first()
+                        date = int(request.data.get(i))/1000
+                        date = datetime.datetime.fromtimestamp(date)
+                        validation.date = date
+                        validation.save()
+
+                key = i
             if file_manager:
                 lock_company = request.data.get('lock_1', 'false').lower() == 'true'
                 if validation_existing:
@@ -595,14 +609,18 @@ class ValidationAdminViewset (APIView) :
 
                 })
             else:
+                date_comp = int(int(date_manager['1_date'])/1000)
+                date_comp = datetime.datetime.fromtimestamp(date_comp)
+                validation_existing.date = str(date_comp)
+                validation_existing.lock = request.data.get('lock_1', 'false').lower() == 'true'
+                validation_existing.save()
                 manager_list.append({
                     'national_code': '1',
                     'name': 'شرکت',
                     'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None,
-                    'date' : validation.date,
+                    'date' : validation_existing.date,
                     'lock' : validation_existing.lock if validation_existing else False
                 })
-
             response_data = {
                 'managers': manager_list
             }
@@ -647,7 +665,7 @@ class ValidationAdminViewset (APIView) :
                     'national_code': manager.national_code,
                     'name': manager.name,
                     'file_manager': validation.file_manager.url if validation and validation.file_manager else None,
-                    'date' : date,
+                    'date' : str(date),
                     'lock' : validation.lock if validation and validation.lock else None
                 })
 
@@ -660,7 +678,7 @@ class ValidationAdminViewset (APIView) :
                 'national_code': '1',
                 'name': 'شرکت',
                 'file_manager': company_validation.file_manager.url if company_validation and company_validation.file_manager else None,
-                'date' : date,
+                'date' : str(date),
                 'lock' : company_validation.lock if company_validation else None
 
             })
