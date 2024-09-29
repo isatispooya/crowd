@@ -109,15 +109,34 @@ class SetCartAdminViewset(APIView) :
         update_fields = [
             'otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
             'percentage_total_amount', 'payback_period', 'swimming_percentage',
-            'partnership_interest', 'guarantee'
+            'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record',
+            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 
         ]
-
         for i in update_fields:
             if i in data:
                 setattr(cart, i, data.get(i))
         cart.save()
         serializer = serializers.CartSerializer(cart)
+        
         return Response ({'success': True , 'cart' : serializer.data}, status=status.HTTP_200_OK)
+    
+    def get (self,request,id) : 
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).values('otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
+            'percentage_total_amount', 'payback_period', 'swimming_percentage',
+            'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record',
+            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', )
+        if cart  :
+            return Response(cart, status=status.HTTP_200_OK)
+        return Response ({'error': 'not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 # وارد کردن اطلاعات قرارداد عاملیت توسط مشتری
