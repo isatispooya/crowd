@@ -63,5 +63,5 @@ class History (models.Model) :
     lock = models.BooleanField(default=False)
     date = models.DateTimeField(blank=True, null=True) 
     def __str__(self):
-        return  f"Histiry for Cart ID: {self.manager.name}"
+        return  f"{self.cart} - {self.lock}"
 

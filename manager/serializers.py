@@ -47,11 +47,11 @@ class ResumeSerializer (serializers.ModelSerializer):
 class ValidationSerializer (serializers.ModelSerializer):
     class Meta:
         model = models.Validation
-        fields = ['manager' , 'cart'  , 'file_manager']
+        fields = ['manager' , 'cart'  , 'file_manager' , 'lock' , 'date']
 
 
 class HistorySerializer (serializers.ModelSerializer):
     class Meta:
         model = models.History
-        fields = '__all__'
+        fields = ['id', 'file', 'lock', 'date', 'manager', 'cart']
 

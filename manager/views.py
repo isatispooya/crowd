@@ -7,6 +7,8 @@ from authentication import fun
 from . import serializers
 from investor import models
 import datetime
+from django.utils import timezone
+from investor.time import get_date_from_request
 
 class ManagerViewset(APIView) :
     def post (self , request , id ):
@@ -70,34 +72,50 @@ class ManagerAdminViewset(APIView):
         serializer = serializers.ManagerSerializer(managers, many=True)
         return Response({'message': True ,  'data': serializer.data }, status=status.HTTP_200_OK)
 
-    def post (self , request , id) :
+    def post(self, request, id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
+
         if id is None:
-            return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        cart =  models.Cart.objects.filter(id=id).first()
+            return Response({'error': 'Cart ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-        manager = Manager.objects.filter(cart=cart)
-        if manager :
-            manager.delete()
+
         managers_data = request.data.get('managers', [])
+        
+        updated_managers = []  
+        
         for manager_data in managers_data:
-            serializer = serializers.ManagerSerializer(data={**manager_data, 'cart': cart.id})
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            serializer.save(cart=cart)
-        serializer = serializers.CartWithManagersSerializer(cart)
+            national_code = manager_data.get('national_code')
+            if not national_code:
+                return Response({'error': 'Manager national_code is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+            manager = Manager.objects.filter(national_code=national_code, cart=cart).first()
+
+            if manager:
+                serializer = serializers.ManagerSerializer(manager, data=manager_data, partial=True)
+                if not serializer.is_valid():
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer.save()
+                updated_managers.append(serializer.instance)  
+            else:
+                serializer = serializers.ManagerSerializer(data={**manager_data, 'cart': cart.id})
+                if not serializer.is_valid():
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer.save(cart=cart)
+                updated_managers.append(serializer.instance)  
+
+        serializer = serializers.ManagerSerializer(updated_managers, many=True)
+        
         return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
-    
-
-
-
 
 
 class ResumeViewset(APIView):
@@ -520,11 +538,10 @@ class ValidationAdminViewset (APIView) :
             cart = models.Cart.objects.filter(id=id).first()
             if not cart:
                 return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-            lock = request.data.get('lock') == 'true'
-            validation_existing = Validation.objects.filter(cart=cart, manager='1' , lock=lock).first()
 
             file_manager = request.FILES.get('1')
             date_manager = request.data.copy()
+            validation_existing = Validation.objects.filter(cart=cart, manager='1' ).first()
 
             if not file_manager and not validation_existing:
                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -534,6 +551,8 @@ class ValidationAdminViewset (APIView) :
             for national_code, file in request.FILES.items():
                 if national_code == '1':
                     continue
+                lock_key = f'lock_{national_code}'
+                lock = request.data.get(lock_key, 'false').lower() == 'true'
 
                 manager = Manager.objects.filter(national_code=national_code, cart=cart).first()
                 if not manager:
@@ -558,6 +577,7 @@ class ValidationAdminViewset (APIView) :
                 })
 
             if file_manager:
+                lock_company = request.data.get('lock_1', 'false').lower() == 'true'
                 if validation_existing:
                     validation_existing.file_manager.delete()
                     validation_existing.delete()
@@ -571,7 +591,7 @@ class ValidationAdminViewset (APIView) :
                     'name': 'شرکت',
                     'file_manager': validation.file_manager.url if validation.file_manager else None,
                     'date' : validation.date,
-                    'lock' : lock
+                    'lock' : lock_company
 
                 })
             else:
@@ -580,7 +600,7 @@ class ValidationAdminViewset (APIView) :
                     'name': 'شرکت',
                     'file_manager': validation_existing.file_manager.url if validation_existing and validation_existing.file_manager else None,
                     'date' : validation.date,
-                    'lock' : lock
+                    'lock' : validation_existing.lock if validation_existing else False
                 })
 
             response_data = {
@@ -759,96 +779,67 @@ class HistoryViewset (APIView) :
 
 
 class HistoryAdminViewset (APIView) :
-    def post (self, request, id) :
+    def post(self, request, id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-        managers_data = []
-        date_manager = request.data.copy()
+        
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
-            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)     
-        if request.FILES : 
-            for file_key ,file in request.FILES.items() :
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        print(request.FILES)
+        if request.FILES:
+            for file_key, file in request.FILES.items():
                 lock = False
-                manager = Manager.objects.filter(national_code = file_key , cart = cart)
+                manager = Manager.objects.filter(national_code=file_key, cart=cart)
                 if not manager.exists():
                     return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
                 manager = manager.first()
-                history = History.objects.filter(file=file, manager=manager, lock=lock).first()
-                if history is None:  
-                    history = History(file=file, manager=manager, lock=lock)
-                history.save()
-                serializer = serializers.HistorySerializer(history)
-                managers_data.append(serializer.data)
 
+                history = History.objects.filter(manager=manager).first()
+                if history is None:
+                    date, error_message = get_date_from_request(request, manager.national_code)
+                    if error_message:
+                        return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    history = History(file=file, manager=manager, lock=lock, cart=cart, date=date)
+                    history.save()
+                
 
-        for lock_key in request.data.copy():
+        
+        for lock_key in request.data:
             if 'lock' in lock_key:
                 _key = lock_key.split('_')[1]
                 manager = Manager.objects.filter(national_code=_key, cart=cart)
                 if not manager.exists():
-                    return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'error': f'Not found management for national_code {_key}'}, status=status.HTTP_400_BAD_REQUEST)
                 manager = manager.first()
-                try:
-                    timestamp_key = f'{manager.national_code}_date'  
-                    if timestamp_key not in date_manager:
-                        return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    date = int(date_manager[timestamp_key]) / 1000  
-                    date = datetime.datetime.fromtimestamp(date)     
 
-                except (KeyError, ValueError) as e:
-                    return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
-                
-                history = History.objects.filter(manager=manager, date=date).first()
-                if history:
-                    try:
-                        history.lock = request.data.copy()[lock_key] == 'true'
-                        history.save()
-                    except Exception as e:
-                        return Response({'error': f'Failed to update lock status: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({'managers': managers_data}, status=status.HTTP_200_OK)
-    
-
-        # if not request.FILES:
-        #     return Response({'error': 'No files were uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        # date_manager = request.data.copy()
-        # manager_list = []
-
-        # for i in request.FILES:
-        #     manager = Manager.objects.filter(national_code=i, cart=cart)
-        #     if len(manager) == 0:
-        #         return Response({'error': f'Manager with national code {i} not found for this cart'}, status=status.HTTP_404_NOT_FOUND)
-        #     manager = manager.first()
-
-        #     try:
-        #         timestamp_key = f'{manager.national_code}_date'  
-        #         if timestamp_key not in date_manager:
-        #             return Response({'error': f'Date for manager with national code {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
-                
-        #         date = int(date_manager[timestamp_key]) / 1000  
-        #         date = datetime.datetime.fromtimestamp(date)     
-
-        #     except (KeyError, ValueError) as e:
-        #         return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
+                date, error_message = get_date_from_request(request, _key)
+                if error_message:
+                    return Response({'error': error_message}, status=status.HTTP_400_BAD_REQUEST)
             
-        #     existing_history = History.objects.create(file=request.FILES[i], manager=manager, cart=cart , date=date)
-        #     existing_history.save()
+                history = History.objects.filter(manager=manager, date=date).first()
+                
+                if history:
+                    if lock_key in request.data:
+                        history.lock = request.data[lock_key].lower() == 'true'  
+                        history.save()
+                        history.refresh_from_db()
+                        serializer = serializers.HistorySerializer(history)
 
-        #     manager_list.append({
-        #         'national_code': manager.national_code,
-        #         'name': manager.name,
-        #         'file': existing_history.file.url if existing_history.file else None,
-        #         'date' : existing_history.date
-
-        #     })
-
+                    else:
+                        return Response({'error': f'Lock status for manager {manager.national_code} is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        managers_data = History.objects.filter(cart=cart)
+        serializer = serializers.HistorySerializer(managers_data,many=True)
+        return Response({'managers': serializer.data}, status=status.HTTP_200_OK)
+      
 
 
 

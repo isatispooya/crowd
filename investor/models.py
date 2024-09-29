@@ -93,7 +93,7 @@ class Cart (models.Model) :
 
     creat = models.DateTimeField(default=timezone.now)
     logo = models.FileField(upload_to='static/' ,  blank = True, null = True,validators=[validate_file_size])
-    lock_logo =  models.BooleanField(default=False)
+    Lock_logo =  models.BooleanField(default=False)
 
     city = models.CharField(max_length=100 , null=True , blank=True)
     lock_city =  models.BooleanField(default=False)
@@ -102,10 +102,10 @@ class Cart (models.Model) :
     lock_postal_code =  models.BooleanField(default=False)
 
     newspaper = models.CharField(max_length=20, null=True , blank=True)   #روزنامه رسمی
-    lock_newspaper =  models.BooleanField(default=False)
+    Lock_newspaper =  models.BooleanField(default=False)
 
     date_newspaper = models.DateTimeField(null=True , blank=True)    #تاریخ روزنامه
-    lock_date_newspaper =  models.BooleanField(default=False)
+    Lock_date_newspaper =  models.BooleanField(default=False)
 
     otc_fee = models.CharField(max_length=150, null=True , blank=True)    #کارمزد فرابورس
     lock_otc_fee = models.BooleanField(default=False)
