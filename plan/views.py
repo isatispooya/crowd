@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment , DocumentationRecieve , Plans
+from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment , DocumentationRecieve , Plans ,ProjectOwnerCompan
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -730,6 +730,89 @@ class  UpdatePlansViewset(APIView) :
         admin = admin.first()  
         crowd_founding_api = CrowdfundingAPI()
         plan_list = crowd_founding_api.get_company_projects()
-        plan = Plans.objects.create(plan_id=plan_list)
+        for i in plan_list : 
+            if not Plans.objects.filter(plan_id = i).exists () :
+                plan = Plans.objects.create(plan_id=i)
+                
+        return Response(plan_list, status=status.HTTP_200_OK)
 
-        return Response({'success': plan}, status=status.HTTP_200_OK)
+class PlanDetailViewset(APIView) :
+    def get (self, request , id ):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        crowd_founding_api = CrowdfundingAPI()
+        plan_detail =  crowd_founding_api.get_project_info(id)
+        print(plan_detail)
+        plan = Plan.objects.filter(trace_code = id).first()
+        if not plan :
+
+            plan = Plan (
+                trace_code = id,
+                creation_date = plan_detail['Creation Date'] ,  
+                persian_name = plan_detail['Persian Name'] , 
+                persian_suggested_symbol = plan_detail['Persian Suggested Symbol'] , 
+                persoan_approved_symbol = plan_detail['Persoan Approved Symbol'] , 
+                english_name = plan_detail['English Name'] , 
+                english_suggested_symbol = plan_detail['English Suggested Symbol'] , 
+                english_approved_symbol = plan_detail['English Approved Symbol'] , 
+                industry_group_id = plan_detail['Industry Group ID'] , 
+                industry_group_description = plan_detail['Industry Group Description'] , 
+                sub_industry_group_id = plan_detail['Sub Industry Group ID'] , 
+                sub_industry_group_description = plan_detail['Sub Industry Group Description'] , 
+                persian_subject = plan_detail['Persian Subject'] , 
+                english_subject = plan_detail['English Subject'] , 
+                unit_price = plan_detail['Unit Price'] , 
+                total_units = plan_detail['Total Units'] , 
+                company_unit_counts = plan_detail['Company Unit Counts'] , 
+                total_price = plan_detail['Total Price'] , 
+                crowd_funding_type_id  = plan_detail['Crowd Funding Type ID'] , 
+                crowd_funding_type_description = plan_detail['Crowd Funding Type Description'] , 
+                float_crowd_funding_type_description = plan_detail['Float Crowd Funding Type Description'] , 
+                minimum_required_price = plan_detail['Minimum Required Price'] , 
+                real_person_minimum_availabe_price = plan_detail['Real Person Minimum Availabe Price'] , 
+                real_person_maximum_available_price = plan_detail['Real Person Maximum Available Price'] , 
+                legal_person_minimum_availabe_price = plan_detail['Legal Person Minimum Availabe Price'] , 
+                legal_person_maximum_availabe_price = plan_detail['Legal Person Maximum Availabe Price'] , 
+                underwriting_duration = plan_detail['Underwriting Duration'] , 
+                suggested_underwriting_start_date = plan_detail['Suggested Underwriting Start Date'] , 
+                suggested_underwriting_end_date = plan_detail['Suggested Underwriting End Date'] , 
+                approved_underwriting_start_date = plan_detail['Approved Underwriting Start Date'] , 
+                approved_underwriting_end_date = plan_detail['Approved Underwriting End Date'] , 
+                project_start_date = plan_detail['Project Start Date'] , 
+                project_end_date = plan_detail['Project End Date'] , 
+                settlement_description = plan_detail['Settlement Description'] , 
+                project_status_description = plan_detail['Project Status Description'] , 
+                project_status_id = plan_detail['Project Status ID'] , 
+                persian_suggested_underwiring_start_date = plan_detail['Persian Suggested Underwiring Start Date'] , 
+                persian_suggested_underwriting_end_date = plan_detail['Persian Suggested Underwriting End Date'] , 
+                persian_approved_underwriting_start_date = plan_detail['Persian Approved Underwriting Start Date'] , 
+                persian_approved_underwriting_end_date = plan_detail['Persian Approved Underwriting End Date'] , 
+                persian_project_start_date = plan_detail['Persian Project Start Date'] , 
+                persian_project_end_date = plan_detail['Persian Project End Date'] , 
+                persian_creation_date = plan_detail['Persian Creation Date'] , 
+                number_of_finance_provider = plan_detail['Number of Finance Provider'] , 
+                sum_of_funding_provided = plan_detail['SumOfFundingProvided'] , 
+                )
+            plan.save()
+
+            if len(plan_detail['Project Owner Company']) > 0:
+                project_owner_company = ProjectOwnerCompan (
+                    # email_address = 
+                    # phone_number =
+
+                )
+            list_of_project_big_share_holders = plan_detail[''] , 
+            list_of_project_board_members = plan_detail[''] , 
+
+        return Response (plan_detail )
+    
+
+    
+
+
+

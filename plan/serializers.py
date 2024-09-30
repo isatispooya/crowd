@@ -79,3 +79,9 @@ class DocumationRecieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.DocumentationRecieve
         fields = '__all__'
+
+
+class PlansSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Plans
+        fields = '__all__'

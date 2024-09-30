@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlanAdminViewset , PlanAdmin2Viewset , PlanViewset , Plan2Viewset ,DocumentationAdminViewset , AppendicesAdminViewset ,DocumentationViewset , AppendicesViewset , ParticipantViewset , ParticipantAdminViewset , CommentAdminViewset , CommentViewset , DocumationRecieveViewset , CertificateViewset ,RoadMapViewset, SetFileParticipantViewSet ,  UpdatePlansViewset
+from.views import PlanAdminViewset , PlanAdmin2Viewset , PlanViewset , Plan2Viewset ,DocumentationAdminViewset , AppendicesAdminViewset,PlanDetailViewset,DocumentationViewset , AppendicesViewset , ParticipantViewset , ParticipantAdminViewset , CommentAdminViewset , CommentViewset , DocumationRecieveViewset , CertificateViewset ,RoadMapViewset, SetFileParticipantViewSet ,  UpdatePlansViewset
 
 
 urlpatterns = [
@@ -20,4 +20,5 @@ urlpatterns = [
     path('roadmap/<int:id>/', RoadMapViewset.as_view(), name='roadmap-user'),
     path('set/participant/<int:id>/', SetFileParticipantViewSet.as_view(), name='set-file-participant-user'),
     path('plan/farabours/', UpdatePlansViewset.as_view(), name='get-plans-farabours'),
+    path('plan/farabours/<str:id>/', PlanDetailViewset.as_view(), name='get-plans-farabours-detial'),
 ]
