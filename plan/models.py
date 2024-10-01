@@ -3,38 +3,6 @@ from authentication.models import User
 from accounting.models import Wallet
 from django.utils import timezone
 
-# class Plan(models.Model):
-#     plan_name = models.CharField(max_length=100 , null=True , blank=True )
-#     company_name = models.CharField(max_length=150, null=True , blank=True)
-#     funded_amount = models.IntegerField(null=True , blank=True) #مبلغ بودجه
-#     profit = models.FloatField(null=True , blank=True) #سود
-#     total_time = models.IntegerField(null=True , blank=True) #مدت زمان طرح
-#     buoyancy = models.IntegerField(null=True , blank=True) #شناوری
-#     payment_period = models.IntegerField(null=True , blank=True) #دوره پرداخت
-#     picture = models.FileField(upload_to = 'static/', null=True , blank=True)
-#     description = models.CharField(max_length=10000, null=True , blank=True)
-#     status_option = [
-#         ('1','1'),
-#         ('2','2'),
-#         ('3','3'),
-#         ('4','4'),
-#         ('5','5'),
-#     ]
-#     plan_status = models.CharField(max_length=50 , choices=status_option, null=True , blank=True)
-#     activity_field = models.CharField(max_length=150, null=True , blank=True) 
-#     remaining_from_to = models.DateTimeField(null=True, blank=True) #روزهای باقی مانده از
-#     remaining_date_to = models.DateTimeField(null=True, blank=True) #روزهای باقی مانده تا 
-#     marketer  = models.CharField(max_length=150, null=True , blank=True) # بازارگردان
-#     symbol = models.CharField(max_length=100 , null=True , blank=True)
-#     farabours_link = models.CharField(max_length=500, null=True , blank=True)
-#     applicant_funding_percentage = models.FloatField(null=True , blank=True) #درصد تامین متقاضی
-#     nominal_price_certificate = models.IntegerField( null=True , blank=True) #قیمت اسمی هر گواهی 
-#     amount_of_shareholders = models.IntegerField( null=True , blank=True) #تعداد سرمایه گذران
-
-
-#     def __str__(self) :
-#         return self.plan_name
-    
 
 
 class Plan (models.Model) : 
@@ -120,6 +88,11 @@ class ListOfProjectBoardMembers(models.Model):
     company_national_id = models.BigIntegerField( null=True, blank=True)
     company_name = models.CharField(max_length=500, null=True , blank=True)
 
+class PicturePlan(models.Model):
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    picture = models.FileField(upload_to='static/' , null=True ,  blank= True)
+    def __str__(self) :
+        return self.plan.persian_name
 
 
 
@@ -149,36 +122,28 @@ class Comment(models.Model):
     user = models.ForeignKey(User , on_delete=models.CASCADE)
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     def __str__(self) :
-        return self.user.uniqueIdentifier
+        return str(self.user.uniqueIdentifier) + str(self.comment)
     
 
 
 class PaymentGateway(models.Model) :
-    wallet = models.ForeignKey(Wallet , on_delete=models.CASCADE)
-    user = models.ForeignKey(User , on_delete=models.CASCADE)
-    payment_id = models.CharField(max_length=30 , null=True, blank=True)
-    amount = models.CharField(max_length=100 , null=True, blank=True)
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    user = models.ForeignKey(User , to_field='uniqueIdentifier',  on_delete=models.CASCADE)
+    amount = models.BigIntegerField() #تعداد سهم
+    value = models.BigIntegerField() #ارزش کل 
+    payment_id = models.CharField(max_length=256) #شناسه پرداخت
     description = models.CharField(max_length=2500 , null=True, blank=True)
-    code = models.CharField(max_length=2500 , null=True, blank=True)
+    code = models.CharField(max_length=2500 , null=True, blank=True) #کد 
     cart_number =  models.CharField(max_length=50 , null=True, blank=True)
     cart_hashpan =  models.CharField(max_length=50 , null=True, blank=True)
-
-    def __str__(self) :
-            return self.user.uniqueIdentifier
-        
-
-class Participant (models.Model):
-    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
-    amount = models.BigIntegerField( null=True, blank=True)
-    total_amount = models.BigIntegerField( null=True , blank=True)
-    name_status = models.BooleanField (default=False)
     create_date =  models.DateTimeField(null=True, blank=True, default=timezone.now) # تاریخ ایجاد مشارکت 
     risk_statement = models.BooleanField(default=True) # بیانیه ریسک
-    agreement = models.BooleanField(default=True) # موافقت نامه
-    status = models.BooleanField(default=True) # وضعیت تایید سفارش 
-    participant_new = models.CharField(max_length=20 , blank= True , null= True)
+    name_status = models.BooleanField (default=False)
+    status =  models.BooleanField (default=False)
+    document =  models.BooleanField (default=True)
+    picture = models.FileField(null=True, blank = True  , upload_to='static/')
     def __str__(self) :
-            return self.participant_new
+            return self.user.uniqueIdentifier
         
 
 
@@ -190,7 +155,7 @@ class DocumentationRecieve (models.Model):
     date = models.DateTimeField(auto_now_add=True)
     doing = models.BooleanField(default=False)
     def __str__(self) :
-            return self.plan.plan_name
+            return self.plan.persian_name
         
 
 class Plans (models.Model):
@@ -199,3 +164,10 @@ class Plans (models.Model):
     def __str__(self) :
          return self.plan_id
     
+
+class InformationPlan (models.Model):
+    plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
+    rate_of_return = models.IntegerField (null=True , blank= True)
+    def __str__(self) :
+         return self.plan.persian_name
+         

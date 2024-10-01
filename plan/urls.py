@@ -1,24 +1,19 @@
 from django.urls import path
-from.views import PlanAdminViewset , PlanAdmin2Viewset , PlanViewset , Plan2Viewset ,DocumentationAdminViewset , AppendicesAdminViewset,PlanDetailViewset,DocumentationViewset , AppendicesViewset , ParticipantViewset , ParticipantAdminViewset , CommentAdminViewset , CommentViewset , DocumationRecieveViewset , CertificateViewset ,RoadMapViewset, SetFileParticipantViewSet ,  UpdatePlansViewset
+from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset ,PaymentDocument, CommentAdminViewset , CommentViewset ,InformationPlanViewset,DocumationRecieveViewset   ,SendpicturePlanViewset , ParticipantViewset
 
 
 urlpatterns = [
-    path('plan/admin/', PlanAdminViewset.as_view(), name='plan-admin'),
-    path('plan/admin/<int:id>/', PlanAdmin2Viewset.as_view(), name='plan-admin'),
-    path('plan/', PlanViewset.as_view(), name='plan-user'),
-    path('plan/<int:id>/', Plan2Viewset.as_view(), name='plan-user'),
-    path('documentation/admin/<int:id>/', DocumentationAdminViewset.as_view(), name='documentation-admin'),
-    path('appendices/admin/<int:id>/', AppendicesAdminViewset.as_view(), name='appendices-admin'),
-    path('documentation/<int:id>/', DocumentationViewset.as_view(), name='documentation-user'),
-    path('appendices/<int:id>/', AppendicesViewset.as_view(), name='appendices-user'),
-    path('participant/<int:id>/', ParticipantViewset.as_view(), name='participant-user'),
-    path('participant/admin/<int:id>/', ParticipantAdminViewset.as_view(), name='participant-admin'),
-    path('comment/admin/<int:id>/', CommentAdminViewset.as_view(), name='comment-admin'),
+
+    path('plans/', PlansViewset.as_view(), name='plans'),
+    path('plan/<str:trace_code>/', PlanViewset.as_view(), name='plan'),
+    path('appendices/<str:trace_code>/', AppendicesViewset.as_view(), name='appendices-admin'),
+    path('send/picture/<str:trace_code>/', SendpicturePlanViewset.as_view(), name='send-picture-admin'),
+    path('documentation/<str:trace_code>/', DocumentationViewset.as_view(), name='documentation-admin'),
+    path('comment/user/<str:trace_code>/', CommentViewset.as_view(), name='comment-user'),
+    path('comment/admin/<str:trace_code>/', CommentAdminViewset.as_view(), name='comment-admin'),
+    path('payment/document/<str:trace_code>/', PaymentDocument.as_view(), name='comment-admin'),
+    path('participant/user/<str:trace_code>/', ParticipantViewset.as_view(), name='participant-user'),
     path('documation/recieve/admin/<int:id>/', DocumationRecieveViewset.as_view(), name='documation-recieve-admin'),
-    path('comment/<int:id>/', CommentViewset.as_view(), name='comment-user'),
-    path('certificate/', CertificateViewset.as_view(), name='certificate-user'),
-    path('roadmap/<int:id>/', RoadMapViewset.as_view(), name='roadmap-user'),
-    path('set/participant/<int:id>/', SetFileParticipantViewSet.as_view(), name='set-file-participant-user'),
-    path('plan/farabours/', UpdatePlansViewset.as_view(), name='get-plans-farabours'),
-    path('plan/farabours/<str:id>/', PlanDetailViewset.as_view(), name='get-plans-farabours-detial'),
+    path('information/plan/admin/<str:trace_code>/', InformationPlanViewset.as_view(), name='add-information-plan-admin'),
+
 ]

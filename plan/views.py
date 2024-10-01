@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Plan , DocumentationFiles ,Appendices ,Participant ,Comment , DocumentationRecieve , Plans ,ProjectOwnerCompan
+from .models import Plan , DocumentationFiles ,Appendices ,Comment , DocumentationRecieve , Plans ,ProjectOwnerCompan , PaymentGateway ,PicturePlan , InformationPlan
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -7,13 +7,306 @@ from authentication import fun
 from . import serializers
 from accounting.models import Wallet
 from investor.models import Cart
-from authentication.models import privatePerson
+from authentication.models import privatePerson , User
 import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 from .CrowdfundingAPIService import CrowdfundingAPI
-class PlanAdminViewset(APIView):
+
+
+
+
+def get_name (uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    privateperson = privatePerson.objects.filter(user=user).first()
+    first_name = privateperson.firstName
+    last_name = privateperson.lastName
+    full_name = first_name + ' ' + last_name
+
+    return full_name
+
+
+# done
+class PlanViewset(APIView):
+    def get(self, request, trace_code):
+        plan = Plan.objects.filter(trace_code=trace_code)
+        if not plan.exists ():
+            return Response({'message':'not found plan'}, status=status.HTTP_404_NOT_FOUND)
+        plan = plan.first()
+        response = serializers.PlanSerializer(plan)
+        return Response(response.data, status=status.HTTP_200_OK)
+# done
+class PlansViewset(APIView):
+    def get(self, request):
+        plan = Plan.objects.filter()
+        response =serializers.PlanSerializer(plan, many=True)
+        return Response(response.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        crowd_founding_api = CrowdfundingAPI()
+        plan_list = crowd_founding_api.get_company_projects()
+        for i in plan_list : 
+            if not Plans.objects.filter(plan_id = i).exists () :
+                plan = Plans.objects.create(plan_id=i)
+        for i in plan_list:    
+            plan_detail = crowd_founding_api.get_project_info(i)
+
+        
+            plan, created = Plan.objects.update_or_create(
+                trace_code=i,
+                defaults={
+                    'creation_date': plan_detail.get('Creation Date', None),
+                    'persian_name': plan_detail.get('Persian Name', None),
+                    'persian_suggested_symbol': plan_detail.get('Persian Suggested Symbol', None),
+                    'persoan_approved_symbol': plan_detail.get('Persoan Approved Symbol', None),
+                    'english_name': plan_detail.get('English Name', None),
+                    'english_suggested_symbol': plan_detail.get('English Suggested Symbol', None),
+                    'english_approved_symbol': plan_detail.get('English Approved Symbol', None),
+                    'industry_group_id': plan_detail.get('Industry Group ID', None),
+                    'industry_group_description': plan_detail.get('Industry Group Description', None),
+                    'sub_industry_group_id': plan_detail.get('Sub Industry Group ID', None),
+                    'sub_industry_group_description': plan_detail.get('Sub Industry Group Description', None),
+                    'persian_subject': plan_detail.get('Persian Subject', None),
+                    'english_subject': plan_detail.get('English Subject', None),
+                    'unit_price': plan_detail.get('Unit Price', None),
+                    'total_units': plan_detail.get('Total Units', None),
+                    'company_unit_counts': plan_detail.get('Company Unit Counts', None),
+                    'total_price': plan_detail.get('Total Price', None),
+                    'crowd_funding_type_id': plan_detail.get('Crowd Funding Type ID', None),
+                    'crowd_funding_type_description': plan_detail.get('Crowd Funding Type Description', None),
+                    'float_crowd_funding_type_description': plan_detail.get('Float Crowd Funding Type Description', None),
+                    'minimum_required_price': plan_detail.get('Minimum Required Price', None),
+                    'real_person_minimum_availabe_price': plan_detail.get('Real Person Minimum Availabe Price', None),
+                    'real_person_maximum_available_price': plan_detail.get('Real Person Maximum Available Price', None),
+                    'legal_person_minimum_availabe_price': plan_detail.get('Legal Person Minimum Availabe Price', None),
+                    'legal_person_maximum_availabe_price': plan_detail.get('Legal Person Maximum Available Price', None),
+                    'underwriting_duration': plan_detail.get('Underwriting Duration', None),
+                    'suggested_underwriting_start_date': plan_detail.get('Suggested Underwriting Start Date', None),
+                    'suggested_underwriting_end_date': plan_detail.get('Suggested Underwriting End Date', None),
+                    'approved_underwriting_start_date': plan_detail.get('Approved Underwriting Start Date', None),
+                    'approved_underwriting_end_date': plan_detail.get('Approved Underwriting End Date', None),
+                    'project_start_date': plan_detail.get('Project Start Date', None),
+                    'project_end_date': plan_detail.get('Project End Date', None),
+                    'settlement_description': plan_detail.get('Settlement Description', None),
+                    'project_status_description': plan_detail.get('Project Status Description', None),
+                    'project_status_id': plan_detail.get('Project Status ID', None),
+                    'persian_suggested_underwiring_start_date': plan_detail.get('Persian Suggested Underwiring Start Date', None),
+                    'persian_suggested_underwriting_end_date': plan_detail.get('Persian Suggested Underwriting End Date', None),
+                    'persian_approved_underwriting_start_date': plan_detail.get('Persian Approved Underwriting Start Date', None),
+                    'persian_approved_underwriting_end_date': plan_detail.get('Persian Approved Underwriting End Date', None),
+                    'persian_project_start_date': plan_detail.get('Persian Project Start Date', None),
+                    'persian_project_end_date': plan_detail.get('Persian Project End Date', None),
+                    'persian_creation_date': plan_detail.get('Persian Creation Date', None),
+                    'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
+                    'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
+                }
+            )
+            if len(plan_detail.get('Project Owner Company', [])) > 0:
+                for j in plan_detail['Project Owner Company']:
+                    project_owner_company, _ = ProjectOwnerCompan.objects.update_or_create(
+                        plan=plan,
+                        national_id=j.get('National ID', None),
+                        defaults={
+                            'name': j.get('Name', None),
+                            'compnay_type_id': j.get('Company Type ID', None),
+                            'company_type_description': j.get('Company Type Description', None),
+                            'registration_date': j.get('Registration Date', None),
+                            'registration_number': j.get('Registration Number', None),
+                            'economic_id': j.get('Economic ID', None),
+                            'address': j.get('Address', None),
+                            'postal_code': j.get('Postal Code', None),
+                            'phone_number': j.get('Phone Number', None),
+                            'fax_number': j.get('Fax Number', None),
+                            'email_address': j.get('Email Address', None)
+                        }
+                    )
+        return Response({'message':'بروزرسانی از فرابورس انجام شد'}, status=status.HTTP_200_OK)
+# done
+class AppendicesViewset(APIView) :
+    def post (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        serializer = serializers.AppendicesSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            serializer.uploaded_file = request.FILES['file']
+        serializer.save(plan=plan)
+        return Response (serializer.data, status=status.HTTP_200_OK)
+    
+
+    def get (self,request,trace_code) :
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        appendices = Appendices.objects.filter(plan=plan)
+        if not appendices.exists() :
+            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.AppendicesSerializer(appendices, many= True)
+        return Response(serializer.data , status=status.HTTP_200_OK)
+
+    def delete(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        appendices = Appendices.objects.filter(id=int(trace_code))
+        if not appendices.exists() :
+            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
+        appendices.delete()
+        return Response({'message':'succes'} , status=status.HTTP_200_OK)
+    
+# done
+class DocumentationViewset(APIView) :
+    def post (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        serializer = serializers.DocumentationSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            serializer.uploaded_file = request.FILES['file']
+        serializer.save(plan=plan)
+        return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
+
+    def get (self,request,trace_code) :
+
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        ducumentation = DocumentationFiles.objects.filter(plan=plan)
+        serializer = serializers.DocumentationSerializer(ducumentation, many= True)
+        return Response(serializer.data , status=status.HTTP_200_OK)
+
+    def delete(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        appendices = DocumentationFiles.objects.filter(id=int(trace_code))
+        if not appendices.exists() :
+            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
+        appendices.delete()
+        return Response({'message':'succses'} , status=status.HTTP_200_OK)
+# done
+class CommentAdminViewset (APIView) :
+
+    def get (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()     
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        comment = Comment.objects.filter(plan=plan)
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CommenttSerializer(comment , many=True)
+        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
+    
+    def patch (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()     
+        comment = Comment.objects.filter(id=trace_code).first()
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CommenttSerializer(comment, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+   # done 
+class CommentViewset (APIView):
+    def post (self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()      
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        comment = Comment.objects.create(plan=plan , user=user)
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CommenttSerializer(comment , data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+    def get (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        private_person = privatePerson.objects.filter(user=user).first()
+        if not private_person:
+            return Response({'error': 'privatePerson not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        comments = Comment.objects.filter(plan=plan, status=True)
+        if not comments.exists():
+            return Response({'error': 'Comments not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = serializers.CommenttSerializer(comments, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+
+
     def post(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -61,11 +354,10 @@ class PlanAdminViewset(APIView):
         serializer = serializers.PlanSerializer(plan, many=True)     
         return Response({'success': True,'data': serializer.data}, status=status.HTTP_200_OK)
 
+#done
+class SendpicturePlanViewset(APIView) :
 
-
-class PlanAdmin2Viewset(APIView):
-
-    def patch (self,request,id) :
+    def post (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -73,408 +365,183 @@ class PlanAdmin2Viewset(APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-        plan = Plan.objects.get(id=id)
-        serializer = serializers.PlanSerializer(plan, data=request.data, partial=True)
-        
-        if not serializer.is_valid():
-            print(serializer.errors)  
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response({'success': True,'data': serializer.data}, status=status.HTTP_201_CREATED)
-
-# ارسال عکس برای پلن 
-    def post (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         if 'picture' not in request.FILES:
             return Response({'error': 'No picture file was uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-        picture = request.FILES['picture']
-        plan.picture = picture
-        plan.save()
+        picture = PicturePlan.objects.filter(plan=plan).first()
+        if picture :
+            picture.delete()
+        picture = PicturePlan.objects.create(plan=plan , picture = request.FILES['picture'])
+        picture.save()
         return Response({'success': True, 'message': 'Picture updated successfully'}, status=status.HTTP_200_OK)
 
 
 
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
+    def get (self,request,trace_code) :
+        plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.PlanSerializer(plan)
+        picture = PicturePlan.objects.filter(plan=plan).first()
+        serializer = serializers.PicturePlanSerializer(picture)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        return Response({'success': True,'data': serializer.data}, status=status.HTTP_200_OK)
 
-
-
-    def delete (self,request,id) :
+# done
+class PaymentDocument(APIView):
+    def post(self,request,trace_code):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        plan.delete()
-        return Response({'success': 'plan deleted'}, status=status.HTTP_200_OK)
-
-
-
-class PlanViewset(APIView):
-    def get (self, request):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        plan = Plan.objects.all()
-        serializer = serializers.PlanSerializer(plan, many=True)     
-        return Response({'success': True,'data': serializer.data}, status=status.HTTP_200_OK)
+        if not request.data.get('amount'):
+            return Response({'error': 'amount not found'}, status=status.HTTP_404_NOT_FOUND)
+        amount = int(request.data.get('amount'))
+        value = plan.unit_price * amount
+        if not request.data.get('payment_id'):
+            return Response({'error': 'payment_id not found'}, status=status.HTTP_404_NOT_FOUND)
+        payment_id = request.data.get('payment_id')
+        description = request.data.get('description',None)
+        if not request.data.get('risk_statement'):
+            return Response({'error': 'risk_statement not found'}, status=status.HTTP_404_NOT_FOUND)
+        payment_id = request.data.get('risk_statement') == 'true'
+        if not payment_id:
+            return Response({'error': 'risk_statement not true'}, status=status.HTTP_404_NOT_FOUND)
+        if not request.data.get('name_status'):
+            return Response({'error': 'name_status not found'}, status=status.HTTP_404_NOT_FOUND)
+        name_status = request.data.get('name_status') == 'true'
+        if not request.FILES.get('picture'):
+            return Response({'error': 'picture not found'}, status=status.HTTP_404_NOT_FOUND)
+        picture = request.FILES.get('picture')
+        payment = PaymentGateway(
+            plan = plan,
+            user = user,
+            amount = amount,
+            value = value,
+            payment_id = payment_id,
+            description = description,
+            name_status = name_status,
+            picture = picture
+        )
+        payment.save()
+        return Response('success')
     
 
-class Plan2Viewset(APIView):
-
-    def get (self,request,id) :
+    def get(self,request,trace_code):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        plan = Plan.objects.filter(id=id).first()
+
+        admin = fun.decryptionadmin(Authorization)
+
+
+        if not admin and not user:
+            return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.PlanSerializer(plan)
-
-        return Response({'success': True,'data': serializer.data}, status=status.HTTP_200_OK)
-
-
-
-
-class DocumentationAdminViewset(APIView) :
-    def post (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        data = request.data.copy()
-        ducumentation = DocumentationFiles.objects.filter(plan = plan).first()
-        if ducumentation :
-            ducumentation.delete()
-        serializer = serializers.DocumentationSerializer(data=data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if 'file' in request.FILES:
-            serializer.uploaded_file = request.FILES['file']
-        serializer.save(plan=plan)
-        return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
-    
-
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        ducumentation = DocumentationFiles.objects.filter(plan=plan).first()
-        serializer = serializers.DocumentationSerializer(ducumentation)
-        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
-
-class DocumentationViewset(APIView):
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        plan = Plan.objects.filter(id=id).first()
-        documentation = DocumentationFiles.objects.filter(plan=plan)
-        serializer = serializers.DocumentationSerializer(documentation , many = True)
-        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
-    
-    
-class AppendicesAdminViewset(APIView) :
-    def post (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        appendices = Appendices.objects.filter(plan = plan).first()
-        if appendices :
-            appendices.delete()
-        data = request.data.copy()
-        serializer = serializers.AppendicesSerializer(data=data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        if 'file' in request.FILES:
-            serializer.uploaded_file = request.FILES['file']
-        serializer.save(plan=plan)
-        return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
-    
-
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.filter(id=id).first()
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        appendices = Appendices.objects.filter(plan=plan).first()
-        if not appendices :
-            return Response({'error': 'Appendices not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.AppendicesSerializer(appendices)
-        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
-
-
-
-class AppendicesViewset(APIView):
-    def get (self,request,id):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        plan = Plan.objects.filter(id=id).first()
-        appendices = Appendices.objects.filter(plan=plan)
-        serializer = serializers.AppendicesSerializer(appendices , many = True)
-        return Response({'data' :serializer.data} , status=status.HTTP_200_OK)
-    
-
-
-class ParticipantViewset(APIView):
-    def post(self,request,id):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()      
-        plan = Plan.objects.filter(id=id).first()
-        amount = request.data.get('amount')
-        name_status = request.data.get('status')
-        participant_new = request.data.get('participant_new')
-        risk_statement = request.data.get('risk_statement')
-        agreement = request.data.get('agreement')
         
-        try:
-            amount = int(amount)  
-        except ValueError:
-            return Response({'error': 'Invalid amount value, it should be an integer'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            nominal_price = plan.nominal_price_certificate
-            total_amount = amount * int(nominal_price)
-        except AttributeError:
-            return Response({'error': 'Plan does not have nominal_price_certificate'}, status=status.HTTP_400_BAD_REQUEST)
-        participant = Participant.objects.filter(plan=plan, participant_new=participant_new).first()
-        if not participant:
-            participant = Participant.objects.create(plan=plan, participant_new=participant_new, amount=amount, total_amount=total_amount , name_status =name_status ,risk_statement = risk_statement , agreement =  agreement )
-        serializer_data = {
-            'amount': amount,
-            'total_amount': total_amount,
-            'plan':plan,
-            'name_status' : name_status,
-            'participant_new' : participant_new,
-            'risk_statement' : risk_statement,
-            'agreement' :agreement ,
-            'create_date' : participant.create_date , 
-    
-        }
-
-        wallet = Wallet.objects.filter(user=user).first() 
-        if not wallet :
-            return Response({'error': 'Wallet does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-        if  total_amount >= wallet.remaining :
-            return Response({'error' : 'کیف پول شما شارژ نیست'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.ParticipantSerializer(participant, data=serializer_data, partial=True)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-
-        data = serializer.data      
-        data['plan_name'] = plan.plan_name
-        data['nominal_price'] = nominal_price
-
-        return Response({'data': data}, status=status.HTTP_200_OK)
-    
 
 
+        if admin:
+            admin = admin.first()
+            payments = PaymentGateway.objects.filter(plan=plan)
+            response = serializers.PaymentGatewaySerializer(payments,many=True)
+            return Response(response.data, status=status.HTTP_200_OK)
 
+        if user:
+            user = user.first()
+            payments = PaymentGateway.objects.filter(user=user, plan=plan)
+            response = serializers.PaymentGatewaySerializer(payments,many=True)
+            return Response(response.data, status=status.HTTP_200_OK)
 
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()      
-
-        plan = Plan.objects.filter(id=id).first()
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        participants = Participant.objects.filter(plan=plan)  
-        if not participants:
-            return Response({'error': 'participants not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = serializers.ParticipantSerializer(participants, many = True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-class ParticipantAdminViewset(APIView):
-    
-    def get (self,request,id) :
+        
+    def patch (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()     
-        plan = Plan.objects.filter(id=id).first()
-        participants = Participant.objects.filter(plan=plan)
-        serializer = serializers.ParticipantSerializer(participants , many = True)
-        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
-    
-
-class CommentAdminViewset (APIView) :
-    def get (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()     
-        plan = Plan.objects.filter(id=id).first()
-        comment = Comment.objects.filter(plan=plan)
-        if not comment:
-            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CommenttSerializer(comment , many=True)
-        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
-    
-
-    def patch (self,request,id) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()     
-        comment = Comment.objects.filter(id=id).first()
-        if not comment:
-            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CommenttSerializer(comment, data=request.data, partial=True)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
-    
-
-
-class CommentViewset (APIView):
-    def post (self,request,id):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()      
-        plan = Plan.objects.filter(id=id).first()
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        comment = Comment.objects.create(plan=plan , user=user)
-        if not comment:
-            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CommenttSerializer(comment , data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response({'data':serializer.data}, status=status.HTTP_200_OK)
+        payments = PaymentGateway.objects.filter(plan=plan).first()
+        if not payments :
+            return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
+        if serializer.is_valid () :
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+# done
+class ParticipantViewset(APIView) :
+    def get(self, request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if  Authorization:
+            admin = fun.decryptionadmin(Authorization)
+            if not admin:
+                return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            admin = admin.first()
+        else :
+            admin= False
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response ({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        participant = PaymentGateway.objects.filter(plan=plan , status= True)
+        if not participant :
+            return Response ({'error': 'participant not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.PaymentGatewaySerializer(participant , many= True)
+        names = []
 
-
-
-    def get (self,request,id) :
+        df = pd.DataFrame(serializer.data)
+        df = df.drop(['picture', 'risk_statement', 'cart_number', 'code', 'description' , 'cart_hashpan'] , axis=1)
+        for index, row in df.iterrows():
+            
+            if row['name_status'] == True or admin:
+                name = get_name(row['user'])
+            else : 
+                name = 'نامشخص'
+            names.append(name)
+        df['name'] = names
+        df= df.sort_values(by='user')
+        df = df.to_dict('records')
+              
+        return Response (df, status=status.HTTP_200_OK)
+    
+# done
+class InformationPlanViewset(APIView) :
+    def post (self,request,trace_code):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        plan = Plan.objects.filter(id=id).first()
-        if not plan:
-            return Response({'error': 'Plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        rate_of_return = request.data.get('rate_of_return')
+        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return} )
+        serializer = serializers.InformationPlanSerializer(information)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        private_person = privatePerson.objects.filter(user=user).first()
-        if not private_person:
-            return Response({'error': 'privatePerson not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        comments = Comment.objects.filter(plan=plan, status=True)
-        if not comments.exists():
-            return Response({'error': 'Comments not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = serializers.CommenttSerializer(comments, many=True)
-
-        response_data = {
-            'comments': serializer.data, 
-        }
-        return Response({'data': response_data}, status=status.HTTP_200_OK)
-    
-
-
+    def get(self,request,trace_code) : 
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        information = InformationPlan.objects.filter(plan=plan).first()
+        serializer = serializers.InformationPlanSerializer(information)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class DocumationRecieveViewset(APIView) :
     def post (self, request, id) :
@@ -606,27 +673,6 @@ class DocumationRecieveViewset(APIView) :
         return Response({
             'message': f'{len(updated_list)} DocumentationRecieve records updated','list': updated_list}, status=status.HTTP_200_OK)
 
-# گواهی مشارکت 
-class CertificateViewset (APIView) :
-    def get (self, request) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        participant = Participant.objects.filter (participant = user)
-        if not participant:
-            return Response({'error': 'participant not found'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.ParticipantSerializer(participant , many = True)
-        data = serializer.data
-        for i in data :
-            i ['link'] = 'www.isatispooya.com'
-
-        return Response({'data': data}, status=status.HTTP_200_OK)
-    
-
 
 class RoadMapViewset(APIView) :
     def get (self,request,id) :
@@ -657,162 +703,6 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
-
-
-
-
-class SetFileParticipantViewSet(APIView) :
-    def post (self,request,id) :
-        token = 'xJxZ52n1QmKw6a4'
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = Authorization.split(' ')[1] if len(Authorization.split(' ')) == 2 else None
-        if user != token:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        plan = Plan.objects.filter(id=id).first()
-        if not plan :
-            return Response ({'error' : 'Plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-        if 'file' in request.FILES:
-            file = request.FILES['file']
-        else:
-            return Response({'message': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            df = pd.read_excel(file)
-        except Exception as e:
-            return Response({'error': f"Error reading Excel file: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        df = df.fillna(0)
-
-        failed_rows = []
-
-        for index, row in df.iterrows():
-            try:
-                data = {
-
-                    'plan': plan.id,
-                    'participant_new': row['کد ملی'],  
-                    'amount': row['تعداد گواهی'],       
-                    'total_amount': row['مبلغ سفارش'],  
-                    'risk_statement': row['تایید بیانیه ریسک'],  
-                    'agreement': row['تایید قوانین سرمایه گذاری'],  
-                    'status': row['وضعیت سفارش']      
-                
-                }
-
-                
-            except Exception as e:
-                failed_rows.append(index)
-                print(f"Error processing row {index}: {str(e)}")
-
-                serializer = serializers.ParticipantSerializer(data=data)
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    failed_rows.append({
-                        'row': index,
-                        'errors': serializer.errors
-                    })
-        return Response({'message': 'File processed successfully' }, status=status.HTTP_200_OK)
-    
-
-
-
-class  UpdatePlansViewset(APIView) :
-    def get (self, request)  :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()  
-        crowd_founding_api = CrowdfundingAPI()
-        plan_list = crowd_founding_api.get_company_projects()
-        for i in plan_list : 
-            if not Plans.objects.filter(plan_id = i).exists () :
-                plan = Plans.objects.create(plan_id=i)
-                
-        return Response(plan_list, status=status.HTTP_200_OK)
-
-class PlanDetailViewset(APIView) :
-    def get (self, request , id ):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first() 
-        crowd_founding_api = CrowdfundingAPI()
-        plan_detail =  crowd_founding_api.get_project_info(id)
-        print(plan_detail)
-        plan = Plan.objects.filter(trace_code = id).first()
-        if not plan :
-
-            plan = Plan (
-                trace_code = id,
-                creation_date = plan_detail['Creation Date'] ,  
-                persian_name = plan_detail['Persian Name'] , 
-                persian_suggested_symbol = plan_detail['Persian Suggested Symbol'] , 
-                persoan_approved_symbol = plan_detail['Persoan Approved Symbol'] , 
-                english_name = plan_detail['English Name'] , 
-                english_suggested_symbol = plan_detail['English Suggested Symbol'] , 
-                english_approved_symbol = plan_detail['English Approved Symbol'] , 
-                industry_group_id = plan_detail['Industry Group ID'] , 
-                industry_group_description = plan_detail['Industry Group Description'] , 
-                sub_industry_group_id = plan_detail['Sub Industry Group ID'] , 
-                sub_industry_group_description = plan_detail['Sub Industry Group Description'] , 
-                persian_subject = plan_detail['Persian Subject'] , 
-                english_subject = plan_detail['English Subject'] , 
-                unit_price = plan_detail['Unit Price'] , 
-                total_units = plan_detail['Total Units'] , 
-                company_unit_counts = plan_detail['Company Unit Counts'] , 
-                total_price = plan_detail['Total Price'] , 
-                crowd_funding_type_id  = plan_detail['Crowd Funding Type ID'] , 
-                crowd_funding_type_description = plan_detail['Crowd Funding Type Description'] , 
-                float_crowd_funding_type_description = plan_detail['Float Crowd Funding Type Description'] , 
-                minimum_required_price = plan_detail['Minimum Required Price'] , 
-                real_person_minimum_availabe_price = plan_detail['Real Person Minimum Availabe Price'] , 
-                real_person_maximum_available_price = plan_detail['Real Person Maximum Available Price'] , 
-                legal_person_minimum_availabe_price = plan_detail['Legal Person Minimum Availabe Price'] , 
-                legal_person_maximum_availabe_price = plan_detail['Legal Person Maximum Availabe Price'] , 
-                underwriting_duration = plan_detail['Underwriting Duration'] , 
-                suggested_underwriting_start_date = plan_detail['Suggested Underwriting Start Date'] , 
-                suggested_underwriting_end_date = plan_detail['Suggested Underwriting End Date'] , 
-                approved_underwriting_start_date = plan_detail['Approved Underwriting Start Date'] , 
-                approved_underwriting_end_date = plan_detail['Approved Underwriting End Date'] , 
-                project_start_date = plan_detail['Project Start Date'] , 
-                project_end_date = plan_detail['Project End Date'] , 
-                settlement_description = plan_detail['Settlement Description'] , 
-                project_status_description = plan_detail['Project Status Description'] , 
-                project_status_id = plan_detail['Project Status ID'] , 
-                persian_suggested_underwiring_start_date = plan_detail['Persian Suggested Underwiring Start Date'] , 
-                persian_suggested_underwriting_end_date = plan_detail['Persian Suggested Underwriting End Date'] , 
-                persian_approved_underwriting_start_date = plan_detail['Persian Approved Underwriting Start Date'] , 
-                persian_approved_underwriting_end_date = plan_detail['Persian Approved Underwriting End Date'] , 
-                persian_project_start_date = plan_detail['Persian Project Start Date'] , 
-                persian_project_end_date = plan_detail['Persian Project End Date'] , 
-                persian_creation_date = plan_detail['Persian Creation Date'] , 
-                number_of_finance_provider = plan_detail['Number of Finance Provider'] , 
-                sum_of_funding_provided = plan_detail['SumOfFundingProvided'] , 
-                )
-            plan.save()
-
-            if len(plan_detail['Project Owner Company']) > 0:
-                project_owner_company = ProjectOwnerCompan (
-                    # email_address = 
-                    # phone_number =
-
-                )
-            list_of_project_big_share_holders = plan_detail[''] , 
-            list_of_project_board_members = plan_detail[''] , 
-
-        return Response (plan_detail )
-    
-
-    
 
 
 
