@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset ,PaymentDocument, CommentAdminViewset , CommentViewset ,InformationPlanViewset,DocumationRecieveViewset   ,SendpicturePlanViewset , ParticipantViewset
+from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset ,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset,DocumationRecieveViewset   ,SendpicturePlanViewset , ParticipantViewset
 
 
 urlpatterns = [
@@ -15,5 +15,6 @@ urlpatterns = [
     path('participant/user/<str:trace_code>/', ParticipantViewset.as_view(), name='participant-user'),
     path('documation/recieve/admin/<int:id>/', DocumationRecieveViewset.as_view(), name='documation-recieve-admin'),
     path('information/plan/admin/<str:trace_code>/', InformationPlanViewset.as_view(), name='add-information-plan-admin'),
+    path('end/fundraising/admin/<str:trace_code>/', EndOfFundraisingViewset.as_view(), name='end-fundraising-plan-admin'),
 
 ]

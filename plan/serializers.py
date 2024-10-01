@@ -8,6 +8,23 @@ class PlanSerializer(serializers.ModelSerializer):
         model = models.Plan
         fields = '__all__'
 
+class PicturePlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PicturePlan
+        fields = '__all__'
+
+
+class InformationPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.InformationPlan
+        fields = '__all__'
+
+
+class EndOfFundraisingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.EndOfFundraising
+        fields = '__all__'
+
 
 
 class DocumentationSerializer(serializers.ModelSerializer):
@@ -25,34 +42,6 @@ class AppendicesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ParticipantSerializer(serializers.ModelSerializer):
-    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
-    firstName = serializers.SerializerMethodField()  
-    lastName = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = models.Participant
-        fields = ['total_amount', 'amount', 'plan', 'id', 'firstName', 'lastName' ,'name_status' , 'name' , 'participant_new' , 'agreement' , 'risk_statement' , 'create_date' ]
-
-    def get_firstName(self, obj):
-        private_person = privatePerson.objects.filter(user=obj.participant_new).first()
-        if private_person:
-            return private_person.firstName
-        return None
-
-    def get_lastName(self, obj):
-        private_person = privatePerson.objects.filter(user=obj.participant_new).first()
-        if private_person:
-            return private_person.lastName
-        return None
-
-    def get_name(self, obj):
-        if obj.name_status:
-            private_person = privatePerson.objects.filter(user=obj.participant_new).first()
-            if private_person:
-                return f"{private_person.firstName} {private_person.lastName}"
-        return 'نامشخص'
 
 class CommenttSerializer(serializers.ModelSerializer):
     firstName = serializers.SerializerMethodField()  
@@ -84,4 +73,8 @@ class DocumationRecieveSerializer(serializers.ModelSerializer):
 class PlansSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Plans
+        fields = '__all__'
+class PaymentGatewaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PaymentGateway
         fields = '__all__'
