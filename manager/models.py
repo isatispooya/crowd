@@ -35,7 +35,7 @@ class Shareholder (models.Model):
     name = models.CharField(max_length=100)
     national_code = models.CharField(max_length=50, null=True, blank=True)
     national_id = models.CharField(max_length=50, null=True, blank=True)
-    percent = models.CharField(max_length=4 , null=True, blank=True)
+    percent = models.CharField(max_length=99999999 , null=True, blank=True)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
     phone = models.CharField(max_length=14)
