@@ -456,7 +456,33 @@ class AddInformationViewset (APIView) :
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         addinformation = AddInformation.objects.filter(cart=cart).first()
+
         if addinformation:
+
+            if request.data.get('announcement_of_changes_managers') == None:
+                addinformation.announcement_of_changes_managers = request.data.get('announcement_of_changes_managers')
+            if request.data.get('announcement_of_changes_capital') == None:
+                addinformation.announcement_of_changes_capital = request.data.get('announcement_of_changes_capital')
+            if request.data.get('bank_account_turnover') == None:
+                addinformation.bank_account_turnover = request.data.get('bank_account_turnover')
+            if request.data.get('statutes') == None:
+                addinformation.statutes = request.data.get('statutes')
+            if request.data.get('assets_and_liabilities') == None:
+                addinformation.assets_and_liabilities = request.data.get('assets_and_liabilities')
+            if request.data.get('latest_insurance_staf') == None:
+                addinformation.latest_insurance_staf = request.data.get('latest_insurance_staf')
+            if request.data.get('claims_status') == None:
+                addinformation.claims_status = request.data.get('claims_status')
+            if request.data.get('product_catalog') == None:
+                addinformation.product_catalog = request.data.get('product_catalog')
+            if request.data.get('licenses') == None:
+                addinformation.licenses = request.data.get('licenses')
+            if request.data.get('auditor_representative') == None:
+                addinformation.auditor_representative = request.data.get('auditor_representative')
+            if request.data.get('announcing_account_number') == None:
+                addinformation.announcing_account_number = request.data.get('announcing_account_number')
+                
+
             # دریافت داده‌های ارسال شده در فایل‌ها (در صورتی که هر کدام ارسال شده باشند)
             if 'announcement_of_changes_managers' in request.FILES:
                 addinformation.announcement_of_changes_managers = request.FILES.get('announcement_of_changes_managers')
@@ -473,13 +499,13 @@ class AddInformationViewset (APIView) :
             if 'claims_status' in request.FILES:
                 addinformation.claims_status = request.FILES.get('claims_status')
             if 'product_catalog' in request.FILES:
-                addinformation.claims_status = request.FILES.get('product_catalog')
-            if 'licenses' in request.FILES:
-                addinformation.claims_status = request.FILES.get('licenses')
+                addinformation.product_catalog = request.FILES.get('product_catalog')
+            if 'licenses' in request.FILES :
+                addinformation.licenses = request.FILES.get('licenses')
             if 'auditor_representative' in request.FILES:
-                addinformation.claims_status = request.FILES.get('auditor_representative')
+                addinformation.auditor_representative = request.FILES.get('auditor_representative')
             if 'announcing_account_number' in request.FILES:
-                addinformation.claims_status = request.FILES.get('announcing_account_number')
+                addinformation.announcing_account_number = request.FILES.get('announcing_account_number')
 
             # ذخیره تغییرات
             addinformation.save()
@@ -545,7 +571,33 @@ class AddInfromationAdminViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         addinformation = AddInformation.objects.filter(cart=cart).first()
         if addinformation:
+
+            if request.data.get('announcement_of_changes_managers') == None:
+                addinformation.announcement_of_changes_managers = request.data.get('announcement_of_changes_managers')
+            if request.data.get('announcement_of_changes_capital') == None:
+                addinformation.announcement_of_changes_capital = request.data.get('announcement_of_changes_capital')
+            if request.data.get('bank_account_turnover') == None:
+                addinformation.bank_account_turnover = request.data.get('bank_account_turnover')
+            if request.data.get('statutes') == None:
+                addinformation.statutes = request.data.get('statutes')
+            if request.data.get('assets_and_liabilities') == None:
+                addinformation.assets_and_liabilities = request.data.get('assets_and_liabilities')
+            if request.data.get('latest_insurance_staf') == None:
+                addinformation.latest_insurance_staf = request.data.get('latest_insurance_staf')
+            if request.data.get('claims_status') == None:
+                addinformation.claims_status = request.data.get('claims_status')
+            if request.data.get('product_catalog') == None:
+                addinformation.product_catalog = request.data.get('product_catalog')
+            if request.data.get('licenses') == None:
+                addinformation.licenses = request.data.get('licenses')
+            if request.data.get('auditor_representative') == None:
+                addinformation.auditor_representative = request.data.get('auditor_representative')
+            if request.data.get('announcing_account_number') == None:
+                addinformation.announcing_account_number = request.data.get('announcing_account_number')
+
+
             # دریافت داده‌های ارسال شده در فایل‌ها (در صورتی که هر کدام ارسال شده باشند)
+
             if 'announcement_of_changes_managers' in request.FILES:
                 addinformation.announcement_of_changes_managers = request.FILES.get('announcement_of_changes_managers')
             if 'announcement_of_changes_capital' in request.FILES:
@@ -561,13 +613,36 @@ class AddInfromationAdminViewset (APIView) :
             if 'claims_status' in request.FILES:
                 addinformation.claims_status = request.FILES.get('claims_status')
             if 'product_catalog' in request.FILES:
-                addinformation.claims_status = request.FILES.get('product_catalog')
+                addinformation.product_catalog = request.FILES.get('product_catalog')
             if 'licenses' in request.FILES:
-                addinformation.claims_status = request.FILES.get('licenses')
+                addinformation.licenses = request.FILES.get('licenses')
             if 'auditor_representative' in request.FILES:
-                addinformation.claims_status = request.FILES.get('auditor_representative')
+                addinformation.auditor_representative = request.FILES.get('auditor_representative')
             if 'announcing_account_number' in request.FILES:
-                addinformation.claims_status = request.FILES.get('auditor_representative')
+                addinformation.announcing_account_number = request.FILES.get('announcing_account_number')
+            
+            if 'lock_announcement_of_changes_managers' in request.data.copy():
+              addinformation.lock_announcement_of_changes_managers = request.data.copy()['lock_announcement_of_changes_managers'] == 'true'
+            if 'lock_claims_status' in request.data.copy():
+              addinformation.lock_claims_status = request.data.copy()['lock_claims_status'] == 'true'
+            if 'lock_announcement_of_changes_capital' in request.data.copy():
+              addinformation.lock_announcement_of_changes_capital = request.data.copy()['lock_announcement_of_changes_capital'] == 'true'
+            if 'lock_bank_account_turnover' in request.data.copy():
+              addinformation.lock_bank_account_turnover = request.data.copy()['lock_bank_account_turnover'] == 'true'
+            if 'lock_statutes' in request.data.copy():
+              addinformation.lock_statutes = request.data.copy()['lock_statutes'] == 'true'
+            if 'lock_assets_and_liabilities' in request.data.copy():
+              addinformation.lock_assets_and_liabilities = request.data.copy()['lock_assets_and_liabilities'] == 'true'
+            if 'lock_latest_insurance_staf' in request.data.copy():
+                addinformation.lock_latest_insurance_staf = request.data.copy()['lock_latest_insurance_staf'] == 'true'
+            if 'lock_product_catalog' in request.data.copy():
+              addinformation.lock_product_catalog = request.data.copy()['lock_product_catalog'] == 'true'
+            if 'lock_licenses' in request.data.copy():
+              addinformation.lock_licenses = request.data.copy()['lock_licenses'] == 'true'
+            if 'lock_auditor_representative' in request.data.copy():
+              addinformation.lock_auditor_representative = request.data.copy()['lock_auditor_representative'] == 'true'
+            if 'lock_announcing_account_number' in request.data.copy():
+              addinformation.lock_announcing_account_number = request.data.copy()['lock_announcing_account_number'] == 'true'
             # ذخیره تغییرات
             addinformation.save()
             return Response({'message': 'Information updated successfully'}, status=status.HTTP_200_OK)
@@ -619,3 +694,24 @@ class AddInfromationAdminViewset (APIView) :
 
 
 
+class FinishCartViewset(APIView):
+    def patch (self,request,id) : 
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        finish_cart_value = request.data.get('finish_cart')
+        if finish_cart_value is None:
+            return Response({'error': 'finish_cart is required'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.CartSerializer(cart, data={'finish_cart': finish_cart_value}, partial=True)
+        if serializer.is_valid():
+            serializer.save()  
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

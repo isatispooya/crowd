@@ -143,6 +143,8 @@ class Cart (models.Model) :
     year_of_establishment = models.DateTimeField(null=True, blank=True)
     lock_year_of_establishment = models.BooleanField(default=False) 
 
+    finish_cart =  models.BooleanField(default=False) #اتمام کارت
+
     role_141 = models.BooleanField(default=False)  #  ماده 141
     lock_contract = models.BooleanField(default=False) 
     Prohibited = models.BooleanField(default=False)  #  ممنوع العامله
@@ -196,7 +198,7 @@ class AddInformation (models.Model):
     lock_assets_and_liabilities = models.BooleanField(default=False)
     
     latest_insurance_staf  =models.FileField(upload_to='static/' ,  blank = True, null = True) #اخرین لیست بیمه کارکنان 
-    lock_insurance_staf = models.BooleanField(default=False)
+    lock_latest_insurance_staf = models.BooleanField(default=False)
     
     claims_status = models.FileField(upload_to='static/' ,  blank = True, null = True) # وضعیت دعاوی
     lock_claims_status = models.BooleanField(default=False)
