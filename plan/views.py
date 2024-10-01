@@ -544,7 +544,7 @@ class InformationPlanViewset(APIView) :
         serializer = serializers.InformationPlanSerializer(information)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+#done
 class EndOfFundraisingViewset(APIView) :
     def post (self,request,trace_code):
         Authorization = request.headers.get('Authorization')
@@ -557,21 +557,30 @@ class EndOfFundraisingViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        all_end_fundraising = []
         amount_fundraising = plan.sum_of_funding_provided
         if amount_fundraising : 
             amount_fundraising = amount_fundraising / 4
         else:
             amount_fundraising = 0
+            
         date = plan.project_start_date
         if isinstance(date, str):
             date =datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+
         for i in range (4) :
             format_date = date.strftime('%Y-%m-%d')           
             end_fundraising , _ = EndOfFundraising.objects.update_or_create(plan=plan,date=format_date,defaults={'amount': amount_fundraising,'type': 2})
             date = date + relativedelta(months=3)
-            
-        end_fundraising_total ,_ = EndOfFundraising.objects.update_or_create(plan=plan , date=date.strftime('%Y-%m-%d') , defaults={'amount': plan.sum_of_funding_provided,'type': 1})
-        return Response ({'success': 'edn_fundraising'}, status=status.HTTP_200_OK)
+            all_end_fundraising.append(end_fundraising)
+
+        date_end = plan.project_end_date
+        date_end = datetime.datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S')
+        end_fundraising_total ,_ = EndOfFundraising.objects.update_or_create(plan=plan , date=date_end.strftime('%Y-%m-%d') , defaults={'amount': plan.sum_of_funding_provided,'type': 1})
+        all_end_fundraising.append(end_fundraising_total)
+
+        serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
+        return Response (serializer.data, status=status.HTTP_200_OK)
 
 
 
