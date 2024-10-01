@@ -108,9 +108,9 @@ class SetCartAdminViewset(APIView) :
         
         update_fields = [
             'otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
-            'percentage_total_amount', 'payback_period', 'swimming_percentage',
-            'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record',
-            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract'
+            'percentage_total_amount', 'payback_period', 'swimming_percentage','lock_payback_period','lock_swimming_percentage'
+            'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record','lock_partnership_interest',
+            'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract','lock_guarantee'
         ]
         for i in update_fields:
             if i in data:
@@ -129,8 +129,8 @@ class SetCartAdminViewset(APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
         cart = models.Cart.objects.filter(id=id).values('otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
-            'percentage_total_amount', 'payback_period', 'swimming_percentage',
-            'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record',
+            'percentage_total_amount', 'payback_period', 'swimming_percentage','lock_swimming_percentage','lock_partnership_interest',
+            'partnership_interest','lock_payback_period', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record','lock_guarantee',
             'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract')
         if cart  :
             return Response(cart, status=status.HTTP_200_OK)
