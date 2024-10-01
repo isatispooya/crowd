@@ -272,7 +272,6 @@ class SignUpViewset(APIView):
         else:
             return Response({'error': 'Invalid data format for financialInfo'}, status=status.HTTP_400_BAD_REQUEST)
         wallet = Wallet.objects.filter(user = new_user).first()
-        print(wallet)
         if  wallet is None :
             wallet = Wallet(
                 remaining = 0 ,
@@ -280,7 +279,6 @@ class SignUpViewset(APIView):
                 user = new_user
             )
             wallet.save()
-        print(wallet)
         token = fun.encryptionUser(new_user)
 
         return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)

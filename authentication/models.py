@@ -129,7 +129,9 @@ class Admin(models.Model):
     lastName = models.CharField(max_length=32)
     mobile = models.CharField(max_length=11)
     uniqueIdentifier = models.CharField(max_length=10)
-
+    def __str__(self):
+        uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
+        return f'{uniqueIdentifier}'
 
 class Reagent(models.Model):
     reference = models.ForeignKey(User,to_field='referal', on_delete=models.CASCADE , related_name='reagent_references') # معرفی کننده
