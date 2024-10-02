@@ -42,6 +42,21 @@ class AppendicesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AuditReportSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
+    class Meta:
+        model = models.AuditReport
+        fields = '__all__'
+
+
+
+class ProgressReportSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
+    class Meta:
+        model = models.ProgressReport
+        fields = '__all__'
+
+
 
 class CommenttSerializer(serializers.ModelSerializer):
     firstName = serializers.SerializerMethodField()  
@@ -63,11 +78,6 @@ class CommenttSerializer(serializers.ModelSerializer):
             return private_person.lastName
         return None
 
-
-class DocumationRecieveSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.DocumentationRecieve
-        fields = '__all__'
 
 
 class PlansSerializer(serializers.ModelSerializer):

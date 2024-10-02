@@ -115,6 +115,26 @@ class Appendices(models.Model): #تضامین
     
 
 
+
+    
+class AuditReport(models.Model): # گزارش حسابرسی
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    title = models.CharField(max_length=150 , blank=True , null=True) 
+    file = models.FileField(upload_to = 'static/', null=True , blank=True)
+    def __str__(self) :
+        return self.title
+    
+
+    
+class ProgressReport(models.Model): # گزارش پیشرفت 
+    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    title = models.CharField(max_length=150 , blank=True , null=True) 
+    file = models.FileField(upload_to = 'static/', null=True , blank=True)
+    def __str__(self) :
+        return self.title
+    
+
+
 class Comment(models.Model):
     comment = models.CharField(max_length=2000 , null= True, blank = True) 
     status = models.BooleanField(default=False)
@@ -149,15 +169,6 @@ class PaymentGateway(models.Model) :
 
 
 
-class DocumentationRecieve (models.Model):
-    plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
-    type = models.CharField(max_length=20 , blank=True , null= True , choices =[('1','اصل پول') , ('2','سود')])
-    amount = models.BigIntegerField( null=True, blank=True)
-    date = models.DateTimeField(auto_now_add=True)
-    doing = models.BooleanField(default=False)
-    def __str__(self) :
-            return self.plan.persian_name
-        
 
 class Plans (models.Model):
     plan_id = models.CharField(max_length=250)

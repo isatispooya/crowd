@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset ,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset ,AuditReportViewset,ProgressReportViewset,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -8,6 +8,8 @@ urlpatterns = [
     path('plan/<str:trace_code>/', PlanViewset.as_view(), name='plan'),
     path('appendices/<str:trace_code>/', AppendicesViewset.as_view(), name='appendices-admin'),
     path('send/picture/<str:trace_code>/', SendpicturePlanViewset.as_view(), name='send-picture-admin'),
+    path('progres/report/admin/<str:trace_code>/', ProgressReportViewset.as_view(), name='progres-report-admin'),
+    path('audit/report/admin/<str:trace_code>/', AuditReportViewset.as_view(), name='audit-report-admin'),
     path('documentation/<str:trace_code>/', DocumentationViewset.as_view(), name='documentation-admin'),
     path('comment/user/<str:trace_code>/', CommentViewset.as_view(), name='comment-user'),
     path('comment/admin/<str:trace_code>/', CommentAdminViewset.as_view(), name='comment-admin'),
