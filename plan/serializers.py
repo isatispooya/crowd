@@ -49,7 +49,7 @@ class CommenttSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Comment
-        fields = ['id', 'comment', 'status', 'known', 'firstName', 'lastName']
+        fields = ['id', 'comment', 'status', 'known', 'firstName', 'lastName' , 'answer']
 
     def get_firstName(self, obj):
         private_person = privatePerson.objects.filter(user=obj.user).first()

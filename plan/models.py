@@ -121,6 +121,7 @@ class Comment(models.Model):
     known =  models.BooleanField(default=False)
     user = models.ForeignKey(User , on_delete=models.CASCADE)
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
+    answer = models.CharField(max_length=2000 , null= True, blank = True) 
     def __str__(self) :
         return str(self.user.uniqueIdentifier) + str(self.comment)
     
@@ -168,6 +169,16 @@ class Plans (models.Model):
 class InformationPlan (models.Model):
     plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
     rate_of_return = models.IntegerField (null=True , blank= True)
+    status_second_option = [
+         ('1','1'),
+         ('2','2'),
+         ('3','3'),
+         ('4','4'),
+         ('5','5'),
+    ]
+    satus_second = models.CharField (max_length=50 , choices=status_second_option , null=True, blank=True )
+    status_show = models.BooleanField (default=False)
+    amount_collected_now = models.BigIntegerField (null=True, blank=True)
     def __str__(self) :
          return self.plan.persian_name
          

@@ -224,8 +224,6 @@ class DocumentationViewset(APIView) :
         return Response({'message':'succses'} , status=status.HTTP_200_OK)
 # done
 class CommentAdminViewset (APIView) :
-
-
     def get (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -235,11 +233,17 @@ class CommentAdminViewset (APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()     
         plan = Plan.objects.filter(trace_code=trace_code).first()
-        comment = Comment.objects.filter(plan=plan)
-        if not comment:
-            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CommenttSerializer(comment , many=True)
-        return Response ({'data' :serializer.data} , status=status.HTTP_200_OK)
+        if not plan:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        comments = Comment.objects.filter(plan=plan)
+        for comment in comments:
+            if comment.answer is None or comment.answer == '':
+                comment.answer = 'منتظر پاسخ'
+                comment.save()  
+
+        serializer = serializers.CommenttSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def patch (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
@@ -252,16 +256,17 @@ class CommentAdminViewset (APIView) :
         comment = Comment.objects.filter(id=trace_code).first()
         if not comment:
             return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CommenttSerializer(comment, data=request.data, partial=True)
+        data = request.data
+        data['answer'] = data.get('answer', 'منتظر پاسخ') or 'منتظر پاسخ'
+        serializer = serializers.CommenttSerializer(comment, data=data, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-   # done 
+
 # done
 class CommentViewset (APIView):
     def post (self,request,trace_code):
-        print(trace_code)   
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -269,14 +274,16 @@ class CommentViewset (APIView):
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()   
-        print(user)   
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data
         comment = Comment.objects.create(plan=plan , user=user)
         if not comment:
             return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CommenttSerializer(comment , data=request.data)
+        if not data.get('answer'):
+            data['answer'] = 'منتظر پاسخ'
+        serializer = serializers.CommenttSerializer(comment , data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
@@ -445,10 +452,22 @@ class PaymentDocument(APIView):
             mobileNumber=data.get('mobileNumber'),
             bankTrackingNumber=data.get('bankTrackingNumber'),
         )
+
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
+        payment = PaymentGateway.objects.filter(plan=plan)
+        value = 0
+        for i in payment : 
+            if i.status == True:
+               value += i.value
+        information = InformationPlan.objects.filter(plan=plan ).first()
+        information.amount_collected_now = value
+        information.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
 # done
 class ParticipantViewset(APIView) :
     def get(self, request,trace_code):
@@ -498,7 +517,11 @@ class InformationPlanViewset(APIView) :
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
         rate_of_return = request.data.get('rate_of_return')
-        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return} )
+        status_second = request.data.get('status_second')
+        status_show = request.data.get('status_show')
+        if status_second not in ['1' , '2','3' , '4' , '5'] :
+            status_second = '1'
+        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'satus_second': status_second, 'status_show' :status_show } )
         serializer = serializers.InformationPlanSerializer(information)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -548,7 +571,7 @@ class EndOfFundraisingViewset(APIView) :
         serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
         return Response (serializer.data, status=status.HTTP_200_OK)
 
-
+# done
 class SendPaymentToFarabours(APIView) :
     def post (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
