@@ -12,7 +12,7 @@ import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-from .CrowdfundingAPIService import CrowdfundingAPI
+from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
 from dateutil.relativedelta import relativedelta
 
 
@@ -225,6 +225,7 @@ class DocumentationViewset(APIView) :
 # done
 class CommentAdminViewset (APIView) :
 
+
     def get (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -257,15 +258,18 @@ class CommentAdminViewset (APIView) :
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
    # done 
+# done
 class CommentViewset (APIView):
     def post (self,request,trace_code):
+        print(trace_code)   
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()      
+        user = user.first()   
+        print(user)   
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -277,8 +281,6 @@ class CommentViewset (APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 
     def get (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
@@ -304,56 +306,6 @@ class CommentViewset (APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-
-
-
-
-    def post(self, request):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        data = request.data.copy()
-
-        if 'remaining_date_to' in data : 
-            try : 
-                timestamp = abs(int(data['remaining_date_to'])/1000)
-                print(timestamp)
-                data['remaining_date_to'] = datetime.datetime.fromtimestamp(timestamp)
-            except (ValueError, TypeError):
-                return Response({'error': 'Invalid timestamp for remaining_date_to'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if 'remaining_from_to' in data : 
-            try : 
-                timestamp = abs(int(data['remaining_from_to'])/1000)
-                data['remaining_from_to'] = datetime.datetime.fromtimestamp(timestamp)
-            except (ValueError, TypeError):
-                return Response({'error': 'Invalid timestamp for remaining_from_to'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-        serializer = serializers.PlanSerializer(data=data)
-        if not serializer.is_valid():
-            print(serializer.errors) 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
-        serializer.save()
-        return Response({'success': True,'data': serializer.data}, status=status.HTTP_201_CREATED)
-    
-
-
-    def get (self,request):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
-        admin = admin.first()
-        plan = Plan.objects.all()
-        serializer = serializers.PlanSerializer(plan, many=True)     
-        return Response({'success': True,'data': serializer.data}, status=status.HTTP_200_OK)
 
 #done
 class SendpicturePlanViewset(APIView) :
@@ -479,6 +431,20 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data
+        financing_provider = ProjectFinancingProvider(
+            projectID=data.get('projectID'),
+            nationalID=data.get('nationalID'),
+            isLegal=data.get('isLegal'),
+            firstName=data.get('firstName'),
+            lastNameOrCompanyName=data.get('lastNameOrCompanyName'),
+            providedFinancePrice=data.get('providedFinancePrice'),
+            bourseCode=data.get('bourseCode'),
+            paymentDate=data.get('paymentDate'),
+            shebaBankAccountNumber=data.get('shebaBankAccountNumber'),
+            mobileNumber=data.get('mobileNumber'),
+            bankTrackingNumber=data.get('bankTrackingNumber'),
+        )
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
@@ -582,6 +548,31 @@ class EndOfFundraisingViewset(APIView) :
         serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
         return Response (serializer.data, status=status.HTTP_200_OK)
 
+
+class SendPaymentToFarabours(APIView) :
+    def post (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        data = request.data
+        financing_provider = ProjectFinancingProvider(
+            projectID=data.get('projectID'),
+            nationalID=data.get('nationalID'),
+            isLegal=data.get('isLegal'),
+            firstName=data.get('firstName'),
+            lastNameOrCompanyName=data.get('lastNameOrCompanyName'),
+            providedFinancePrice=data.get('providedFinancePrice'),
+            bourseCode=data.get('bourseCode'),
+            paymentDate=data.get('paymentDate'),
+            shebaBankAccountNumber=data.get('shebaBankAccountNumber'),
+            mobileNumber=data.get('mobileNumber'),
+            bankTrackingNumber=data.get('bankTrackingNumber'),
+        )
+        return Response (status=status.HTTP_200_OK)
 
 
 class RoadMapViewset(APIView) :
