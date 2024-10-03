@@ -599,10 +599,33 @@ class UserOneViewset(APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
         user = User.objects.filter(id=id).first()
-        user_serializer = serializers.UserSerializer(user , many=True)
-        
-        print(user_serializer)
-        return Response ({'success' : True} , status=status.HTTP_200_OK)
+        user_serializer = serializers.UserSerializer(user).data
+        privateperson = privatePerson.objects.filter(user=user)
+        privateperson_serializer = serializers.privatePersonSerializer(privateperson, many=True).data
+
+        user_addresses = addresses.objects.filter(user=user)
+        serializer_addresses = serializers.addressesSerializer(user_addresses, many=True).data
+
+        user_financialInfo = financialInfo.objects.filter(user=user)
+        serializer_financialInfo = serializers.financialInfoSerializer(user_financialInfo, many=True).data
+
+        user_jobInfo = jobInfo.objects.filter(user=user)
+        serializer_jobInfo = serializers.jobInfoSerializer(user_jobInfo, many=True).data
+
+        user_tradingCodes = tradingCodes.objects.filter(user=user)
+        serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes, many=True).data
+
+        combined_data = {
+            **user_serializer, 
+            'addresses': serializer_addresses,
+            'private_person': privateperson_serializer,
+            'financial_info': serializer_financialInfo,
+            'job_info': serializer_jobInfo,
+            'trading_codes': serializer_tradingCodes,
+        }
+
+        return Response({'success': combined_data}, status=status.HTTP_200_OK)
+
 
 
 class OtpUpdateViewset(APIView) :

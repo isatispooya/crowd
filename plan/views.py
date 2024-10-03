@@ -14,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
 from dateutil.relativedelta import relativedelta
+from datetime import timedelta
 
 
 
@@ -558,18 +559,80 @@ class EndOfFundraisingViewset(APIView) :
             date =datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
 
         for i in range (4) :
-            format_date = date.strftime('%Y-%m-%d')           
-            end_fundraising , _ = EndOfFundraising.objects.update_or_create(plan=plan,date=format_date,defaults={'amount': amount_fundraising,'type': 2})
+            format_date = date.strftime('%Y-%m-%d')    
+            date_capitalization =( date - timedelta(days=5)).date()
+            end_fundraising , _ = EndOfFundraising.objects.update_or_create(plan=plan,date=format_date,defaults={'amount': amount_fundraising,'type': 2,'date_capitalization': date_capitalization} )
             date = date + relativedelta(months=3)
             all_end_fundraising.append(end_fundraising)
 
         date_end = plan.project_end_date
         date_end = datetime.datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S')
-        end_fundraising_total ,_ = EndOfFundraising.objects.update_or_create(plan=plan , date=date_end.strftime('%Y-%m-%d') , defaults={'amount': plan.sum_of_funding_provided,'type': 1})
+        date_capitalization_end = (date_end - timedelta(days=5)).date()
+        end_fundraising_total ,_ = EndOfFundraising.objects.update_or_create(plan=plan , date=date_end.strftime('%Y-%m-%d') , defaults={'amount': plan.sum_of_funding_provided,'type': 1 ,'date_capitalization': date_capitalization_end})
         all_end_fundraising.append(end_fundraising_total)
 
         serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
         return Response (serializer.data, status=status.HTTP_200_OK)
+    
+
+    def get(self,request,trace_code) : 
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first() 
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        end_fundraising = EndOfFundraising.objects.filter(plan=plan)
+        if end_fundraising.exists():
+            serializer = serializers.EndOfFundraisingSerializer(end_fundraising , many = True).data
+            return Response(serializer, status=status.HTTP_200_OK)
+        if not end_fundraising.exists():
+            all_end_fundraising = []
+            amount_fundraising = plan.sum_of_funding_provided
+            if amount_fundraising:
+                amount_fundraising = amount_fundraising / 4
+            else:
+                amount_fundraising = 0
+
+            date = plan.project_start_date
+            if isinstance(date, str):
+                date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+
+            for i in range(4):
+                format_date = date.strftime('%Y-%m-%d')
+                date_capitalization = (date - timedelta(days=5)).date()
+
+                end_fundraising = EndOfFundraising.objects.create(
+                    plan=plan,
+                    date=format_date,
+                    amount=amount_fundraising,
+                    type=2,
+                    date_capitalization=date_capitalization
+                )
+
+                date = date + relativedelta(months=3)
+                all_end_fundraising.append(end_fundraising)
+
+            date_end = plan.project_end_date
+            date_end = datetime.datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S')
+            date_capitalization_end = (date_end - timedelta(days=5)).date()
+
+            end_fundraising_total = EndOfFundraising.objects.create(
+                plan=plan,
+                date=date_end.strftime('%Y-%m-%d'),
+                amount=plan.sum_of_funding_provided,
+                type=1,
+                date_capitalization=date_capitalization_end
+            )
+            
+            all_end_fundraising.append(end_fundraising_total)
+
+            serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 # done
 class SendPaymentToFarabours(APIView) :

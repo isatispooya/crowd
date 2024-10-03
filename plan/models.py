@@ -199,6 +199,7 @@ class EndOfFundraising (models.Model) :
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     type = models.CharField(max_length=100  , null=True, blank=True)
     date = models.DateField(null=True, blank=True)
+    date_capitalization = models.DateField(null=True, blank=True)
 
     def __str__(self) :
          return self.plan.persian_name + '-' + self.type
