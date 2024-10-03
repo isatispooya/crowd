@@ -12,10 +12,11 @@ class User(models.Model):
     uniqueIdentifier = models.CharField(max_length=150 , unique=True)
     referal = models.CharField(max_length=14,  null=True, blank=True , unique=True) # معرف : کدملی معرف 
 
+
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
         return f'{uniqueIdentifier}'
-    
+
 class accounts (models.Model) :
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     accountNumber = models.CharField(max_length=200)
@@ -29,6 +30,45 @@ class accounts (models.Model) :
     sheba = models.CharField(max_length= 200)
 
 
+class LegalPerson (models.Model):
+    citizenshipCountry = models.CharField( max_length=150 , null=True , blank= True)
+    companyName = models.CharField( max_length=150 , null=True , blank= True)
+    economicCode = models.CharField( max_length=150 , null=True , blank= True)
+    evidenceExpirationDate = models.CharField( max_length=150 , null=True , blank= True)
+    evidenceReleaseCompany = models.CharField( max_length=150 , null=True , blank= True)
+    evidenceReleaseDate = models.CharField( max_length=150 , null=True , blank= True)
+    legalPersonTypeSubCategory = models.CharField( max_length=150 , null=True , blank= True)
+    registerDate = models.CharField( max_length=150 , null=True , blank= True)
+    legalPersonTypeCategory = models.CharField( max_length=150 , null=True , blank= True)
+    registerPlace = models.CharField( max_length=150 , null=True , blank= True)
+    registerNumber = models.CharField( max_length=150 , null=True , blank= True)
+
+
+
+class legalPersonShareholders (models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    registerNumber = models.CharField( max_length=150 , null=True , blank= True)
+    uniqueIdentifier = models.CharField( max_length=150 , null=True , blank= True)
+    postalCode = models.CharField( max_length=150 , null=True , blank= True)
+    positionType = models.CharField( max_length=150 , null=True , blank= True)
+    percentageVotingRight = models.CharField( max_length=150 , null=True , blank= True)
+    lastName = models.CharField( max_length=150 , null=True , blank= True)
+    firstName = models.CharField( max_length=150 , null=True , blank= True)
+    address = models.CharField( max_length=150 , null=True , blank= True)
+
+
+class legalPersonStakeholders (models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    uniqueIdentifier = models.CharField( max_length=150 , null=True , blank= True)
+    type = models.CharField( max_length=150 , null=True , blank= True)
+    startAt = models.CharField( max_length=150 , null=True , blank= True)
+    positionType = models.CharField( max_length=150 , null=True , blank= True)
+    lastName = models.CharField( max_length=150 , null=True , blank= True)
+    isOwnerSignature = models.CharField( max_length=150 , null=True , blank= True)
+    firstName = models.CharField( max_length=150 , null=True , blank= True)
+    fileType = models.CharField( max_length=150 , null=True , blank= True)
+    fileName = models.CharField( max_length=150 , null=True , blank= True)
+    endAt = models.CharField( max_length=150 , null=True , blank= True)
 
 
 class addresses (models.Model):

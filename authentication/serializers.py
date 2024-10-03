@@ -67,3 +67,27 @@ class financialInfoSerializer(serializers.ModelSerializer):
 
     some_field = serializers.CharField(allow_blank=True, required=False)
     another_field = serializers.IntegerField(required=False, allow_null=True)
+
+class legalPersonShareholdersSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.legalPersonShareholders
+        fields = '__all__'
+
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
+
+class legalPersonStakeholdersSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.legalPersonStakeholders
+        fields = '__all__'
+
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)
+
+class LegalPersonSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.LegalPerson
+        fields = '__all__'
+
+    some_field = serializers.CharField(allow_blank=True, required=False)
+    another_field = serializers.IntegerField(required=False, allow_null=True)

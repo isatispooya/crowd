@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework import status 
 import requests
-from .models import User , Otp , Admin , accounts ,addresses , financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent
+from .models import User , Otp , Admin , accounts ,addresses , financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent , legalPersonShareholders , legalPersonStakeholders , LegalPerson
 from . import serializers
 import datetime
 from . import fun
@@ -108,9 +108,9 @@ class SignUpViewset(APIView):
             new_user  =User(
                 agent = data ['agent'],
                 email = data ['email'],
-                legalPerson = data ['legalPerson'],
-                legalPersonShareholders = data ['legalPersonShareholders'],
-                legalPersonStakeholders = data ['legalPersonStakeholders'],
+                # legalPerson = data ['legalPerson'],
+                # legalPersonShareholders = data ['legalPersonShareholders'],
+                # legalPersonStakeholders = data ['legalPersonStakeholders'],
                 mobile = data ['mobile'],
                 status = data ['status'],
                 type = data ['type'],
@@ -127,6 +127,55 @@ class SignUpViewset(APIView):
                 except User.DoesNotExist:
                     print("معرف مورد تایید نیست")
                 
+        if len(data['legalPersonStakeholders']) > 0:
+                for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
+                    new_legalPersonStakeholders = legalPersonStakeholders(
+                    user = new_user ,
+                    uniqueIdentifier =legalPersonStakeholders_data['uniqueIdentifier'] ,
+                    type = legalPersonStakeholders_data['type'],
+                    startAt = legalPersonStakeholders_data ['startAt'],
+                    positionType = legalPersonStakeholders_data ['positionType'],
+                    lastName = legalPersonStakeholders_data ['lastName'],
+                    isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
+                    firstName = legalPersonStakeholders_data ['firstName'],
+                    fileType = legalPersonStakeholders_data ['fileType'],
+                    fileName = legalPersonStakeholders_data ['fileName'] ,
+                    endAt = legalPersonStakeholders_data ['endAt'] ,)
+                new_legalPersonStakeholders.save()
+                print(new_legalPersonStakeholders)
+        if len(data['LegalPerson']) > 0:
+                for LegalPerson_data in data['LegalPerson'] :
+                    new_LegalPerson = LegalPerson(
+                    user = new_user ,
+                    citizenshipCountry =LegalPerson_data['citizenshipCountry'] ,
+                    economicCode = LegalPerson_data['economicCode'],
+                    evidenceExpirationDate = LegalPerson_data ['evidenceExpirationDate'],
+                    evidenceReleaseCompany = LegalPerson_data ['evidenceReleaseCompany'],
+                    evidenceReleaseDate = LegalPerson_data ['evidenceReleaseDate'],
+                    legalPersonTypeSubCategory = LegalPerson_data ['legalPersonTypeSubCategory'],
+                    registerDate = LegalPerson_data ['registerDate'],
+                    legalPersonTypeCategory = LegalPerson_data ['legalPersonTypeCategory'],
+                    registerPlace = LegalPerson_data ['registerPlace'] ,
+                    registerNumber = LegalPerson_data ['registerNumber'] ,)
+                new_LegalPerson.save()
+                print(new_LegalPerson)
+
+        if len(data['legalPersonShareholders']) > 0:
+                for legalPersonShareholders_data in data['legalPersonShareholders'] :
+                    new_legalPersonShareholders = legalPersonShareholders(
+                    user = new_user ,
+                    registerNumber =legalPersonShareholders_data['registerNumber'] ,
+                    uniqueIdentifier = legalPersonShareholders_data['uniqueIdentifier'],
+                    postalCode = legalPersonShareholders_data ['postalCode'],
+                    positionType = legalPersonShareholders_data ['positionType'],
+                    percentageVotingRight = legalPersonShareholders_data ['percentageVotingRight'],
+                    isOwnerSignature = legalPersonShareholders_data ['isOwnerSignature'],
+                    firstName = legalPersonShareholders_data ['firstName'],
+                    lastName = legalPersonShareholders_data ['lastName'],
+                    address = legalPersonShareholders_data ['address'] )
+                new_legalPersonShareholders.save()
+                print(new_legalPersonShareholders)
+
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
                 new_accounts = accounts(
@@ -141,7 +190,7 @@ class SignUpViewset(APIView):
                     type = acounts_data ['type'],
                     sheba = acounts_data ['sheba'] ,)
                 new_accounts.save()
-                
+                print(new_accounts)
         if len (data['addresses']) > 0 :
             for addresses_data in data ['addresses']:
                 new_addresses = addresses (
@@ -167,29 +216,30 @@ class SignUpViewset(APIView):
                     website =  addresses_data ['website'],
                 )
                 new_addresses.save()
+                print(new_addresses)
+            jobInfo_data = data.get('jobInfo')
+            print(jobInfo_data)
+            if isinstance(jobInfo_data, dict):
+                new_jobInfo = jobInfo(
+                    user=new_user,
+                    companyAddress=jobInfo_data.get('companyAddress', ''),
+                    companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
+                    companyEmail=jobInfo_data.get('companyEmail', ''),
+                    companyFax=jobInfo_data.get('companyFax', ''),
+                    companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
+                    companyName=jobInfo_data.get('companyName', ''),
+                    companyPhone=jobInfo_data.get('companyPhone', ''),
+                    companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
+                    companyWebSite=jobInfo_data.get('companyWebSite', ''),
+                    employmentDate=jobInfo_data.get('employmentDate', ''),
+                    job=jobInfo_data.get('job', {}).get('title', ''),
+                    jobDescription=jobInfo_data.get('jobDescription', ''),
+                    position=jobInfo_data.get('position', ''),
+                )
 
+                new_jobInfo.save()
+                print(new_jobInfo)
 
-        jobInfo_data = data.get('jobInfo')
-        if isinstance(jobInfo_data, dict):
-            new_jobInfo = jobInfo(
-                user=new_user,
-                companyAddress=jobInfo_data.get('companyAddress', ''),
-                companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
-                companyEmail=jobInfo_data.get('companyEmail', ''),
-                companyFax=jobInfo_data.get('companyFax', ''),
-                companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
-                companyName=jobInfo_data.get('companyName', ''),
-                companyPhone=jobInfo_data.get('companyPhone', ''),
-                companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
-                companyWebSite=jobInfo_data.get('companyWebSite', ''),
-                employmentDate=jobInfo_data.get('employmentDate', ''),
-                job=jobInfo_data.get('job', {}).get('title', ''),
-                jobDescription=jobInfo_data.get('jobDescription', ''),
-                position=jobInfo_data.get('position', ''),
-            )
-            new_jobInfo.save()
-        else:
-            return Response({'error' : 'Invalid data format for financialInfo_data'})
 
         privatePerson_data = data.get('privatePerson')
         if isinstance(privatePerson_data, dict):
@@ -220,8 +270,6 @@ class SignUpViewset(APIView):
                 signatureFile=signatureFile
             )
             new_privatePerson.save()
-        else:
-            return Response({'error': 'Invalid data format for privatePerson'}, status=status.HTTP_400_BAD_REQUEST)
 
         if len (data['tradingCodes']) > 0 :
             for tradingCodes_data in data ['tradingCodes']:
@@ -269,8 +317,6 @@ class SignUpViewset(APIView):
                 transactionLevel=transactionLevel,
             )
             new_financialInfo.save()
-        else:
-            return Response({'error': 'Invalid data format for financialInfo'}, status=status.HTTP_400_BAD_REQUEST)
         wallet = Wallet.objects.filter(user = new_user).first()
         if  wallet is None :
             wallet = Wallet(
@@ -313,6 +359,12 @@ class InformationViewset (APIView) :
         serializer_jobInfo = serializers.jobInfoSerializer(user_jobInfo , many = True).data
         user_tradingCodes = tradingCodes.objects.filter(user=user)
         serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes , many = True).data
+        user_legalPersonStakeholders = legalPersonStakeholders.objects.filter(user=user)
+        serializer_legalPersonStakeholders = serializers.legalPersonStakeholdersSerializer(user_legalPersonStakeholders , many = True).data
+        user_LegalPerson = LegalPerson.objects.filter(user=user)
+        serializer_LegalPerson = serializers.legalPersonStakeholdersSerializer(user_LegalPerson , many = True).data
+        user_legalPersonShareholders = legalPersonShareholders.objects.filter(user=user)
+        serializer_legalPersonShareholders = serializers.legalPersonStakeholdersSerializer(user_legalPersonShareholders , many = True).data
         combined_data = {
             **serializer_user,  
             'accounts': serializer_accounts,   
@@ -321,6 +373,9 @@ class InformationViewset (APIView) :
             'financial_info': serializer_financialInfo,  
             'job_info': serializer_jobInfo,    
             'trading_codes': serializer_tradingCodes,     
+            'legalPersonStakeholders': serializer_legalPersonStakeholders,     
+            'LegalPerson': serializer_LegalPerson,     
+            'legalPersonShareholders': serializer_legalPersonShareholders,     
         }
         return Response({'received_data': True ,  'acc' : combined_data})
     
@@ -540,8 +595,20 @@ class UserListViewset (APIView) :
             user_list.append(combined_data)
 
         return Response(user_list, status=status.HTTP_200_OK)
-
-
+class UserOneViewset(APIView) :
+    def get (self,request,id) :
+        Authorization = request.headers.get('Authorization')    
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        user = User.objects.filter(id=id).first()
+        user_serializer = serializers.UserSerializer(user , many=True)
+        
+        print(user_serializer)
+        return Response ({'success' : True} , status=status.HTTP_200_OK)
 
 
 class OtpUpdateViewset(APIView) :
