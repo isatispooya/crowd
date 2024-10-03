@@ -1,1 +1,16 @@
 django-dbbackup
+djangorestframework
+persiantools
+python-dateutil
+pandas
+requests
+django
+django.utils
+random
+os
+reportlab
+arabic_reshaper
+python-bidi
+GuardPyCaptcha
+json
+ValidationError
