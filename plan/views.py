@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ProjectOwnerCompan , PaymentGateway ,PicturePlan , InformationPlan , EndOfFundraising , ProgressReport , AuditReport
 from rest_framework.response import Response
 from rest_framework import status 

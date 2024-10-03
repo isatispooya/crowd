@@ -1,4 +1,3 @@
-from django.shortcuts import render
 import datetime
 from . import serializers
 from .models import Cart , Message  , AddInformation 
