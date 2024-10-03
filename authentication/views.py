@@ -38,7 +38,7 @@ class OtpViewset(APIView) :
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
-        captcha = captcha.check_response(encrypted_response, request.data['captcha'])
+        # captcha = captcha.check_response(encrypted_response, request.data['captcha'])
         # if not captcha  :
         if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
@@ -142,23 +142,21 @@ class SignUpViewset(APIView):
                     fileName = legalPersonStakeholders_data ['fileName'] ,
                     endAt = legalPersonStakeholders_data ['endAt'] ,)
                 new_legalPersonStakeholders.save()
-                print(new_legalPersonStakeholders)
-        if len(data['LegalPerson']) > 0:
-                for LegalPerson_data in data['LegalPerson'] :
-                    new_LegalPerson = LegalPerson(
-                    user = new_user ,
-                    citizenshipCountry =LegalPerson_data['citizenshipCountry'] ,
-                    economicCode = LegalPerson_data['economicCode'],
-                    evidenceExpirationDate = LegalPerson_data ['evidenceExpirationDate'],
-                    evidenceReleaseCompany = LegalPerson_data ['evidenceReleaseCompany'],
-                    evidenceReleaseDate = LegalPerson_data ['evidenceReleaseDate'],
-                    legalPersonTypeSubCategory = LegalPerson_data ['legalPersonTypeSubCategory'],
-                    registerDate = LegalPerson_data ['registerDate'],
-                    legalPersonTypeCategory = LegalPerson_data ['legalPersonTypeCategory'],
-                    registerPlace = LegalPerson_data ['registerPlace'] ,
-                    registerNumber = LegalPerson_data ['registerNumber'] ,)
-                new_LegalPerson.save()
-                print(new_LegalPerson)
+
+        if data['legalPerson']:
+            new_LegalPerson = LegalPerson(
+            user = new_user ,
+            citizenshipCountry =data['legalPerson']['citizenshipCountry'] ,
+            economicCode = data['legalPerson']['economicCode'],
+            evidenceExpirationDate = data['legalPerson'] ['evidenceExpirationDate'],
+            evidenceReleaseCompany = data['legalPerson'] ['evidenceReleaseCompany'],
+            evidenceReleaseDate = data['legalPerson'] ['evidenceReleaseDate'],
+            legalPersonTypeSubCategory = data['legalPerson'] ['legalPersonTypeSubCategory'],
+            registerDate = data['legalPerson'] ['registerDate'],
+            legalPersonTypeCategory = data['legalPerson'] ['legalPersonTypeCategory'],
+            registerPlace = data['legalPerson'] ['registerPlace'] ,
+            registerNumber = data['legalPerson'] ['registerNumber'] ,)
+            new_LegalPerson.save()
 
         if len(data['legalPersonShareholders']) > 0:
                 for legalPersonShareholders_data in data['legalPersonShareholders'] :
@@ -174,7 +172,6 @@ class SignUpViewset(APIView):
                     lastName = legalPersonShareholders_data ['lastName'],
                     address = legalPersonShareholders_data ['address'] )
                 new_legalPersonShareholders.save()
-                print(new_legalPersonShareholders)
 
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
@@ -190,7 +187,6 @@ class SignUpViewset(APIView):
                     type = acounts_data ['type'],
                     sheba = acounts_data ['sheba'] ,)
                 new_accounts.save()
-                print(new_accounts)
         if len (data['addresses']) > 0 :
             for addresses_data in data ['addresses']:
                 new_addresses = addresses (
@@ -216,9 +212,7 @@ class SignUpViewset(APIView):
                     website =  addresses_data ['website'],
                 )
                 new_addresses.save()
-                print(new_addresses)
             jobInfo_data = data.get('jobInfo')
-            print(jobInfo_data)
             if isinstance(jobInfo_data, dict):
                 new_jobInfo = jobInfo(
                     user=new_user,
@@ -238,7 +232,6 @@ class SignUpViewset(APIView):
                 )
 
                 new_jobInfo.save()
-                print(new_jobInfo)
 
 
         privatePerson_data = data.get('privatePerson')
@@ -343,6 +336,7 @@ class InformationViewset (APIView) :
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()   
         user = User.objects.filter(id=user.id).first() if user else None
+        print(user)
         
         if not user:
             return Response({'error': 'User not found in database'}, status=status.HTTP_404_NOT_FOUND)

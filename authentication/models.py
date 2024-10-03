@@ -31,6 +31,7 @@ class accounts (models.Model) :
 
 
 class LegalPerson (models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
     citizenshipCountry = models.CharField( max_length=150 , null=True , blank= True)
     companyName = models.CharField( max_length=150 , null=True , blank= True)
     economicCode = models.CharField( max_length=150 , null=True , blank= True)
