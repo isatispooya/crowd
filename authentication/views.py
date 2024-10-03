@@ -507,10 +507,40 @@ class UserListViewset (APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-        privateperson = privatePerson.objects.all()
-        serializer = serializers.privatePersonSerializer(privateperson, many=True)
-        return Response ({'success' : True , 'users' : serializer.data}, status=status.HTTP_200_OK)
-    
+        user = User.objects.all()
+        user_serializer = serializers.UserSerializer(user,many=True).data
+        user_list = []
+
+        for i, user_data in enumerate(user_serializer):
+            i_user = user[i]  
+            privateperson = privatePerson.objects.filter(user=i_user)
+            privateperson_serializer = serializers.privatePersonSerializer(privateperson, many=True).data
+            
+            user_addresses = addresses.objects.filter(user=i_user)
+            serializer_addresses = serializers.addressesSerializer(user_addresses , many=True).data
+            
+            user_financialInfo = financialInfo.objects.filter(user=i_user)
+            serializer_financialInfo = serializers.financialInfoSerializer(user_financialInfo , many=True).data
+            
+            user_jobInfo = jobInfo.objects.filter(user=i_user)
+            serializer_jobInfo = serializers.jobInfoSerializer(user_jobInfo , many=True).data
+            
+            user_tradingCodes = tradingCodes.objects.filter(user=i_user)
+            serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes , many=True).data
+            
+            combined_data = {
+                **user_data,  
+                'addresses': serializer_addresses,
+                'private_person': privateperson_serializer,
+                'financial_info': serializer_financialInfo,
+                'job_info': serializer_jobInfo,
+                'trading_codes': serializer_tradingCodes,
+            }
+            
+            user_list.append(combined_data)
+
+        return Response(user_list, status=status.HTTP_200_OK)
+
 
 
 
