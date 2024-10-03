@@ -12,7 +12,7 @@ import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
+from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider 
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 
@@ -765,6 +765,24 @@ class AuditReportViewset(APIView) :
         audit_report.delete()
         return Response({'message':'succes'} , status=status.HTTP_200_OK)
 
+
+# done
+class ParticipationReportViewset(APIView) :
+    def get (self , request, trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        national_id =   user.uniqueIdentifier
+        crowd_api = CrowdfundingAPI()
+        participation = crowd_api.get_project_participation_report(plan.id , national_id)
+        return Response (participation, status=status.HTTP_200_OK)
+
+
 class RoadMapViewset(APIView) :
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -794,6 +812,8 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
+
+
 
 
 

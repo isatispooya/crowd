@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset ,AuditReportViewset,ProgressReportViewset,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset, ParticipationReportViewset,AuditReportViewset,ProgressReportViewset,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -18,5 +18,6 @@ urlpatterns = [
     path('information/plan/admin/<str:trace_code>/', InformationPlanViewset.as_view(), name='add-information-plan-admin'),
     path('end/fundraising/admin/<str:trace_code>/', EndOfFundraisingViewset.as_view(), name='end-fundraising-plan-admin'),
     path('send/payment/farabours/admin/<str:trace_code>/', SendPaymentToFarabours.as_view(), name='send-payment-faravours-admin'),
+    path('participation/report/<str:trace_code>/', ParticipationReportViewset.as_view(), name='get-participation-report-user'),
 
 ]
