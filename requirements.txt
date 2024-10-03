@@ -14,3 +14,4 @@ python-bidi
 GuardPyCaptcha
 json
 ValidationError
+decouple
