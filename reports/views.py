@@ -1,5 +1,7 @@
 from django.shortcuts import render
-from plan.models import Plan , ProgressReport , AuditReport
+from plan.models import Plan , PaymentGateway ,InformationPlan
+from investor.models import Cart
+from .models import ProgressReport , AuditReport
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -7,7 +9,8 @@ from authentication import fun
 from . import serializers
 from plan import serializers
 from plan.CrowdfundingAPIService import CrowdfundingAPI 
-
+from django.utils import timezone
+from django.db.models import Sum
 
 # گزارش پیشرفت پروژه
 # done
@@ -60,8 +63,6 @@ class ProgressReportViewset(APIView) :
             return Response({'error': 'progres report not found'}, status=status.HTTP_404_NOT_FOUND)
         progres_report.delete()
         return Response({'message':'succes'} , status=status.HTTP_200_OK)
-
-
 
 
 # گزارش حسابررسی
@@ -117,7 +118,6 @@ class AuditReportViewset(APIView) :
         return Response({'message':'succes'} , status=status.HTTP_200_OK)
 
 
-
 # گزارش مشارکت کننده ها
 # done
 class ParticipationReportViewset(APIView) :
@@ -134,3 +134,54 @@ class ParticipationReportViewset(APIView) :
         crowd_api = CrowdfundingAPI()
         participation = crowd_api.get_project_participation_report(plan.id , national_id)
         return Response (participation, status=status.HTTP_200_OK)
+
+
+# داشبورد ادمین طرح
+# done
+class DashBoardAdminViewset (APIView) : 
+    def get (self , request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+
+        plan_all = Plan.objects.all().count()
+        now = timezone.now()
+        expire_plan = Plan.objects.filter(suggested_underwriting_end_date__lt=now).count()
+        current_date = timezone.now().date()
+        active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
+        cart_all = Cart.objects.all().count()
+        expire_cart = Cart.objects.filter(finish_cart = True).count()
+        active_cart = Cart.objects.filter(finish_cart = False).count()
+        return Response ({'all plan':plan_all ,'expire plan' : expire_plan , 'active plan' : active_plan , 'all cart' : cart_all, 'expire cart' : expire_cart , 'active cart' : active_cart} , status=status.HTTP_200_OK)
+   
+
+
+
+class DashBoardUserViewset(APIView) :
+    def get (self,request) : 
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan_all = Plan.objects.all().count()
+        current_date = timezone.now().date()
+        active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
+        payments = PaymentGateway.objects.filter(user=user).values('plan').distinct()
+        payments_count = payments.count()
+        total_value = PaymentGateway.objects.filter(user=user).aggregate(total_value_sum=Sum('value'))['total_value_sum']
+        if total_value is None:
+            total_value = 0
+
+        total_rate_of_return = InformationPlan.objects.filter(plan__in=payments).aggregate(total_rate_sum=Sum('rate_of_return'))['total_rate_sum']        
+        if total_rate_of_return is None:
+            total_rate_of_return = 0
+        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return }, status=status.HTTP_200_OK)
+    
+
