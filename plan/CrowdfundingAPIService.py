@@ -1,5 +1,6 @@
 import requests
 from dataclasses import dataclass
+import os
 
 @dataclass
 class ProjectFinancingProvider:
@@ -44,7 +45,7 @@ class CrowdfundingAPI:
     """
 
     BASE_URL = "https://cfapitest.ifb.ir"
-    API_KEY = "85d5ff91-0c4d-4142-beab-d734b72a40fe"  
+    API_KEY = os.getenv('API_KEY')
 
     def __init__(self):
         """

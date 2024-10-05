@@ -10,7 +10,7 @@ from . import fun
 import json
 import random
 from accounting.models import Wallet
-
+import os
 
 # done
 class CaptchaViewset(APIView) :
@@ -62,7 +62,7 @@ class OtpViewset(APIView) :
             "uniqueIdentifier": uniqueIdentifier
             })
             headers = {
-            'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+            'X-API-KEY': os.getenv('X-API-KEY'),
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
@@ -92,7 +92,7 @@ class SignUpViewset(APIView):
         "otp": otp
         })
         headers = {
-        'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+        'X-API-KEY': os.getenv('X-API-KEY'),
         'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload)
@@ -639,7 +639,7 @@ class OtpUpdateViewset(APIView) :
             "uniqueIdentifier": uniqueIdentifier
             })
             headers = {
-            'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+            'X-API-KEY': os.getenv('X-API-KEY'),
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
@@ -674,7 +674,7 @@ class UpdateInformationViewset(APIView) :
             "otp": otp
         })
         headers = {
-            'X-API-KEY': 'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc',
+            'X-API-KEY': os.getenv('X-API-KEY'),
             'Content-Type': 'application/json'
         }
         
