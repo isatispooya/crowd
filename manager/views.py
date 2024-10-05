@@ -9,6 +9,8 @@ import datetime
 from django.utils import timezone
 from investor.time import get_date_from_request
 
+
+# done
 class ManagerViewset(APIView) :
     def post (self , request , id ):
         Authorization = request.headers.get('Authorization')
@@ -51,9 +53,7 @@ class ManagerViewset(APIView) :
         return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
     
 
-    
-
-
+# done
 class ManagerAdminViewset(APIView):
     def get (self,request,id):
         Authorization = request.headers.get('Authorization')
@@ -117,6 +117,7 @@ class ManagerAdminViewset(APIView):
         return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
 
 
+# done
 class ResumeViewset(APIView):
     def post (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -187,8 +188,7 @@ class ResumeViewset(APIView):
         return Response({'manager': resume_list}, status=status.HTTP_200_OK)
 
 
- 
-
+# done
 class ResumeAdminViewset(APIView) :
     def get(self, request,id) :
         Authorization = request.headers.get('Authorization')
@@ -272,6 +272,8 @@ class ResumeAdminViewset(APIView) :
 
         return Response({'managers': managers_data }, status=status.HTTP_201_CREATED)
 
+
+# done
 class ShareholderViewset(APIView):
     def post(self, request,id):
         Authorization = request.headers.get('Authorization')
@@ -318,8 +320,9 @@ class ShareholderViewset(APIView):
         shareholder = Shareholder.objects.filter(cart=cart)
         serializer = serializers.ShareholderSerializer(shareholder, many=True)
         return Response({'message': True, 'data': serializer.data}, status=status.HTTP_200_OK)
-    
 
+
+# done
 class ShareholderAdminViewset(APIView) :
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
@@ -367,10 +370,8 @@ class ShareholderAdminViewset(APIView) :
     
         return Response({'message': True, 'data': all_serialized}, status=status.HTTP_200_OK)
 
-        
 
-
-
+# done
 class ValidationViewset (APIView) :
     def post(self, request, id):
         try:
@@ -523,7 +524,7 @@ class ValidationViewset (APIView) :
             print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+# done
 class ValidationAdminViewset (APIView) :
     def post (self, request, id) :
         try :
@@ -693,7 +694,7 @@ class ValidationAdminViewset (APIView) :
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
+# done
 class HistoryViewset (APIView) :
     def post (self, request, id) :
         Authorization = request.headers.get('Authorization')
@@ -791,10 +792,7 @@ class HistoryViewset (APIView) :
         return Response({'manager': manager_list}, status=status.HTTP_200_OK)
 
 
-
-
-
-
+# done
 class HistoryAdminViewset (APIView) :
     def post(self, request, id):
         Authorization = request.headers.get('Authorization')

@@ -6,12 +6,9 @@ pandas
 requests
 django
 django.utils
-random
-os
 reportlab
 arabic_reshaper
 python-bidi
 GuardPyCaptcha
-json
 ValidationError
 decouple

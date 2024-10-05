@@ -11,6 +11,8 @@ import json
 import random
 from accounting.models import Wallet
 
+
+# done
 class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
@@ -31,6 +33,7 @@ def SendSms(snd,txt):
 
 
 # otp for user
+# done
 class OtpViewset(APIView) :
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
@@ -71,10 +74,9 @@ class OtpViewset(APIView) :
         return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
-
-
         
 # sign up for first user sejam
+# done
 class SignUpViewset(APIView):
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
@@ -322,9 +324,7 @@ class SignUpViewset(APIView):
         return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)
 
 
-
-
-
+# done
 class InformationViewset (APIView) :
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
@@ -423,10 +423,8 @@ class InformationViewset (APIView) :
 
 
 
-
-
-
 # login for user
+# done
 class LoginViewset(APIView) :
     def post (self,request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
@@ -465,9 +463,8 @@ class LoginViewset(APIView) :
         return Response({'access': token} , status=status.HTTP_200_OK)
 
 
-
-
 #otp for admin
+# done
 class OtpAdminViewset(APIView) :
     def post (self,request) :
         captcha = GuardPyCaptcha()
@@ -497,12 +494,8 @@ class OtpAdminViewset(APIView) :
     
 
 
-
-
-
-
-
 # login for admin
+# done
 class LoginAdminViewset(APIView) :
     def post (self,request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
@@ -543,9 +536,7 @@ class LoginAdminViewset(APIView) :
         return Response({'access': token} , status=status.HTTP_200_OK)
 
 
-
-
-
+# done
 class UserListViewset (APIView) :
     def get (self, request) :
         Authorization = request.headers.get('Authorization')    
@@ -588,6 +579,9 @@ class UserListViewset (APIView) :
             user_list.append(combined_data)
 
         return Response(user_list, status=status.HTTP_200_OK)
+
+
+# done
 class UserOneViewset(APIView) :
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')    
@@ -625,8 +619,7 @@ class UserOneViewset(APIView) :
 
         return Response({'success': combined_data}, status=status.HTTP_200_OK)
 
-
-
+# done
 class OtpUpdateViewset(APIView) :
     def post (self,request) :
         Authorization = request.headers.get('Authorization')
@@ -657,7 +650,7 @@ class OtpUpdateViewset(APIView) :
         return Response({'registered' : False , 'message' : 'سیستم قطع است خداحافظ'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
-
+# done
 class UpdateInformationViewset(APIView) :
     def patch(self, request):
         Authorization = request.headers.get('Authorization')

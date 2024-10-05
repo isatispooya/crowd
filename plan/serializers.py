@@ -42,22 +42,6 @@ class AppendicesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AuditReportSerializer(serializers.ModelSerializer):
-    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
-    class Meta:
-        model = models.AuditReport
-        fields = '__all__'
-
-
-
-class ProgressReportSerializer(serializers.ModelSerializer):
-    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
-    class Meta:
-        model = models.ProgressReport
-        fields = '__all__'
-
-
-
 class CommenttSerializer(serializers.ModelSerializer):
     firstName = serializers.SerializerMethodField()  
     lastName = serializers.SerializerMethodField() 

@@ -164,23 +164,6 @@ class Message(models.Model):
         return self.cart.__str__() + self.message
     
 
-
-
-# class SetStatus (models.Model):
-#     cart = models.ForeignKey(Cart , on_delete=models.CASCADE)
-#     OPTION_STATUS = [
-#             ('1','بررسی شرکت'),
-#             ('2','بررسی مدیران'),
-#             ('3','بررسی رزومه'),
-#             ('4','بررسی سهامدارن'),
-#             ('5','بررسی اعتبار سینجی'),
-#         ]
-#     status = models.CharField(max_length = 20 , choices = OPTION_STATUS , default = '1')
-#     def __str__(self):
-#             return self.cart.__str__ () + self.status
-
-
-
 class AddInformation (models.Model):
     announcement_of_changes_managers = models.FileField(upload_to='static/' ,  blank = True, null = True) # اگهی اخرین تغیرات مدیران 
     lock_announcement_of_changes_managers = models.BooleanField(default=False)

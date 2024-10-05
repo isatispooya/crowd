@@ -9,6 +9,7 @@ from authentication import fun
 from django.http import HttpResponse, HttpResponseNotAllowed
 
 
+# done
 class WalletAdminViewset(APIView):
     def get (self,request):
         Authorization = request.headers.get('Authorization')     
@@ -28,7 +29,7 @@ class WalletAdminViewset(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
+# done
 class WalletAdmin2Viewset(APIView):
     def patch (self,request,id) :
         Authorization = request.headers.get('Authorization')     
@@ -67,8 +68,7 @@ class WalletAdmin2Viewset(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
 
-
-
+# done
 class WalletViewset(APIView) :
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
@@ -85,9 +85,7 @@ class WalletViewset(APIView) :
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-
-
-
+# done
 class TransactionAdminViewset(APIView):
     def get(self,request) :
         Authorization = request.headers.get('Authorization')     
@@ -107,6 +105,7 @@ class TransactionAdminViewset(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
 
+# done
 class TransactionAdmin2Viewset(APIView):
     def get(self,request,id) :
         Authorization = request.headers.get('Authorization')     
@@ -173,9 +172,7 @@ class TransactionAdmin2Viewset(APIView):
             return Response({'error': 'status field is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
    
-
-
-
+# done
 class TransactionViewset(APIView) :
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
@@ -223,6 +220,7 @@ class TransactionViewset(APIView) :
         return Response ({'transaction' : serializer.data } ,  status=status.HTTP_200_OK)
     
 
+# done
 class Transaction2Viewset(APIView):
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')

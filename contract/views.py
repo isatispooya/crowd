@@ -20,6 +20,7 @@ from .utilti import ContarctCreator
 
 
 # انتخاب مدیران شرکت برای حق امضا توسط ادمین
+# done
 class SignatureViewset (APIView):
     def post (self,request,id):
         Authorization = request.headers.get('Authorization')
@@ -42,8 +43,9 @@ class SignatureViewset (APIView):
             return Response(signature_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
-class SetSignatureViewset(APIView) :
 # فعال کردن وضعیت حق امضای مدیران مشتری توسط ادمین
+# done
+class SetSignatureViewset(APIView) :
     def post (self,request,id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -90,8 +92,8 @@ class SetSignatureViewset(APIView) :
 
 
 
-
 # وارد کردن اطلاعات قرارداد عاملیت توسط ادمین
+# done
 class SetCartAdminViewset(APIView) :
     def post (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -140,6 +142,7 @@ class SetCartAdminViewset(APIView) :
 
 
 # وارد کردن اطلاعات قرارداد عاملیت توسط مشتری
+# done
 class SetCartUserViewset(APIView) :
     def post (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -167,9 +170,6 @@ class SetCartUserViewset(APIView) :
         cart.save()
         serializer = serializers.CartSerializer(cart)
         return Response ({'success': True , 'cart' : serializer.data}, status=status.HTTP_200_OK)
-
-
-
 
 
 

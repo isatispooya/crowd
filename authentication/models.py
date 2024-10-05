@@ -45,7 +45,6 @@ class LegalPerson (models.Model):
     registerNumber = models.CharField( max_length=150 , null=True , blank= True)
 
 
-
 class legalPersonShareholders (models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     registerNumber = models.CharField( max_length=150 , null=True , blank= True)
@@ -93,8 +92,6 @@ class addresses (models.Model):
     section =models.CharField(max_length=1000 ,  blank=True , null= True)
     tel =  models.CharField(max_length=1000 ,  blank=True , null= True)
     website = models.CharField(max_length=1000 ,  blank=True , null= True)
-
-
 
 
 class financialInfo (models.Model) :
@@ -146,7 +143,6 @@ class privatePerson (models.Model) :
     signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True) 
 
 
-
 class tradingCodes (models.Model) :
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     code = models.CharField(max_length=200)
@@ -156,14 +152,11 @@ class tradingCodes (models.Model) :
     type = models.CharField(max_length=200, null=True, blank=True)
 
 
-
-
-
-
 class Otp(models.Model):
     code = models.CharField(max_length=4)
     mobile = models.CharField(max_length=14)
     date = models.DateTimeField(auto_now_add=True)
+
 
 class Admin(models.Model):
     firstName = models.CharField(max_length=32)
@@ -173,6 +166,7 @@ class Admin(models.Model):
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
         return f'{uniqueIdentifier}'
+
 
 class Reagent(models.Model):
     reference = models.ForeignKey(User,to_field='referal', on_delete=models.CASCADE , related_name='reagent_references') # معرفی کننده
