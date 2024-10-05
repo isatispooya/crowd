@@ -12,3 +12,5 @@ python-bidi
 GuardPyCaptcha
 ValidationError
 decouple
+python-dotenv
+dj-database-url

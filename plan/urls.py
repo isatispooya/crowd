@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset, ParticipationReportViewset,AuditReportViewset,ProgressReportViewset,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
