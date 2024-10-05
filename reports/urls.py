@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import ParticipationReportViewset,AuditReportViewset,ProgressReportViewset , DashBoardAdminViewset , DashBoardUserViewset
+from.views import ParticipationReportViewset,AuditReportViewset,ProgressReportViewset , DashBoardAdminViewset , DashBoardUserViewset , ProfitabilityReportViewSet
 
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path('participation/report/<str:trace_code>/', ParticipationReportViewset.as_view(), name='get-participation-report-user'),
     path('dashboard/admin/', DashBoardAdminViewset.as_view(), name='dashboard-admin'),
     path('dashboard/user/', DashBoardUserViewset.as_view(), name='dashboard-user'),
+    path('profitability/report/admin/', ProfitabilityReportViewSet.as_view(), name='profitability-report-admin'),
 ]

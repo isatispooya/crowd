@@ -660,7 +660,6 @@ class SendPaymentToFarabours(APIView) :
         return Response (status=status.HTTP_200_OK)
 
 
-
 class RoadMapViewset(APIView) :
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
