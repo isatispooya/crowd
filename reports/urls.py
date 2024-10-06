@@ -8,5 +8,5 @@ urlpatterns = [
     path('participation/report/<str:trace_code>/', ParticipationReportViewset.as_view(), name='get-participation-report-user'),
     path('dashboard/admin/', DashBoardAdminViewset.as_view(), name='dashboard-admin'),
     path('dashboard/user/', DashBoardUserViewset.as_view(), name='dashboard-user'),
-    path('profitability/report/admin/', ProfitabilityReportViewSet.as_view(), name='profitability-report-admin'),
+    path('report/admin/profitability/<str:trace_code>/', ProfitabilityReportViewSet.as_view(), name='profitability-report-admin'),
 ]

@@ -188,7 +188,7 @@ class DashBoardUserViewset(APIView) :
     
 # گزارش سود دهی ادمین
 class ProfitabilityReportViewSet(APIView) :
-    def get(self,request):
+    def get(self,request,trace_code):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -196,37 +196,32 @@ class ProfitabilityReportViewSet(APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-        now = timezone.now()
-        expire_plan = Plan.objects.filter(suggested_underwriting_end_date__lt=now)
-        end_fundraising = EndOfFundraising.objects.filter(plan__in = expire_plan)
-        if not end_fundraising :
-            return Response({'error': 'this plan has not end of fundraising'}, status=status.HTTP_400_BAD_REQUEST)
-        # df = pd.DataFrame(columns=['نام کاربر', 'کدملی', 'موبایل', 'طرح', 'جمع کل سرمایه گذاری', 
-        #                            'مبلغ قسط 1', 'مبلغ قسط 2', 'مبلغ قسط 3', 'مبلغ قسط 4',
-        #                            'تاریخ پرداخت قسط 1', 'تاریخ پرداخت قسط 2', 'تاریخ پرداخت قسط 3', 'تاریخ پرداخت قسط 4', 
-        #                            'تاریخ واریز سود', 'تاریخ پرداخت اصل پول', 'پرداخت اصل پول'])
-        # data_list = [] 
-        # for entry in end_fundraising:
-        #     plan_name = entry.plan.persian_name  
-        #     data_list.append({
-        #         'نام کاربر': 'نام کاربر نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'کدملی': '1234567890',  # باید از مدل مرتبط گرفته شود
-        #         'موبایل': '09123456789',  # باید از مدل مرتبط گرفته شود
-        #         'طرح': plan_name,  # نام طرح از مدل Plan
-        #         'جمع کل سرمایه گذاری': 'مقدار نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'مبلغ قسط 1': 'مقدار نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'مبلغ قسط 2': 'مقدار نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'مبلغ قسط 3': 'مقدار نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'مبلغ قسط 4': 'مقدار نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'تاریخ پرداخت قسط 1': 'تاریخ نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'تاریخ پرداخت قسط 2': 'تاریخ نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'تاریخ پرداخت قسط 3': 'تاریخ نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'تاریخ پرداخت قسط 4': 'تاریخ نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'تاریخ واریز سود': 'تاریخ نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'تاریخ پرداخت اصل پول': 'تاریخ نمونه',  # باید از مدل مرتبط گرفته شود
-        #         'پرداخت اصل پول': 'وضعیت نمونه'  # باید از مدل مرتبط گرفته شود
-        #     }, ignore_index=True)
-        # df = pd.concat([df, pd.DataFrame(data_list)], ignore_index=True)
-        # print(df)
-        return Response({'success':True}, status=status.HTTP_200_OK)
-    
+        if not trace_code:
+            return Response({'error': 'trace_code not found'}, status=status.HTTP_400_BAD_REQUEST)
+        plan =Plan.objects.filter(trace_code=trace_code)
+        if not plan.exists():
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        plan =plan.first()
+        end_plan = EndOfFundraising.objects.filter(plan=plan)
+        if not end_plan.exists():
+            return Response({'error': 'plan not end'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        end_plan = serializers.EndOfFundraisingSerializer(end_plan,many=True)
+        user_peyment = PaymentGateway.objects.filter(plan=plan,status=True)
+        if not user_peyment.exists():
+            return Response({'error': 'payment not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        user_peyment = serializers.PaymentGatewaySerializer(user_peyment,many=True)
+        information = InformationPlan.objects.filter(plan=plan)
+        if not information.exists():
+            return Response({'error': 'information not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        information_serializer = serializers.InformationPlanSerializer(information.first())
+        rate_of_return = 365 / (information_serializer.data['rate_of_return'])
+        print(rate_of_return)
+        df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
+        print(df)
+        pey_df = pd.DataFrame(end_plan.data).sort_values('date')
+        start_project = plan.project_start_date
+        pey_df['date'] = pd.to_datetime(pey_df['date'])
+        pey_df['date_diff'] = pey_df['date'] - pd.to_datetime(start_project)
+        print(pey_df)
+        df = df.to_dict('records')
+        return Response(df, status=status.HTTP_200_OK)

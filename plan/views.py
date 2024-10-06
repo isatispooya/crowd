@@ -485,6 +485,7 @@ class ParticipantViewset(APIView) :
         participant = PaymentGateway.objects.filter(plan=plan , status= True)
         if not participant :
             return Response ({'error': 'participant not found'}, status=status.HTTP_404_NOT_FOUND)
+        print(1)
         serializer = serializers.PaymentGatewaySerializer(participant , many= True)
         names = []
 
@@ -547,6 +548,8 @@ class EndOfFundraisingViewset(APIView) :
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
         all_end_fundraising = []
+        infoPlan = InformationPlan.objects.filter(plan=plan).first()
+
         amount_fundraising = plan.sum_of_funding_provided
         if amount_fundraising : 
             amount_fundraising = amount_fundraising / 4
@@ -568,9 +571,10 @@ class EndOfFundraisingViewset(APIView) :
         date_end = datetime.datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S')
         date_capitalization_end = (date_end - timedelta(days=5)).date()
         end_fundraising_total ,_ = EndOfFundraising.objects.update_or_create(plan=plan , date=date_end.strftime('%Y-%m-%d') , defaults={'amount': plan.sum_of_funding_provided,'type': 1 ,'date_capitalization': date_capitalization_end})
-        all_end_fundraising.append(end_fundraising_total)
-
+        all_end_fundraising.append(end_fundraising_total) 
         serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
+        if serializer.is_valid():
+            serializer.save()
         return Response (serializer.data, status=status.HTTP_200_OK)
     
 
