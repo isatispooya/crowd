@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from plan.models import Plan , PaymentGateway ,InformationPlan ,EndOfFundraising
+from authentication.models import User , accounts , privatePerson
 from investor.models import Cart
 from .models import ProgressReport , AuditReport
 from rest_framework.response import Response
@@ -12,6 +13,7 @@ from plan.CrowdfundingAPIService import CrowdfundingAPI
 from django.utils import timezone
 from django.db.models import Sum
 import pandas as pd
+from authentication.serializers import accountsSerializer , privatePersonSerializer
 
 # گزارش پیشرفت پروژه
 # done
@@ -210,18 +212,51 @@ class ProfitabilityReportViewSet(APIView) :
         if not user_peyment.exists():
             return Response({'error': 'payment not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         user_peyment = serializers.PaymentGatewaySerializer(user_peyment,many=True)
+
+        user = user_peyment.data[0]['user']
+        user = User.objects.filter(uniqueIdentifier = user).first()
+        if user is None:
+            return Response({'error': 'user not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+        user_account = accounts.objects.filter(user=user).first()
+        if user_account is None:
+            return Response({'error': 'user account not found'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        user_account_serializer = accountsSerializer(user_account)
+        account_number = user_account_serializer.data.get('accountNumber')
+
+        user_privetperson = privatePerson.objects.filter(user=user).first()
+        user_privetperson_serializer = privatePersonSerializer(user_privetperson)
+        user_fname = user_privetperson_serializer.data.get('firstName')
+        user_lname = user_privetperson_serializer.data.get('lastName')
+        user_name = user_fname + '' + user_lname
+
         information = InformationPlan.objects.filter(plan=plan)
         if not information.exists():
             return Response({'error': 'information not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         information_serializer = serializers.InformationPlanSerializer(information.first())
-        rate_of_return = 365 / (information_serializer.data['rate_of_return'])
-        print(rate_of_return)
+
+        rate_of_return = ((information_serializer.data['rate_of_return'])/100) /365
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
-        print(df)
+        df ['account_number'] = account_number
+        df ['user_name'] = user_name
+
         pey_df = pd.DataFrame(end_plan.data).sort_values('date')
         start_project = plan.project_start_date
         pey_df['date'] = pd.to_datetime(pey_df['date'])
-        pey_df['date_diff'] = pey_df['date'] - pd.to_datetime(start_project)
-        print(pey_df)
+        pey_df['date_diff'] = (pey_df['date'] - pd.to_datetime(start_project))
+        pey_df['date_diff'] = [x.days for x in  pey_df['date_diff']]
+        pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
+        pey_df = pey_df.sort_values('date_diff')
+        qest = 1
+        for i in pey_df.index : 
+            if pey_df['type'][i] == '2' :
+                df[f'profit{qest}'] = pey_df['profit'][i]
+                df[f'value{qest}'] = pey_df['profit'][i] * df['value']
+                df[f'date{qest}'] = pey_df['date'][i]
+                qest += 1
+            else :
+                df['date_base'] = pey_df['date']
+        
+        print(df)
         df = df.to_dict('records')
         return Response(df, status=status.HTTP_200_OK)
