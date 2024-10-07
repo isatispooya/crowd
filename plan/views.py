@@ -6,7 +6,7 @@ from authentication import fun
 from . import serializers
 from accounting.models import Wallet
 from investor.models import Cart
-from authentication.models import privatePerson , User
+from authentication.models import privatePerson , User , accounts
 import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
@@ -26,6 +26,12 @@ def get_name (uniqueIdentifier) :
     full_name = first_name + ' ' + last_name
 
     return full_name
+        
+def get_account_number(uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    user_account = accounts.objects.filter(user=user).first()
+    account_number = user_account.accountNumber
+    return account_number
 
 
 # done

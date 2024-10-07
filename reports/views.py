@@ -7,14 +7,14 @@ from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
 from authentication import fun
-from . import serializers
+from .serializers import  ProgressReportSerializer ,AuditReportSerializer
 from plan import serializers
 from plan.CrowdfundingAPIService import CrowdfundingAPI 
 from django.utils import timezone
 from django.db.models import Sum
 import pandas as pd
 from authentication.serializers import accountsSerializer , privatePersonSerializer
-
+from plan.views import get_name , get_account_number
 # گزارش پیشرفت پروژه
 # done
 class ProgressReportViewset(APIView) :
@@ -30,7 +30,7 @@ class ProgressReportViewset(APIView) :
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
-        serializer = serializers.ProgressReportSerializer(data=data)
+        serializer = ProgressReportSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
@@ -48,7 +48,7 @@ class ProgressReportViewset(APIView) :
         progres_report = ProgressReport.objects.filter(plan=plan)
         if not progres_report.exists() :
             return Response({'error': 'progres report not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.ProgressReportSerializer(progres_report, many= True)
+        serializer = ProgressReportSerializer(progres_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
@@ -83,7 +83,7 @@ class AuditReportViewset(APIView) :
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
-        serializer = serializers.AuditReportSerializer(data=data)
+        serializer =AuditReportSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
@@ -101,7 +101,7 @@ class AuditReportViewset(APIView) :
         audit_report = AuditReport.objects.filter(plan=plan)
         if not audit_report.exists() :
             return Response({'error': 'audit report not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.AuditReportSerializer(audit_report, many= True)
+        serializer =AuditReportSerializer(audit_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
@@ -209,26 +209,9 @@ class ProfitabilityReportViewSet(APIView) :
             return Response({'error': 'plan not end'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         end_plan = serializers.EndOfFundraisingSerializer(end_plan,many=True)
         user_peyment = PaymentGateway.objects.filter(plan=plan,status=True)
-        if not user_peyment.exists():
+        if user_peyment is None:
             return Response({'error': 'payment not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         user_peyment = serializers.PaymentGatewaySerializer(user_peyment,many=True)
-
-        user = user_peyment.data[0]['user']
-        user = User.objects.filter(uniqueIdentifier = user).first()
-        if user is None:
-            return Response({'error': 'user not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        
-        user_account = accounts.objects.filter(user=user).first()
-        if user_account is None:
-            return Response({'error': 'user account not found'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        user_account_serializer = accountsSerializer(user_account)
-        account_number = user_account_serializer.data.get('accountNumber')
-
-        user_privetperson = privatePerson.objects.filter(user=user).first()
-        user_privetperson_serializer = privatePersonSerializer(user_privetperson)
-        user_fname = user_privetperson_serializer.data.get('firstName')
-        user_lname = user_privetperson_serializer.data.get('lastName')
-        user_name = user_fname + '' + user_lname
 
         information = InformationPlan.objects.filter(plan=plan)
         if not information.exists():
@@ -237,8 +220,23 @@ class ProfitabilityReportViewSet(APIView) :
 
         rate_of_return = ((information_serializer.data['rate_of_return'])/100) /365
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
-        df ['account_number'] = account_number
-        df ['user_name'] = user_name
+
+        account_numbers = []
+        user_names = []
+
+        for i in df['user']:
+            user_obj = User.objects.filter(uniqueIdentifier=i).first()
+            if user_obj is not None:
+                account_number = get_account_number(user_obj)
+                user_name = get_name(user_obj)
+            else:
+                account_number = 'N/A' 
+                user_name = 'N/A'
+            
+            account_numbers.append(account_number)
+            user_names.append(user_name)
+        df ['account_number'] = account_numbers
+        df ['user_name'] = user_names
 
         pey_df = pd.DataFrame(end_plan.data).sort_values('date')
         start_project = plan.project_start_date
