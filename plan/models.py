@@ -143,6 +143,7 @@ class PaymentGateway(models.Model) :
     status =  models.BooleanField (default=False)
     document =  models.BooleanField (default=True)
     picture = models.FileField(null=True, blank = True  , upload_to='static/')
+    send_farabours = models.BooleanField (default=False)
     def __str__(self) :
             return self.user.uniqueIdentifier
         

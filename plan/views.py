@@ -6,12 +6,12 @@ from authentication import fun
 from . import serializers
 from accounting.models import Wallet
 from investor.models import Cart
-from authentication.models import privatePerson , User , accounts
+from authentication.models import privatePerson , User , accounts , LegalPerson , tradingCodes
 import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
 import pandas as pd
-from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider 
+from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 
@@ -27,6 +27,29 @@ def get_name (uniqueIdentifier) :
 
     return full_name
         
+
+def get_fname (uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    privateperson = privatePerson.objects.filter(user=user).first()
+    first_name = privateperson.firstName
+    return first_name
+
+
+def get_lname (uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    privateperson = privatePerson.objects.filter(user=user).first()
+    last_name = privateperson.lastName
+    return last_name
+
+
+def get_economi_code (uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    economi_code = tradingCodes.objects.filter(user=user).first()
+    print(economi_code)
+    economi_code = economi_code.code
+    return economi_code
+
+
 def get_account_number(uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     user_account = accounts.objects.filter(user=user).first()
@@ -34,6 +57,18 @@ def get_account_number(uniqueIdentifier) :
     return account_number
 
 
+def get_mobile_number(uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    mobile = user.mobile
+    return mobile
+
+
+def check_legal_person(uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    legal_person = LegalPerson.objects.filter(user=user).first()
+    if legal_person:
+        return True
+    return False
 # done
 class PlanViewset(APIView):
     def get(self, request, trace_code):
@@ -670,6 +705,60 @@ class SendPaymentToFarabours(APIView) :
         return Response (status=status.HTTP_200_OK)
 
 
+
+
+# done
+class SendParticipationCertificateToFaraboursViewset(APIView):
+    def post(self, request, trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        payment = PaymentGateway.objects.filter(plan=plan , status = True , send_farabours = False)
+        if not payment :
+            return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
+        payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
+        payment_serializer = payment_serializer.data
+
+        for i in payment_serializer :
+            uniqueIdentifier = i['user']
+            user_obj = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+            if user_obj is not None:
+                user_fname = get_fname(uniqueIdentifier)
+                user_lname = get_lname(uniqueIdentifier)
+                account_number = get_account_number (uniqueIdentifier)
+                mobile = get_mobile_number (uniqueIdentifier)
+                bourse_code = get_economi_code (uniqueIdentifier)
+                is_legal = check_legal_person (uniqueIdentifier)
+            provided_finance_price = i['value']
+            payment_date = i['create_date']
+            bank_tracking_number = i['payment_id']
+
+            for i in payment :
+                project_finance = ProjectFinancingProvider(
+                    projectID = trace_code,
+                    nationalID = uniqueIdentifier ,
+                    isLegal = is_legal,
+                    firstName = user_fname ,
+                    lastNameOrCompanyName = user_lname,
+                    providedFinancePrice = provided_finance_price,
+                    bourseCode = bourse_code,
+                    paymentDate = payment_date,
+                    shebaBankAccountNumber = account_number,
+                    mobileNumber = mobile,
+                    bankTrackingNumber = bank_tracking_number,
+                )
+        return Response(True, status=status.HTTP_200_OK)
+
+
+
+
 class RoadMapViewset(APIView) :
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
@@ -699,9 +788,6 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
-
-
-
 
 
 

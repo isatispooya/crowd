@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset,PaymentDocument,EndOfFundraisingViewset, CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset,PaymentDocument,EndOfFundraisingViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -15,6 +15,7 @@ urlpatterns = [
     path('participant/user/<str:trace_code>/', ParticipantViewset.as_view(), name='participant-user'),
     path('information/plan/admin/<str:trace_code>/', InformationPlanViewset.as_view(), name='add-information-plan-admin'),
     path('end/fundraising/admin/<str:trace_code>/', EndOfFundraisingViewset.as_view(), name='end-fundraising-plan-admin'),
-    path('send/payment/farabours/admin/<str:trace_code>/', SendPaymentToFarabours.as_view(), name='send-payment-faravours-admin'),
+    path('send/payment/farabours/admin/<str:trace_code>/', SendPaymentToFarabours.as_view(), name='send-payment-farabours-admin'),
+    path('send/participation/certificate/farabours/admin/<str:trace_code>/', SendParticipationCertificateToFaraboursViewset.as_view(), name='send-participation-certificate-farabours-admin'),
 
 ]
