@@ -63,6 +63,8 @@ class RequestViewset(APIView):
         if serializer.is_valid():
             cart = serializer.save(user=user)
 
+
+
             for file_field in ['financial_report_thisyear', 'financial_report_lastyear', 'financial_report_yearold',
                                'audit_report_thisyear', 'audit_report_lastyear', 'audit_report_yearold',
                                'statement_thisyear', 'statement_lastyear', 'statement_yearold',
@@ -70,6 +72,11 @@ class RequestViewset(APIView):
                                'announcement_of_changes_managers', 'announcement_of_changes_capital',
                                'bank_account_turnover', 'statutes', 'assets_and_liabilities',
                                'latest_insurance_staf', 'claims_status', 'logo']:
+
+                if request.data.get(file_field) == None:
+                    serializer.validated_data[file_field] = request.data.get(file_field)
+
+
                 if file_field in request.FILES:
                     serializer.validated_data[file_field] = request.FILES[file_field]
 
@@ -230,17 +237,32 @@ class CartAdmin(APIView) :
         admin = admin.first()
 
         cart = Cart.objects.filter(id=id).first()
+
         if not cart:
             return Response({'error': 'cart not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
+        for file_field in ['financial_report_thisyear', 'financial_report_lastyear', 'financial_report_yearold',
+                               'audit_report_thisyear', 'audit_report_lastyear', 'audit_report_yearold',
+                               'statement_thisyear', 'statement_lastyear', 'statement_yearold',
+                               'alignment_6columns_thisyear', 'alignment_6columns_lastyear', 'alignment_6columns_yearold',
+                               'announcement_of_changes_managers', 'announcement_of_changes_capital',
+                               'bank_account_turnover', 'statutes', 'assets_and_liabilities',
+                               'latest_insurance_staf', 'claims_status', 'logo']:
+            if file_field in data :
+                if 'null' in request.data.get(file_field) or 'undefined' in request.data.get(file_field):
+                    setattr(cart, file_field, None)
+
+            if file_field in request.FILES:
+                setattr(cart, file_field, request.FILES[file_field])  
+        cart.save()
         data.pop('code', None)
         if 'status' in data :
             cart.status = data['status']
             
-        cart_serializer = serializers.CartSerializer(cart, data = data , partial=True)
-        if cart_serializer.is_valid():
-            cart_serializer.save()
-            return Response({'message': 'Cart updated successfully', 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
+        cart_serializer = serializers.CartSerializer(cart)
+        # if cart_serializer.is_valid():
+        #     cart_serializer.save()
+        return Response({'message': 'Cart updated successfully', 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
         return Response(cart_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self , request , id):

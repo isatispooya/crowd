@@ -45,7 +45,6 @@ def get_lname (uniqueIdentifier) :
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     economi_code = tradingCodes.objects.filter(user=user).first()
-    print(economi_code)
     economi_code = economi_code.code
     return economi_code
 
@@ -53,13 +52,15 @@ def get_economi_code (uniqueIdentifier) :
 def get_account_number(uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     user_account = accounts.objects.filter(user=user).first()
-    account_number = user_account.accountNumber
-    return account_number
+    sheba = user_account.sheba
+    return sheba
 
 
 def get_mobile_number(uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     mobile = user.mobile
+    if mobile[:2] == '98':
+      mobile = '0'+ mobile[2:]
     return mobile
 
 
@@ -238,6 +239,9 @@ class DocumentationViewset(APIView) :
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
             serializer.uploaded_file = request.FILES['file']
+
+
+
         serializer.save(plan=plan)
         return Response ({'data' : serializer.data} , status=status.HTTP_200_OK)
 
@@ -491,7 +495,6 @@ class PaymentDocument(APIView):
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data
-        print(data)
 
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
@@ -525,7 +528,6 @@ class ParticipantViewset(APIView) :
         participant = PaymentGateway.objects.filter(plan=plan , status= True)
         if not participant :
             return Response ({'error': 'participant not found'}, status=status.HTTP_404_NOT_FOUND)
-        print(1)
         serializer = serializers.PaymentGatewaySerializer(participant , many= True)
         names = []
 
@@ -722,12 +724,16 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         payment = PaymentGateway.objects.filter(plan=plan , status = True , send_farabours = False)
         if not payment :
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
+
         payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
         payment_serializer = payment_serializer.data
-
+        api_farabours = CrowdfundingAPI()
         for i in payment_serializer :
             uniqueIdentifier = i['user']
             user_obj = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+            print('-'*55)
+            print(get_account_number (uniqueIdentifier))
+            print('+'*55)
             if user_obj is not None:
                 user_fname = get_fname(uniqueIdentifier)
                 user_lname = get_lname(uniqueIdentifier)
@@ -739,20 +745,25 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             payment_date = i['create_date']
             bank_tracking_number = i['payment_id']
 
-            for i in payment :
-                project_finance = ProjectFinancingProvider(
-                    projectID = trace_code,
-                    nationalID = uniqueIdentifier ,
-                    isLegal = is_legal,
-                    firstName = user_fname ,
-                    lastNameOrCompanyName = user_lname,
-                    providedFinancePrice = provided_finance_price,
-                    bourseCode = bourse_code,
-                    paymentDate = payment_date,
-                    shebaBankAccountNumber = account_number,
-                    mobileNumber = mobile,
-                    bankTrackingNumber = bank_tracking_number,
-                )
+            project_finance = ProjectFinancingProvider(
+                projectID = trace_code,
+                nationalID = uniqueIdentifier ,
+                isLegal = is_legal,
+                firstName = user_fname ,
+                lastNameOrCompanyName = user_lname,
+                providedFinancePrice = provided_finance_price,
+                bourseCode = bourse_code,
+                paymentDate = payment_date,
+                shebaBankAccountNumber = account_number,
+                mobileNumber = mobile,
+                bankTrackingNumber = bank_tracking_number,
+            )
+            # api = api_farabours.register_financing(project_finance)
+        for j in payment :
+            j.send_farabours = True
+            j.save()
+            
+            
         return Response(True, status=status.HTTP_200_OK)
 
 

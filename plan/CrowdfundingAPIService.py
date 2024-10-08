@@ -44,7 +44,7 @@ class CrowdfundingAPI:
         - get_project_participation_report: برای دریافت گزارش گواهی مشارکت یک شخص/شرکت در یک پروژه.
     """
 
-    BASE_URL = "https://cfapitest.ifb.ir"
+    BASE_URL = os.getenv('BASE_URL')
     API_KEY = os.getenv('API_KEY')
 
     def __init__(self):

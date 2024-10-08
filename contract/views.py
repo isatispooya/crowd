@@ -110,11 +110,13 @@ class SetCartAdminViewset(APIView) :
         
         update_fields = [
             'otc_fee', 'publication_fee', 'dervice_fee', 'design_cost',
-            'percentage_total_amount', 'payback_period', 'swimming_percentage','lock_payback_period','lock_swimming_percentage'
+            'percentage_total_amount', 'payback_period', 'swimming_percentage','lock_payback_period','lock_swimming_percentage',
             'partnership_interest', 'guarantee', 'role_141' , 'Prohibited', 'criminal_record','lock_partnership_interest',
             'effective_litigation' , 'bounced_check', 'non_current_debt', 'minimum_deposit_10', 'lock_contract','lock_guarantee'
         ]
         for i in update_fields:
+            
+            print(i)
             if i in data:
                 setattr(cart, i, data.get(i))
         cart.save()

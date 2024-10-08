@@ -50,7 +50,8 @@ class Plan (models.Model) :
     persian_creation_date =  models.CharField(max_length=500, null=True , blank=True)
     number_of_finance_provider =  models.IntegerField( null=True , blank=True)
     sum_of_funding_provided =   models.IntegerField( null=True , blank=True)
-    
+    def __str__(self) :
+        return 'bb'
 class ProjectOwnerCompan(models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     national_id = models.BigIntegerField( null=True, blank=True)
@@ -91,7 +92,7 @@ class PicturePlan(models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     picture = models.FileField(upload_to='static/' , null=True ,  blank= True)
     def __str__(self) :
-        return self.plan.persian_name
+        return str(self.plan.persian_name)
 
 
 
@@ -101,7 +102,7 @@ class DocumentationFiles(models.Model): #فایل های مستندات
     title = models.CharField(max_length=150 , blank=True , null=True) 
     file = models.FileField(upload_to = 'static/', null=True , blank=True)
     def __str__(self) :
-        return self.title
+        return str (self.title)
     
 
     
@@ -110,7 +111,7 @@ class Appendices(models.Model): #تضامین
     title = models.CharField(max_length=150 , blank=True , null=True) 
     file = models.FileField(upload_to = 'static/', null=True , blank=True)
     def __str__(self) :
-        return self.title
+        return str (self.title)
     
 
 
@@ -172,7 +173,7 @@ class InformationPlan (models.Model):
     status_show = models.BooleanField (default=False)
     amount_collected_now = models.BigIntegerField (null=True, blank=True)
     def __str__(self) :
-         return self.plan.persian_name
+         return str(self.plan.persian_name)
          
 
 class EndOfFundraising (models.Model) :
