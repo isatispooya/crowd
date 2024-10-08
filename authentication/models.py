@@ -3,9 +3,9 @@ from django.db import models
 class User(models.Model):
     agent = models.CharField(max_length= 200 , null=True, blank=True )
     email = models.EmailField( null=True, blank=True)
-    legalPerson = models.CharField(max_length=150 ,null=True, blank=True )
-    legalPersonShareholders = models.CharField(max_length=150 ,null=True, blank=True )
-    legalPersonStakeholders = models.CharField(max_length=150 ,null=True, blank=True )
+    # legalPerson = models.CharField(max_length=150 ,null=True, blank=True )
+    # legalPersonShareholders = models.CharField(max_length=150 ,null=True, blank=True )
+    # legalPersonStakeholders = models.CharField(max_length=150 ,null=True, blank=True )
     mobile = models.CharField(max_length=14)
     status = models.CharField(max_length=150 , null=True, blank=True)
     type = models.CharField(max_length=200)
@@ -47,7 +47,6 @@ class LegalPerson (models.Model):
 
 class legalPersonShareholders (models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    registerNumber = models.CharField( max_length=150 , null=True , blank= True)
     uniqueIdentifier = models.CharField( max_length=150 , null=True , blank= True)
     postalCode = models.CharField( max_length=150 , null=True , blank= True)
     positionType = models.CharField( max_length=150 , null=True , blank= True)
@@ -55,6 +54,7 @@ class legalPersonShareholders (models.Model):
     lastName = models.CharField( max_length=150 , null=True , blank= True)
     firstName = models.CharField( max_length=150 , null=True , blank= True)
     address = models.CharField( max_length=150 , null=True , blank= True)
+    
 
 
 class legalPersonStakeholders (models.Model):
@@ -66,8 +66,6 @@ class legalPersonStakeholders (models.Model):
     lastName = models.CharField( max_length=150 , null=True , blank= True)
     isOwnerSignature = models.CharField( max_length=150 , null=True , blank= True)
     firstName = models.CharField( max_length=150 , null=True , blank= True)
-    fileType = models.CharField( max_length=150 , null=True , blank= True)
-    fileName = models.CharField( max_length=150 , null=True , blank= True)
     endAt = models.CharField( max_length=150 , null=True , blank= True)
 
 

@@ -119,7 +119,6 @@ class SignUpViewset(APIView):
                 referal = data ['uniqueIdentifier'],
             )
             new_user.save()
-
             if reference:
                 try :
                    reference_user = User.objects.get(uniqueIdentifier=reference)
@@ -139,10 +138,9 @@ class SignUpViewset(APIView):
                     lastName = legalPersonStakeholders_data ['lastName'],
                     isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
                     firstName = legalPersonStakeholders_data ['firstName'],
-                    fileType = legalPersonStakeholders_data ['fileType'],
-                    fileName = legalPersonStakeholders_data ['fileName'] ,
                     endAt = legalPersonStakeholders_data ['endAt'] ,)
                 new_legalPersonStakeholders.save()
+                print(new_legalPersonStakeholders)
 
         if data['legalPerson']:
             new_LegalPerson = LegalPerson(
@@ -158,22 +156,21 @@ class SignUpViewset(APIView):
             registerPlace = data['legalPerson'] ['registerPlace'] ,
             registerNumber = data['legalPerson'] ['registerNumber'] ,)
             new_LegalPerson.save()
+            print(new_LegalPerson)
 
         if len(data['legalPersonShareholders']) > 0:
                 for legalPersonShareholders_data in data['legalPersonShareholders'] :
                     new_legalPersonShareholders = legalPersonShareholders(
                     user = new_user ,
-                    registerNumber =legalPersonShareholders_data['registerNumber'] ,
                     uniqueIdentifier = legalPersonShareholders_data['uniqueIdentifier'],
                     postalCode = legalPersonShareholders_data ['postalCode'],
                     positionType = legalPersonShareholders_data ['positionType'],
                     percentageVotingRight = legalPersonShareholders_data ['percentageVotingRight'],
-                    isOwnerSignature = legalPersonShareholders_data ['isOwnerSignature'],
                     firstName = legalPersonShareholders_data ['firstName'],
                     lastName = legalPersonShareholders_data ['lastName'],
                     address = legalPersonShareholders_data ['address'] )
                 new_legalPersonShareholders.save()
-
+                print(new_legalPersonShareholders)
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
                 new_accounts = accounts(
@@ -188,6 +185,7 @@ class SignUpViewset(APIView):
                     type = acounts_data ['type'],
                     sheba = acounts_data ['sheba'] ,)
                 new_accounts.save()
+                print(new_accounts)
         if len (data['addresses']) > 0 :
             for addresses_data in data ['addresses']:
                 new_addresses = addresses (
@@ -213,6 +211,7 @@ class SignUpViewset(APIView):
                     website =  addresses_data ['website'],
                 )
                 new_addresses.save()
+                print(new_addresses)
             jobInfo_data = data.get('jobInfo')
             if isinstance(jobInfo_data, dict):
                 new_jobInfo = jobInfo(
@@ -276,7 +275,7 @@ class SignUpViewset(APIView):
                     type = tradingCodes_data ['type'],
                 )
                 new_tradingCodes.save()
-
+                print(new_tradingCodes)
 
         financialInfo_data = data.get('financialInfo')
 
@@ -311,14 +310,8 @@ class SignUpViewset(APIView):
                 transactionLevel=transactionLevel,
             )
             new_financialInfo.save()
-        wallet = Wallet.objects.filter(user = new_user).first()
-        if  wallet is None :
-            wallet = Wallet(
-                remaining = 0 ,
-                status = False,
-                user = new_user
-            )
-            wallet.save()
+            print(new_financialInfo)
+
         token = fun.encryptionUser(new_user)
 
         return Response({'message': True , 'access' :token} , status=status.HTTP_200_OK)

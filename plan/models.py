@@ -169,7 +169,7 @@ class InformationPlan (models.Model):
          ('4','4'),
          ('5','5'),
     ]
-    satus_second = models.CharField (max_length=50 , choices=status_second_option , null=True, blank=True )
+    status_second = models.CharField (max_length=50 , choices=status_second_option , null=True, blank=True )
     status_show = models.BooleanField (default=False)
     amount_collected_now = models.BigIntegerField (null=True, blank=True)
     def __str__(self) :

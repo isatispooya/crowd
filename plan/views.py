@@ -564,7 +564,7 @@ class InformationPlanViewset(APIView) :
         status_show = request.data.get('status_show')
         if status_second not in ['1' , '2','3' , '4' , '5'] :
             status_second = '1'
-        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'satus_second': status_second, 'status_show' :status_show } )
+        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show } )
         serializer = serializers.InformationPlanSerializer(information)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
