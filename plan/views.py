@@ -456,12 +456,22 @@ class PaymentDocument(APIView):
             admin = admin.first()
             payments = PaymentGateway.objects.filter(plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
-            return Response(response.data, status=status.HTTP_200_OK)
-
+            df = pd.DataFrame(response.data)
+            if len(df)==0:
+                return Response([], status=status.HTTP_200_OK)
+            df['fulname'] = [get_name(x) for x in df['user']]
+            df = df.to_dict('records')
+            return Response(df, status=status.HTTP_200_OK)
+        
         if user:
             user = user.first()
             payments = PaymentGateway.objects.filter(user=user, plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
+            df = pd.DataFrame(response.data)
+            if len(df)==0:
+                return Response([], status=status.HTTP_200_OK)
+            df['fulname'] = [get_name(x) for x in df['user']]
+            df = df.to_dict('records')
             return Response(response.data, status=status.HTTP_200_OK)
 
         
@@ -476,28 +486,17 @@ class PaymentDocument(APIView):
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        payments = PaymentGateway.objects.filter(plan=plan).first()
+        payment_id = request.data.get('id')
+        payments = PaymentGateway.objects.filter(plan=plan,id = payment_id).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data
-        financing_provider = ProjectFinancingProvider(
-            projectID=data.get('projectID'),
-            nationalID=data.get('nationalID'),
-            isLegal=data.get('isLegal'),
-            firstName=data.get('firstName'),
-            lastNameOrCompanyName=data.get('lastNameOrCompanyName'),
-            providedFinancePrice=data.get('providedFinancePrice'),
-            bourseCode=data.get('bourseCode'),
-            paymentDate=data.get('paymentDate'),
-            shebaBankAccountNumber=data.get('shebaBankAccountNumber'),
-            mobileNumber=data.get('mobileNumber'),
-            bankTrackingNumber=data.get('bankTrackingNumber'),
-        )
+        print(data)
 
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
-        payment = PaymentGateway.objects.filter(plan=plan)
+        payment = PaymentGateway.objects.filter(plan=plan ,id = payment_id)
         value = 0
         for i in payment : 
             if i.status == True:
