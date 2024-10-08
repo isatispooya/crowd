@@ -140,7 +140,6 @@ class SignUpViewset(APIView):
                     firstName = legalPersonStakeholders_data ['firstName'],
                     endAt = legalPersonStakeholders_data ['endAt'] ,)
                 new_legalPersonStakeholders.save()
-                print(new_legalPersonStakeholders)
 
         if data['legalPerson']:
             new_LegalPerson = LegalPerson(
@@ -156,7 +155,6 @@ class SignUpViewset(APIView):
             registerPlace = data['legalPerson'] ['registerPlace'] ,
             registerNumber = data['legalPerson'] ['registerNumber'] ,)
             new_LegalPerson.save()
-            print(new_LegalPerson)
 
         if len(data['legalPersonShareholders']) > 0:
                 for legalPersonShareholders_data in data['legalPersonShareholders'] :
@@ -170,7 +168,6 @@ class SignUpViewset(APIView):
                     lastName = legalPersonShareholders_data ['lastName'],
                     address = legalPersonShareholders_data ['address'] )
                 new_legalPersonShareholders.save()
-                print(new_legalPersonShareholders)
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
                 new_accounts = accounts(
@@ -185,7 +182,6 @@ class SignUpViewset(APIView):
                     type = acounts_data ['type'],
                     sheba = acounts_data ['sheba'] ,)
                 new_accounts.save()
-                print(new_accounts)
         if len (data['addresses']) > 0 :
             for addresses_data in data ['addresses']:
                 new_addresses = addresses (
@@ -211,7 +207,6 @@ class SignUpViewset(APIView):
                     website =  addresses_data ['website'],
                 )
                 new_addresses.save()
-                print(new_addresses)
             jobInfo_data = data.get('jobInfo')
             if isinstance(jobInfo_data, dict):
                 new_jobInfo = jobInfo(
@@ -275,7 +270,6 @@ class SignUpViewset(APIView):
                     type = tradingCodes_data ['type'],
                 )
                 new_tradingCodes.save()
-                print(new_tradingCodes)
 
         financialInfo_data = data.get('financialInfo')
 
@@ -310,7 +304,6 @@ class SignUpViewset(APIView):
                 transactionLevel=transactionLevel,
             )
             new_financialInfo.save()
-            print(new_financialInfo)
 
         token = fun.encryptionUser(new_user)
 

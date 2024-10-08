@@ -20,10 +20,15 @@ from datetime import timedelta
 
 def get_name (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    
     privateperson = privatePerson.objects.filter(user=user).first()
-    first_name = privateperson.firstName
-    last_name = privateperson.lastName
-    full_name = first_name + ' ' + last_name
+    if privateperson :
+        first_name = privateperson.firstName
+        last_name = privateperson.lastName
+        full_name = first_name + ' ' + last_name
+    else :
+        legalperson = LegalPerson.objects.filter(user=user).first()
+        full_name = legalperson.companyName
 
     return full_name
         
