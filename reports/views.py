@@ -87,7 +87,7 @@ class AuditReportViewset(APIView) :
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
-            serializer.uploaded_file = request.FILES['file']
+            serializer.uploaded_file = request.FILES
         serializer.save(plan=plan)
         return Response (serializer.data, status=status.HTTP_200_OK)
     
@@ -220,7 +220,6 @@ class ProfitabilityReportViewSet(APIView) :
 
         rate_of_return = ((information_serializer.data['rate_of_return'])/100) /365
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
-
         account_numbers = []
         user_names = []
 
@@ -255,6 +254,5 @@ class ProfitabilityReportViewSet(APIView) :
             else :
                 df['date_base'] = pey_df['date']
         
-        print(df)
         df = df.to_dict('records')
         return Response(df, status=status.HTTP_200_OK)
