@@ -579,6 +579,19 @@ class AddInfromationAdminViewset (APIView) :
 
             if file_field in request.FILES:
                 setattr(addinformation, file_field, request.FILES.get(file_field))
+        non_file_fields =['lock_announcement_of_changes_managers','lock_assets_and_liabilities', 'lock_latest_insurance_staf', 'lock_claims_status', 'lock_product_catalog',
+                            'lock_announcement_of_changes_capital', 'lock_licenses',
+                            'lock_bank_account_turnover','lock_statutes', 'lock_auditor_representative','Lock_registered_capital',
+                             'lock_announcing_account_number', ] 
+        for field in non_file_fields:
+            if field in data:
+                value = data.get(field)
+                
+                if value == 'true':
+                    value = True
+                elif value == 'false':
+                    value = False
+                setattr(addinformation, field, value) 
         
         try:
             addinformation.save()
