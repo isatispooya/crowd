@@ -75,21 +75,46 @@ def check_legal_person(uniqueIdentifier) :
     if legal_person:
         return True
     return False
+
 # done
+# detial + information
 class PlanViewset(APIView):
     def get(self, request, trace_code):
         plan = Plan.objects.filter(trace_code=trace_code)
         if not plan.exists ():
             return Response({'message':'not found plan'}, status=status.HTTP_404_NOT_FOUND)
         plan = plan.first()
-        response = serializers.PlanSerializer(plan)
-        return Response(response.data, status=status.HTTP_200_OK)
+        information = InformationPlan.objects.filter(plan=plan).first()
+        list = {}
+        if not information:
+            plan_serializer = serializers.PlanSerializer(plan)
+            return Response(plan_serializer.data, status=status.HTTP_200_OK)
+        
+        plan_serializer = serializers.PlanSerializer(plan)
+        list['plan'] = plan_serializer.data
+        information_serailizer = serializers.InformationPlanSerializer(information)
+        list['information compelte'] = information_serailizer.data
+        return Response(list, status=status.HTTP_200_OK)
+        
+
 # done
+# list + information
+# update
 class PlansViewset(APIView):
     def get(self, request):
-        plan = Plan.objects.filter()
-        response =serializers.PlanSerializer(plan, many=True)
-        return Response(response.data, status=status.HTTP_200_OK)
+        plans = Plan.objects.all()
+        result = []
+        for i in plans:
+            information = InformationPlan.objects.filter(plan=i).first()
+            data = {}
+            plan_serializer = serializers.PlanSerializer(i)
+            data['plan'] = plan_serializer.data
+
+            if information:
+                information_serializer = serializers.InformationPlanSerializer(information)
+                data['information_complete'] = information_serializer.data
+            result.append(data)
+        return Response(result, status=status.HTTP_200_OK)
     
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
@@ -179,6 +204,7 @@ class PlansViewset(APIView):
                     )
         return Response({'message':'بروزرسانی از فرابورس انجام شد'}, status=status.HTTP_200_OK)
 # done
+
 class AppendicesViewset(APIView) :
     def post (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
