@@ -87,9 +87,7 @@ class ManagerAdminViewset(APIView):
         cart = models.Cart.objects.filter(id=id).first()
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
-
         managers_data = request.data.get('managers', [])
-        
         updated_managers = []  
         
         for manager_data in managers_data:
@@ -235,18 +233,18 @@ class ResumeAdminViewset(APIView) :
         managers_data = []
 
         data = request.data.copy()
-
         cart = models.Cart.objects.filter(id=id)
         if len(cart) == 0:
             return Response({'error': 'Not found cart'}, status=status.HTTP_400_BAD_REQUEST)
         cart = cart.first()
 
+
         if request.FILES:
             for file_key, file in request.FILES.items():
                 lock = False
                 manager = Manager.objects.filter(national_code=file_key, cart=cart)
-                if not manager.exists():
-                    return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
+                if not manager:
+                    return Response({'error': 'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
                 manager = manager.first()
                 existing_resumes = Resume.objects.filter(manager=manager)
                 if existing_resumes.exists():
@@ -254,20 +252,31 @@ class ResumeAdminViewset(APIView) :
                 resume = Resume(file=file, manager=manager, lock=lock)
                 resume.save()
                 serializer = serializers.ResumeSerializer(resume)
-                managers_data.append(serializer.data)
+                # managers_data.append(serializer.data)
         for lock_key in request.data.copy():
+
             if 'lock' in lock_key:
-                _key = lock_key.split('_')[1]
+                _key = lock_key.split('_')[0]
                 manager = Manager.objects.filter(national_code=_key, cart=cart)
-                if not manager.exists():
+                if not manager :
                     return Response({'error': f'Not found management for national_code {file_key}'}, status=status.HTTP_400_BAD_REQUEST)
                 manager = manager.first()
                 resumes = Resume.objects.filter(manager=manager).first()
                 try :
                     resumes.lock = request.data.copy()[lock_key] == 'true'
                     resumes.save()
+                    managers_data.append(serializer.data)
                 except :
                     pass
+            else:
+                manager = Manager.objects.filter(national_code=lock_key, cart=cart)
+                if manager.exists() :
+                    manager = manager.first()
+                    resumes = Resume.objects.filter(manager=manager)
+                    if request.data.get(lock_key) in ['null', 'undefined', None, '']:
+                        resumes = resumes.first()
+                        resumes.delete()
+
 
 
         return Response({'managers': managers_data }, status=status.HTTP_201_CREATED)
@@ -559,6 +568,7 @@ class ValidationAdminViewset (APIView) :
                 existing_validation = Validation.objects.filter(manager=manager.national_code, cart=cart , lock = lock).first()
                 if existing_validation:
                     existing_validation.file_manager.delete()
+
                     existing_validation.delete()
                 date = int(date_manager[f'{national_code}_date'])/1000
                 date = datetime.datetime.fromtimestamp(date)
@@ -808,7 +818,6 @@ class HistoryAdminViewset (APIView) :
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        print(request.FILES)
         if request.FILES:
             for file_key, file in request.FILES.items():
                 lock = False
@@ -818,6 +827,8 @@ class HistoryAdminViewset (APIView) :
                 manager = manager.first()
 
                 history = History.objects.filter(manager=manager).first()
+                if history :
+                    history.delete()
                 if history is None:
                     date, error_message = get_date_from_request(request, manager.national_code)
                     if error_message:
@@ -825,6 +836,9 @@ class HistoryAdminViewset (APIView) :
                     
                     history = History(file=file, manager=manager, lock=lock, cart=cart, date=date)
                     history.save()
+                print(history)
+                
+
                 
 
         
