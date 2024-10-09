@@ -488,106 +488,30 @@ class AddInfromationAdminViewset (APIView) :
         if not cart:
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         addinformation = AddInformation.objects.filter(cart=cart).first()
-        if addinformation:
+        data = request.data.copy()
+ 
+        for file_field in ['announcement_of_changes_managers','announcement_of_changes_capital','bank_account_turnover',
+                           'statutes','assets_and_liabilities','latest_insurance_staf','claims_status'
+                           ,'product_catalog','licenses','auditor_representative','announcing_account_number']:
 
-            if request.data.get('announcement_of_changes_managers') == None:
-                addinformation.announcement_of_changes_managers = request.data.get('announcement_of_changes_managers')
-            if request.data.get('announcement_of_changes_capital') == None:
-                addinformation.announcement_of_changes_capital = request.data.get('announcement_of_changes_capital')
-            if request.data.get('bank_account_turnover') == None:
-                addinformation.bank_account_turnover = request.data.get('bank_account_turnover')
-            if request.data.get('statutes') == None:
-                addinformation.statutes = request.data.get('statutes')
-            if request.data.get('assets_and_liabilities') == None:
-                addinformation.assets_and_liabilities = request.data.get('assets_and_liabilities')
-            if request.data.get('latest_insurance_staf') == None:
-                addinformation.latest_insurance_staf = request.data.get('latest_insurance_staf')
-            if request.data.get('claims_status') == None:
-                addinformation.claims_status = request.data.get('claims_status')
-            if request.data.get('product_catalog') == None:
-                addinformation.product_catalog = request.data.get('product_catalog')
-            if request.data.get('licenses') == None:
-                addinformation.licenses = request.data.get('licenses')
-            if request.data.get('auditor_representative') == None:
-                addinformation.auditor_representative = request.data.get('auditor_representative')
-            if request.data.get('announcing_account_number') == None:
-                addinformation.announcing_account_number = request.data.get('announcing_account_number')
+            if file_field in data:
+                field_value = request.data.get(file_field)
+                if field_value in ['null', 'undefined', None , '']:
+                    setattr(addinformation, file_field, None)
 
+                else:
+                    setattr(addinformation, file_field, field_value)
 
-            # دریافت داده‌های ارسال شده در فایل‌ها (در صورتی که هر کدام ارسال شده باشند)
-
-            if 'announcement_of_changes_managers' in request.FILES:
-                addinformation.announcement_of_changes_managers = request.FILES.get('announcement_of_changes_managers')
-            if 'announcement_of_changes_capital' in request.FILES:
-                addinformation.announcement_of_changes_capital = request.FILES.get('announcement_of_changes_capital')
-            if 'bank_account_turnover' in request.FILES:
-                addinformation.bank_account_turnover = request.FILES.get('bank_account_turnover')
-            if 'statutes' in request.FILES:
-                addinformation.statutes = request.FILES.get('statutes')
-            if 'assets_and_liabilities' in request.FILES:
-                addinformation.assets_and_liabilities = request.FILES.get('assets_and_liabilities')
-            if 'latest_insurance_staf' in request.FILES:
-                addinformation.latest_insurance_staf = request.FILES.get('latest_insurance_staf')
-            if 'claims_status' in request.FILES:
-                addinformation.claims_status = request.FILES.get('claims_status')
-            if 'product_catalog' in request.FILES:
-                addinformation.product_catalog = request.FILES.get('product_catalog')
-            if 'licenses' in request.FILES:
-                addinformation.licenses = request.FILES.get('licenses')
-            if 'auditor_representative' in request.FILES:
-                addinformation.auditor_representative = request.FILES.get('auditor_representative')
-            if 'announcing_account_number' in request.FILES:
-                addinformation.announcing_account_number = request.FILES.get('announcing_account_number')
-            
-            if 'lock_announcement_of_changes_managers' in request.data.copy():
-              addinformation.lock_announcement_of_changes_managers = request.data.copy()['lock_announcement_of_changes_managers'] == 'true'
-            if 'lock_claims_status' in request.data.copy():
-              addinformation.lock_claims_status = request.data.copy()['lock_claims_status'] == 'true'
-            if 'lock_announcement_of_changes_capital' in request.data.copy():
-              addinformation.lock_announcement_of_changes_capital = request.data.copy()['lock_announcement_of_changes_capital'] == 'true'
-            if 'lock_bank_account_turnover' in request.data.copy():
-              addinformation.lock_bank_account_turnover = request.data.copy()['lock_bank_account_turnover'] == 'true'
-            if 'lock_statutes' in request.data.copy():
-              addinformation.lock_statutes = request.data.copy()['lock_statutes'] == 'true'
-            if 'lock_assets_and_liabilities' in request.data.copy():
-              addinformation.lock_assets_and_liabilities = request.data.copy()['lock_assets_and_liabilities'] == 'true'
-            if 'lock_latest_insurance_staf' in request.data.copy():
-                addinformation.lock_latest_insurance_staf = request.data.copy()['lock_latest_insurance_staf'] == 'true'
-            if 'lock_product_catalog' in request.data.copy():
-              addinformation.lock_product_catalog = request.data.copy()['lock_product_catalog'] == 'true'
-            if 'lock_licenses' in request.data.copy():
-              addinformation.lock_licenses = request.data.copy()['lock_licenses'] == 'true'
-            if 'lock_auditor_representative' in request.data.copy():
-              addinformation.lock_auditor_representative = request.data.copy()['lock_auditor_representative'] == 'true'
-            if 'lock_announcing_account_number' in request.data.copy():
-              addinformation.lock_announcing_account_number = request.data.copy()['lock_announcing_account_number'] == 'true'
-            # ذخیره تغییرات
+            if file_field in request.FILES:
+                setattr(addinformation, file_field, request.FILES.get(file_field))
+        
+        try:
             addinformation.save()
-            return Response({'message': 'Information updated successfully'}, status=status.HTTP_200_OK)
-
-        data = {
-            'announcement_of_changes_managers': request.FILES.get('announcement_of_changes_managers'),
-            'announcement_of_changes_capital': request.FILES.get('announcement_of_changes_capital'),
-            'bank_account_turnover': request.FILES.get('bank_account_turnover'),
-            'statutes': request.FILES.get('statutes'),
-            'assets_and_liabilities': request.FILES.get('assets_and_liabilities'),
-            'latest_insurance_staf': request.FILES.get('latest_insurance_staf'),
-            'claims_status': request.FILES.get('claims_status'),
-            'product_catalog': request.FILES.get('product_catalog'),
-            'licenses': request.FILES.get('licenses'),
-            'auditor_representative': request.FILES.get('auditor_representative'),
-            'announcing_account_number': request.FILES.get('announcing_account_number'),
-            'cart': cart.id
-        }
-
-
-        serializer = serializers.AddInformationSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        except Exception as e:
+            return Response({'error': f'Failed to save data: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+  
+        addinformation_serializer = serializers.AddInformationSerializer(addinformation)
+        return Response(addinformation_serializer.data, status=status.HTTP_201_CREATED)
 
 
     def get (self, request, id) :
