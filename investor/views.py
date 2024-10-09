@@ -247,23 +247,98 @@ class CartAdmin(APIView) :
                                'alignment_6columns_thisyear', 'alignment_6columns_lastyear', 'alignment_6columns_yearold',
                                'announcement_of_changes_managers', 'announcement_of_changes_capital',
                                'bank_account_turnover', 'statutes', 'assets_and_liabilities',
-                               'latest_insurance_staf', 'claims_status', 'logo']:
+                               'latest_insurance_staf', 'claims_status', 'logo' ] :
             if file_field in data :
                 if 'null' in request.data.get(file_field) or 'undefined' in request.data.get(file_field):
                     setattr(cart, file_field, None)
 
             if file_field in request.FILES:
                 setattr(cart, file_field, request.FILES[file_field])  
+        non_file_fields =['city','lock_city', 'company_name', 'Lock_company_name', 'activity_industry',
+                            'Lock_activity_industry', 'registration_number', 'Lock_registration_number',
+                            'nationalid','Lock_nationalid', 'registered_capital','Lock_registered_capital',
+                            'personnel', 'Lock_personnel', 'company_kind', 'amount_of_request', 'code', 
+                            'address', 'email', 'postal_code', 'newspaper', 'otc_fee','publication_fee','dervice_fee',
+                            'percentage_total_amount','payback_period','swimming_percentage','guarantee',
+                            'year_of_establishment','exchange_code','amount_of_registered_shares',
+                            'non_current_debt','minimum_deposit_10','bounced_check',
+                            'effective_litigation','criminal_record','prohibited','role_141','date_newspaper',
+                            'Lock_company_name', 'Lock_activity_industry', 'Lock_registration_number',
+                            'Lock_nationalid', 'Lock_registered_capital', 'Lock_personnel','Lock_company_kind',
+                            'Lock_amount_of_request',
+                            'Lock_email', 'Lock_address', 'Lock_alignment_6columns_yearold', 'Lock_alignment_6columns_lastyear', 'Lock_alignment_6columns_thisyear',
+                            'Lock_statement_yearold','Lock_statement_lastyear','Lock_statement_thisyear',
+                            'Lock_audit_report_yearold','Lock_audit_report_lastyear','Lock_audit_report_thisyear',
+                            'Lock_financial_report_yearold',
+                            'Lock_financial_report_lastyear','Lock_financial_report_thisyear','Lock_logo','lock_postal_code','Lock_newspaper','Lock_date_newspaper','lock_otc_fee',
+                            'lock_publication_fee','lock_dervice_fee','lock_percentage_total_amount',
+                            'lock_payback_period','lock_swimming_percentage','lock_partnership_interest','lock_guarantee',
+                            'lock_amount_of_registered_shares',
+                            'lock_exchange_code','lock_year_of_establishment','finish_cart','lock_contract',
+                            ]
+        for field in non_file_fields:
+            if field in data:
+                value = data.get(field)
+
+                if field in ['personnel', 'payback_period', 'amount_of_registered_shares','swimming_percentage'] and value == '':
+                    value = None
+
+                
+                if value == 'true':
+                    value = True
+                elif value == 'false':
+                    value = False
+                setattr(cart, field, value) 
+        
+        if 'date_newspaper' in data:
+            if data['date_newspaper'] == '' or data['date_newspaper'] is None:
+                cart.date_newspaper = None  
+            else:
+                if isinstance(data['date_newspaper'], str):
+                    try:
+                        timestamp = int(data['date_newspaper']) / 1000
+                        data['date_newspaper'] = datetime.datetime.fromtimestamp(timestamp)
+                    except (ValueError, TypeError):
+                        try:
+                            date_str = data['date_newspaper'].rstrip('Z')   
+                            if '.' in date_str:
+                                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+                            else:
+                                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                            data['date_newspaper'] = date_obj
+                        except ValueError:
+                            return Response({'error': 'Invalid timestamp or date format for date_newspaper'}, status=status.HTTP_400_BAD_REQUEST)
+
+                cart.date_newspaper = data['date_newspaper']
+        if 'year_of_establishment' in data:
+            if data['year_of_establishment'] == '' or data['year_of_establishment'] is None:
+                cart.year_of_establishment = None  
+            else:
+                if isinstance(data['year_of_establishment'], str):
+                    try:
+                        timestamp = int(data['year_of_establishment']) / 1000
+                        data['year_of_establishment'] = datetime.datetime.fromtimestamp(timestamp)
+                    except (ValueError, TypeError):
+                        try:
+                            date_str = data['year_of_establishment'].rstrip('Z') 
+                            if '.' in date_str:
+                                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+                            else:
+                                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                            data['year_of_establishment'] = date_obj
+                        except ValueError:
+                            return Response({'error': 'Invalid timestamp or date format for year_of_establishment'}, status=status.HTTP_400_BAD_REQUEST)
+
+                cart.year_of_establishment = data['year_of_establishment']
         cart.save()
         data.pop('code', None)
         if 'status' in data :
             cart.status = data['status']
             
-        cart_serializer = serializers.CartSerializer(cart)
-        # if cart_serializer.is_valid():
-        #     cart_serializer.save()
-        return Response({'message': 'Cart updated successfully', 'cart': cart_serializer.data}, status=status.HTTP_200_OK)
-        return Response(cart_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        cart_serializer = serializers.CartSerializer(cart )
+    
+        return Response(cart_serializer.data, status=status.HTTP_200_OK)
+
 
     def delete(self , request , id):
         Authorization = request.headers.get('Authorization')    
