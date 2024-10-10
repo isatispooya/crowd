@@ -80,21 +80,29 @@ def check_legal_person(uniqueIdentifier) :
 # detial + information
 class PlanViewset(APIView):
     def get(self, request, trace_code):
-        plan = Plan.objects.filter(trace_code=trace_code)
-        if not plan.exists ():
-            return Response({'message':'not found plan'}, status=status.HTTP_404_NOT_FOUND)
-        plan = plan.first()
-        information = InformationPlan.objects.filter(plan=plan).first()
-        list = {}
-        if not information:
-            plan_serializer = serializers.PlanSerializer(plan)
-            return Response(plan_serializer.data, status=status.HTTP_200_OK)
-        
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'message': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         plan_serializer = serializers.PlanSerializer(plan)
-        list['plan'] = plan_serializer.data
-        information_serailizer = serializers.InformationPlanSerializer(information)
-        list['information_compelte'] = information_serailizer.data
-        return Response(list, status=status.HTTP_200_OK)
+        
+        board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)
+        if board_members.exists():
+            board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
+        shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)
+        if shareholder.exists():
+            shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
+        response_data = {
+            'plan': plan_serializer.data ,
+            'board_member' : board_members_serializer.data , 
+            'shareholder' : shareholder_serializer.data
+
+        }
+        information = InformationPlan.objects.filter(plan=plan).first()
+        if information:
+            information_serializer = serializers.InformationPlanSerializer(information)
+            response_data['information_complete'] = information_serializer.data
+        
+        return Response(response_data, status=status.HTTP_200_OK)
         
 
 # done
@@ -104,18 +112,25 @@ class PlansViewset(APIView):
     def get(self, request):
         plans = Plan.objects.all()
         result = []
-        for i in plans:
-            information = InformationPlan.objects.filter(plan=i).first()
-            data = {}
-            plan_serializer = serializers.PlanSerializer(i)
-            data['plan'] = plan_serializer.data
 
+        for plan in plans:
+            information = InformationPlan.objects.filter(plan=plan).first()
+            board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
+            shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
+            plan_serializer = serializers.PlanSerializer(plan)
+            board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
+            shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
+            data = {
+                'plan': plan_serializer.data,
+                'board_members': board_members_serializer.data , 
+                'shareholder': shareholder_serializer.data  
+            }
             if information:
-                information_serializer = serializers.InformationPlanSerializer(information)
+                information_serializer =serializers.InformationPlanSerializer(information)
                 data['information_complete'] = information_serializer.data
             result.append(data)
+
         return Response(result, status=status.HTTP_200_OK)
-    
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:

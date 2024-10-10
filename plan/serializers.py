@@ -8,6 +8,18 @@ class PlanSerializer(serializers.ModelSerializer):
         model = models.Plan
         fields = '__all__'
 
+
+class ListOfProjectBoardMembersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ListOfProjectBoardMembers
+        fields = '__all__'
+
+
+class ListOfProjectBigShareHoldersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ListOfProjectBigShareHolders
+        fields = '__all__'
+
 class PicturePlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PicturePlan
