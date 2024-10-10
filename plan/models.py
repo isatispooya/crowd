@@ -87,6 +87,8 @@ class ListOfProjectBoardMembers(models.Model):
     last_name = models.CharField(max_length=500, null=True , blank=True)
     company_national_id = models.BigIntegerField( null=True, blank=True)
     company_name = models.CharField(max_length=500, null=True , blank=True)
+    organization_post_description = models.CharField(max_length=500, null=True , blank=True)
+
 
 class PicturePlan(models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)

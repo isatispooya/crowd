@@ -1,4 +1,4 @@
-from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ProjectOwnerCompan , PaymentGateway ,PicturePlan , InformationPlan , EndOfFundraising 
+from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ListOfProjectBoardMembers,ProjectOwnerCompan , PaymentGateway ,PicturePlan , InformationPlan , EndOfFundraising ,ListOfProjectBigShareHolders
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -93,7 +93,7 @@ class PlanViewset(APIView):
         plan_serializer = serializers.PlanSerializer(plan)
         list['plan'] = plan_serializer.data
         information_serailizer = serializers.InformationPlanSerializer(information)
-        list['information compelte'] = information_serailizer.data
+        list['information_compelte'] = information_serailizer.data
         return Response(list, status=status.HTTP_200_OK)
         
 
@@ -183,6 +183,8 @@ class PlansViewset(APIView):
                     'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
                 }
             )
+
+
             if len(plan_detail.get('Project Owner Company', [])) > 0:
                 for j in plan_detail['Project Owner Company']:
                     project_owner_company, _ = ProjectOwnerCompan.objects.update_or_create(
@@ -202,6 +204,45 @@ class PlansViewset(APIView):
                             'email_address': j.get('Email Address', None)
                         }
                     )
+
+            if len(plan_detail.get('List Of Project Big Share Holders', [])) > 0:
+                for j in plan_detail['List Of Project Big Share Holders']:
+                    List_of_project_big_shareholder, _ = ListOfProjectBigShareHolders.objects.update_or_create(
+                        plan=plan,
+                        national_id=j.get('National ID', None),
+                        defaults={
+                            'shareholder_type': j.get('Shareholder Type', None),
+                            'first_name': j.get('First Name / Company Name', None),
+                            'last_name': j.get('Last Name / CEO Name', None),
+                            'share_percent': j.get('Share Percent', None),
+                            
+                        }
+                    )
+
+
+
+            if len(plan_detail.get('List Of Project Board Members', [])) > 0:
+                for j in plan_detail['List Of Project Board Members']:
+                    List_of_project_board_members, _ = ListOfProjectBoardMembers.objects.update_or_create(
+                        plan=plan,
+                        national_id=j.get('National ID', None),
+                        defaults={
+                            'mobile_number': j.get('mobile_number', None),
+                            'email_address': j.get('email_address', None),
+                            'organization_post_id': j.get('Organization Post ID', None),
+                            'is_agent_from_company': j.get('Is Agent from a Company', None),
+                            'first_name': j.get('First Name', None),
+                            'last_name': j.get('Last Name', None),
+                            'company_national_id': j.get('Company National ID', None),
+                            'company_name': j.get('Company Name', None),
+                            'mobile_number': j.get('Mobile Number', None),
+                            'email_address': j.get('Email Address', None),
+                            'organization_post_description': j.get('Organization Post Description', None),
+                            
+                        }
+                    )
+
+
         return Response({'message':'بروزرسانی از فرابورس انجام شد'}, status=status.HTTP_200_OK)
 # done
 
