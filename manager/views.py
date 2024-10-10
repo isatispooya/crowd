@@ -402,8 +402,14 @@ class ValidationViewset (APIView) :
             file_manager = request.FILES.get('1')
             date_manager = request.data.copy()
 
+
+
             if not file_manager and not validation_existing:
-                return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
+                 validation_existing.file_manager.delete()
+                 validation_existing.delete()
+            elif not file_manager and not validation_existing:
+                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
+             
 
             manager_list = []
 
@@ -532,6 +538,8 @@ class ValidationViewset (APIView) :
         except Exception as e:
             print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 # done
 class ValidationAdminViewset (APIView) :

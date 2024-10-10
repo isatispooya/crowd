@@ -5,12 +5,10 @@ python-dateutil
 pandas
 requests
 django
-django.utils
 reportlab
 arabic_reshaper
 python-bidi
 GuardPyCaptcha
-ValidationError
 decouple
 python-dotenv
 dj-database-url

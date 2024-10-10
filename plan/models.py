@@ -52,6 +52,7 @@ class Plan (models.Model) :
     sum_of_funding_provided =   models.IntegerField( null=True , blank=True)
     def __str__(self) :
         return self.persian_name
+        
 class ProjectOwnerCompan(models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     national_id = models.BigIntegerField( null=True, blank=True)
