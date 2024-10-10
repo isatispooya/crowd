@@ -402,14 +402,8 @@ class ValidationViewset (APIView) :
             file_manager = request.FILES.get('1')
             date_manager = request.data.copy()
 
-
-
             if not file_manager and not validation_existing:
-                 validation_existing.file_manager.delete()
-                 validation_existing.delete()
-            elif not file_manager and not validation_existing:
-                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
-             
+                return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
             manager_list = []
 
@@ -560,7 +554,10 @@ class ValidationAdminViewset (APIView) :
             date_manager = request.data.copy()
             validation_existing = Validation.objects.filter(cart=cart, manager='1' ).first()
             if not file_manager and not validation_existing:
-                return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
+                 validation_existing.file_manager.delete()
+                 validation_existing.delete()
+            elif not file_manager and not validation_existing:
+                 return Response({'error': 'File validation is missing'}, status=status.HTTP_400_BAD_REQUEST)
 
             manager_list = []
             for national_code, file in request.FILES.items():
