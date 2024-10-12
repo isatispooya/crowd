@@ -39,7 +39,7 @@ class OtpViewset(APIView) :
             otp.save()
             message = Message()
             message.otpSMS(code, user.mobile)
-            message.otpEmail(code, user.email)
+            # message.otpEmail(code, user.email)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
@@ -629,14 +629,14 @@ class UpdateInformationViewset(APIView) :
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = fun.decryptionUser(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        user = user.first()
+        admin = admin.first()
         
         otp = request.data.get('otp')
-        uniqueIdentifier = user.uniqueIdentifier
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
         if not otp:
             return Response({'error': 'otp not found'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -665,9 +665,9 @@ class UpdateInformationViewset(APIView) :
         if new_user:
             new_user.agent = data.get('agent', new_user.agent)
             new_user.email = data.get('email', new_user.email)
-            new_user.legalPerson = data.get('legalPerson', new_user.legalPerson)
-            new_user.legalPersonShareholders = data.get('legalPersonShareholders', new_user.legalPersonShareholders)
-            new_user.legalPersonStakeholders = data.get('legalPersonStakeholders', new_user.legalPersonStakeholders)
+            # new_user.legalPerson = data.get('legalPerson', new_user.legalPerson)
+            # new_user.legalPersonShareholders = data.get('legalPersonShareholders', new_user.legalPersonShareholders)
+            # new_user.legalPersonStakeholders = data.get('legalPersonStakeholders', new_user.legalPersonStakeholders)
             new_user.mobile = data.get('mobile', new_user.mobile)
             new_user.status = data.get('status', new_user.status)
             new_user.type = data.get('type', new_user.type)
@@ -690,7 +690,47 @@ class UpdateInformationViewset(APIView) :
                             'sheba': account_data['sheba']
                         }
                     )
-            
+            if len(data['legalPersonStakeholders']) > 0:
+                for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
+                    new_legalPersonStakeholders = legalPersonStakeholders(
+                    user = new_user ,
+                    uniqueIdentifier =legalPersonStakeholders_data['uniqueIdentifier'] ,
+                    type = legalPersonStakeholders_data['type'],
+                    startAt = legalPersonStakeholders_data ['startAt'],
+                    positionType = legalPersonStakeholders_data ['positionType'],
+                    lastName = legalPersonStakeholders_data ['lastName'],
+                    isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
+                    firstName = legalPersonStakeholders_data ['firstName'],
+                    endAt = legalPersonStakeholders_data ['endAt'] ,)
+                new_legalPersonStakeholders.save()
+
+            if data['legalPerson']:
+                new_LegalPerson = LegalPerson(
+                user = new_user ,
+                citizenshipCountry =data['legalPerson']['citizenshipCountry'] ,
+                economicCode = data['legalPerson']['economicCode'],
+                evidenceExpirationDate = data['legalPerson'] ['evidenceExpirationDate'],
+                evidenceReleaseCompany = data['legalPerson'] ['evidenceReleaseCompany'],
+                evidenceReleaseDate = data['legalPerson'] ['evidenceReleaseDate'],
+                legalPersonTypeSubCategory = data['legalPerson'] ['legalPersonTypeSubCategory'],
+                registerDate = data['legalPerson'] ['registerDate'],
+                legalPersonTypeCategory = data['legalPerson'] ['legalPersonTypeCategory'],
+                registerPlace = data['legalPerson'] ['registerPlace'] ,
+                registerNumber = data['legalPerson'] ['registerNumber'] ,)
+                new_LegalPerson.save()
+
+            if len(data['legalPersonShareholders']) > 0:
+                for legalPersonShareholders_data in data['legalPersonShareholders'] :
+                    new_legalPersonShareholders = legalPersonShareholders(
+                    user = new_user ,
+                    uniqueIdentifier = legalPersonShareholders_data['uniqueIdentifier'],
+                    postalCode = legalPersonShareholders_data ['postalCode'],
+                    positionType = legalPersonShareholders_data ['positionType'],
+                    percentageVotingRight = legalPersonShareholders_data ['percentageVotingRight'],
+                    firstName = legalPersonShareholders_data ['firstName'],
+                    lastName = legalPersonShareholders_data ['lastName'],
+                    address = legalPersonShareholders_data ['address'] )
+                new_legalPersonShareholders.save()
             if len(data['addresses']) > 0:
                 for address_data in data['addresses']:
                     address_obj, created = addresses.objects.update_or_create(

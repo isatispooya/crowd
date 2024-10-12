@@ -16,6 +16,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 import numpy as np
 from persiantools.jdatetime import JalaliDateTime
+import os
 
 
 
@@ -161,6 +162,13 @@ class PlansViewset(APIView):
         admin = admin.first()
         crowd_founding_api = CrowdfundingAPI()
         plan_list = crowd_founding_api.get_company_projects()
+        
+        BASE_URL = os.getenv('BASE_URL')
+        API_KEY = os.getenv('API_KEY')
+        print('s',BASE_URL)
+        print('ss',API_KEY)
+        print(plan_list)
+
         for i in plan_list : 
             if not Plans.objects.filter(plan_id = i).exists () :
                 plan = Plans.objects.create(plan_id=i)
