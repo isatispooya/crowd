@@ -28,10 +28,11 @@ def get_name (uniqueIdentifier) :
         first_name = privateperson.firstName
         last_name = privateperson.lastName
         full_name = first_name + ' ' + last_name
-    else :
+    elif LegalPerson.objects.filter(user=user).first() :
         legalperson = LegalPerson.objects.filter(user=user).first()
         full_name = legalperson.companyName
-
+    else :
+        full_name = 'نامشخص'
     return full_name
         
 
@@ -903,7 +904,7 @@ class ShareholdersListExelViewset(APIView) :
                     else:
                         gregorian_date = None
 
-                    data = PaymentGateway.objects.create(
+                    data = PaymentGateway.objects.update_or_create(
                         plan = plan,
                         user =  row['کد ملی'].replace("'", ""),
                         amount =  row['تعداد'],
@@ -917,7 +918,7 @@ class ShareholdersListExelViewset(APIView) :
                         name_status = False,
 
                     )
-                
+# update information plan 
                 value =df['مبلغ سفارش'].sum()
                 information = InformationPlan.objects.filter(plan=plan).first()
                 if not information :
@@ -930,6 +931,9 @@ class ShareholdersListExelViewset(APIView) :
     
 
 
+class PaymentListViewset(APIView):
+
+    pass
 
 
 

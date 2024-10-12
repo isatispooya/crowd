@@ -40,9 +40,9 @@ class OtpViewset(APIView) :
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
-        # captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        # if not captcha  :
-        if False : 
+        captcha = captcha.check_response(encrypted_response, request.data['captcha'])
+        if not captcha  :
+        # if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -458,8 +458,8 @@ class OtpAdminViewset(APIView) :
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        # if not captcha  :
-        if False : 
+        if not captcha  :
+        # if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :

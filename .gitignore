@@ -6,3 +6,4 @@ migrations/
 media/
 participant1.xlsx
 .env
+*.sqlite3
