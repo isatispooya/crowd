@@ -178,3 +178,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 # DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(BASE_DIR, 'backups')}
+
+#SMTP SERVER
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('MAIL_HOST')
+EMAIL_PORT = os.getenv('MAIL_PORT')
+EMAIL_HOST_USER = os.getenv('MAIL_USER')
+EMAIL_HOST_PASSWORD = os.getenv('MAIL_PASSWORD')
+EMAIL_USE_TLS = True  # Use TLS encryption
+EMAIL_FROM_ADDRESS = os.getenv('MAIL_FROM_ADDRESS')
+
+
+
+#SMS SERVICE
+SMS_NUMBER = os.getenv('SMS_NUMBER')
+SMS_USERNAME = os.getenv('SMS_USERNAME')
+SMS_PASSWORD = os.getenv('SMS_PASSWORD')
