@@ -917,10 +917,16 @@ class ShareholdersListExelViewset(APIView) :
                         name_status = False,
 
                     )
+                
+                value =df['مبلغ سفارش'].sum()
+                information = InformationPlan.objects.filter(plan=plan).first()
+                if not information :
+                    return Response ({'error' :'Not Found  InformationPlan'} , status = status.HTTP_400_BAD_REQUEST)
+                information.amount_collected_now = value
+                information.save()
 
 
-
-        return Response(True, status=status.HTTP_200_OK)
+        return Response( True , status=status.HTTP_200_OK)
     
 
 
