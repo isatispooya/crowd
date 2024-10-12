@@ -525,7 +525,7 @@ class PaymentDocument(APIView):
         picture = request.FILES.get('picture')
         payment = PaymentGateway(
             plan = plan,
-            user = user,
+            user = user.uniqueIdentifier,
             amount = amount,
             value = value,
             payment_id = payment_id,
@@ -567,7 +567,7 @@ class PaymentDocument(APIView):
         
         if user:
             user = user.first()
-            payments = PaymentGateway.objects.filter(user=user, plan=plan)
+            payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier, plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
             df = pd.DataFrame(response.data)
             if len(df)==0:

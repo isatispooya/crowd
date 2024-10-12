@@ -177,9 +177,9 @@ class DashBoardUserViewset(APIView) :
         plan_all = Plan.objects.all().count()
         current_date = timezone.now().date()
         active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
-        payments = PaymentGateway.objects.filter(user=user).values('plan').distinct()
+        payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier).values('plan').distinct()
         payments_count = payments.count()
-        total_value = PaymentGateway.objects.filter(user=user).aggregate(total_value_sum=Sum('value'))['total_value_sum']
+        total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier).aggregate(total_value_sum=Sum('value'))['total_value_sum']
         if total_value is None:
             total_value = 0
 
