@@ -14,6 +14,8 @@ import pandas as pd
 from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
+import numpy as np
+from persiantools.jdatetime import JalaliDateTime
 
 
 
@@ -91,10 +93,16 @@ class PlanViewset(APIView):
         shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)
         if shareholder.exists():
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
+            
+        company = ProjectOwnerCompan.objects.filter(plan=plan)
+        if company.exists():
+            company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
+
         response_data = {
             'plan': plan_serializer.data ,
             'board_member' : board_members_serializer.data , 
-            'shareholder' : shareholder_serializer.data
+            'shareholder' : shareholder_serializer.data,
+            'company': company_serializer.data
 
         }
         information = InformationPlan.objects.filter(plan=plan).first()
@@ -116,14 +124,17 @@ class PlansViewset(APIView):
         for plan in plans:
             information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
+            company = ProjectOwnerCompan.objects.filter(plan=plan)  
             shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
             plan_serializer = serializers.PlanSerializer(plan)
             board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
+            company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
             data = {
                 'plan': plan_serializer.data,
                 'board_members': board_members_serializer.data , 
-                'shareholder': shareholder_serializer.data  
+                'shareholder': shareholder_serializer.data  ,
+                'company': company_serializer.data  ,
             }
             if information:
                 information_serializer =serializers.InformationPlanSerializer(information)
@@ -856,6 +867,64 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         return Response(True, status=status.HTTP_200_OK)
 
 
+# done
+# save payment exel
+class ShareholdersListExelViewset(APIView) :
+    def get(self, request, key):
+        key_value = 'mahya1234'
+        url_key = key  
+        if url_key != key_value:
+            return Response({'error': 'key is missing'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.FILES:
+            file = request.FILES['file']
+            df = pd.read_csv(file)
+            df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
+            if not df.empty:
+                trace_code_values = df['شناسه طرح'].tolist()
+                plan = Plan.objects.filter(trace_code__in= trace_code_values).first()
+                if not plan :
+                    return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+                df['تعداد'] = np.where(df['قیمت اسمی هر واحد'] != 0, df['مبلغ سفارش'] / df['قیمت اسمی هر واحد'], np.nan)
+                for index, row in df.iterrows(): 
+                    national_code = str(row['کد ملی']) if not pd.isna(row['کد ملی']) else ''
+                    national_code = national_code.replace("'", "")
+                    if row['روش پرداخت'] == 'اینترنتی' :
+                        document = False
+                    else :
+                        document = True
+                    if not pd.isna(row['تاریخ سفارش']):
+                        try:
+                            date_string = str(row['تاریخ سفارش']).strip()
+                            jalali_date = JalaliDateTime.strptime(date_string, '%Y/%m/%d %H:%M:%S')
+                            gregorian_date = jalali_date.to_gregorian()
+                        except ValueError as e:
+                            return Response({'error': f"Invalid date format: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        gregorian_date = None
+
+                    data = PaymentGateway.objects.create(
+                        plan = plan,
+                        user =  row['کد ملی'].replace("'", ""),
+                        amount =  row['تعداد'],
+                        value =  row['مبلغ سفارش'],
+                        payment_id =  row['شناسه سفارش'],
+                        document = document,
+                        create_date =  gregorian_date,
+                        risk_statement = True,
+                        status =  True,
+                        send_farabours = True,
+                        name_status = False,
+
+                    )
+
+
+
+        return Response(True, status=status.HTTP_200_OK)
+    
+
+
+
 
 
 class RoadMapViewset(APIView) :
@@ -887,6 +956,8 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
+
+
 
 
 

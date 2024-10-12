@@ -15,6 +15,12 @@ class ListOfProjectBoardMembersSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProjectOwnerCompansSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ProjectOwnerCompan
+        fields = '__all__'
+
+
 class ListOfProjectBigShareHoldersSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ListOfProjectBigShareHolders
