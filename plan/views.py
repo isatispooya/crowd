@@ -36,6 +36,13 @@ def get_name (uniqueIdentifier) :
     return full_name
         
 
+def get_name_user (uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+
+    full_name = 'نامشخص'
+    return full_name
+
+
 def get_fname (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     privateperson = privatePerson.objects.filter(user=user).first()
@@ -564,18 +571,25 @@ class PaymentDocument(APIView):
                 return Response([], status=status.HTTP_200_OK)
             df['fulname'] = [get_name(x) for x in df['user']]
             df = df.to_dict('records')
+
             return Response(df, status=status.HTTP_200_OK)
         
         if user:
             user = user.first()
-            payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier, plan=plan)
+            payments = PaymentGateway.objects.filter(plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
+            
             df = pd.DataFrame(response.data)
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
-            df['fulname'] = [get_name(x) for x in df['user']]
-            df = df.to_dict('records')
-            return Response(response.data, status=status.HTTP_200_OK)
+            if df['name_status'] is True :
+                df['fulname'] = [get_name(x) for x in df['user']]
+                df = df.to_dict('records')
+                return Response(df, status=status.HTTP_200_OK)
+            else :
+                df['fulname'] = [get_name_user(x) for x in df['user']]
+                df = df.to_dict('records')
+                return Response(df, status=status.HTTP_200_OK)
 
         
     def patch (self,request,trace_code) :
