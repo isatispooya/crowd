@@ -9,26 +9,15 @@ import datetime
 from . import fun
 import json
 import random
-from accounting.models import Wallet
 import os
-from .fun import SendOtpEmail, SendSms
-
-# done
+from utils.message import Message
 class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
-    
-
-
-
-
-
-
 
 # otp for user
-# done
 class OtpViewset(APIView) :
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
@@ -45,12 +34,12 @@ class OtpViewset(APIView) :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
         if user :
-            mobile = user.mobile
             code = random.randint(10000,99999)
-            otp = Otp(mobile=mobile, code=code)
+            otp = Otp(mobile=user.mobile, code=code)
             otp.save()
-            SendOtpEmail(code, user.email)
-            SendSms(mobile ,code)
+            message = Message()
+            message.otpSMS(code, user.mobile)
+            message.otpEmail(code, user.email)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:

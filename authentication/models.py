@@ -3,15 +3,11 @@ from django.db import models
 class User(models.Model):
     agent = models.CharField(max_length= 200 , null=True, blank=True )
     email = models.EmailField( null=True, blank=True)
-    # legalPerson = models.CharField(max_length=150 ,null=True, blank=True )
-    # legalPersonShareholders = models.CharField(max_length=150 ,null=True, blank=True )
-    # legalPersonStakeholders = models.CharField(max_length=150 ,null=True, blank=True )
     mobile = models.CharField(max_length=14)
     status = models.CharField(max_length=150 , null=True, blank=True)
     type = models.CharField(max_length=200)
     uniqueIdentifier = models.CharField(max_length=150 , unique=True)
     referal = models.CharField(max_length=14,  null=True, blank=True , unique=True) # معرف : کدملی معرف 
-
 
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
