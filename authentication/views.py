@@ -11,6 +11,7 @@ import json
 import random
 from accounting.models import Wallet
 import os
+from .fun import SendOtpEmail, SendSms
 
 # done
 class CaptchaViewset(APIView) :
@@ -21,15 +22,9 @@ class CaptchaViewset(APIView) :
     
 
 
-frm ='30001526'
-usrnm = 'isatispooya'
-psswrd ='5246043adeleh'
 
-def SendSms(snd,txt):
-    txt = f'به ایساتیس کراد خوش آمدید \n کد تایید :{txt}'
-    resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={frm}&to={snd}&username={usrnm}&password={psswrd}&message={txt}').json()
-    print(txt)
-    return resp
+
+
 
 
 # otp for user
@@ -53,6 +48,7 @@ class OtpViewset(APIView) :
             code = random.randint(10000,99999)
             otp = Otp(mobile=mobile, code=code)
             otp.save()
+            SendOtpEmail(code, user.email)
             SendSms(mobile ,code)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
