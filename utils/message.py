@@ -1,25 +1,32 @@
 from django.conf import settings
 import requests
 from django.core.mail import EmailMessage
+import os
 
 
 class Message():
-    def __init__(self):
-        pass
-    def otpSMS(self,otp,mobile):
-        txt = f'به ایساتیس کراد خوش آمدید \n کد تایید :{otp}'
-        resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={settings.SMS_NUMBER}&to={mobile}&username={settings.SMS_USERNAME}&password={settings.SMS_PASSWORD}&message={txt}').json()
+    def __init__(self,otp,mobile,email):
+        self.otp = otp
+        self.mobile = mobile
+        self.email = email
+    def otpSMS(self):
+        txt = f'به ایساتیس کراد خوش آمدید \n کد تایید :{self.otp}'
+        resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={settings.SMS_NUMBER}&to={self.mobile}&username={settings.SMS_USERNAME}&password={settings.SMS_PASSWORD}&message={txt}').json()
         print(txt)
 
-    def otpEmail(otp,email):
+    def otpEmail(self):
+
+        print(self.email)
+
+
         subject = 'کد تایید ایساتیس کراد'
-        message = f'ّکد تایید ورود به ایساتیس کراد شما {otp} میباشد'
-        recipient_list = [email]
+        message = f'ّکد تایید ورود به ایساتیس کراد شما {self.otp} میباشد'
+        recipient_list = [self.email]
         email = EmailMessage(
-            subject,
-            message,
-            settings.EMAIL_FROM_ADDRESS,
-            recipient_list,
+            subject=subject,
+            body=message,
+            from_email=settings.EMAIL_FROM_ADDRESS,
+            to=recipient_list,
             headers={"x-liara-tag": "test-tag"} 
         )
         email.send(fail_silently=False)
