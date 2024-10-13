@@ -35,10 +35,10 @@ class OtpViewset(APIView) :
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
         if user :
             code = random.randint(10000,99999)
-            otp = Otp(mobile=user.mobile, code=code)
+            otp = Otp()
             otp.save()
-            message = Message()
-            message.otpSMS(code, user.mobile)
+            message = Message(code,user.mobile,user.email)
+            message.otpSMS()
             # message.otpEmail(code, user.email)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
@@ -597,14 +597,14 @@ class OtpUpdateViewset(APIView) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        uniqueIdentifier = user.uniqueIdentifier
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        uniqueIdentifier = request.data.get("uniqueIdentifier")
         if not uniqueIdentifier :
             return Response ({'errot' : 'uniqueIdentifier not found '} ,  status=status.HTTP_400_BAD_REQUEST) 
-
+        user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         if user:
             url = "http://31.40.4.92:8870/otp"
             payload = json.dumps({
@@ -621,6 +621,7 @@ class OtpUpdateViewset(APIView) :
 
         return Response({'registered' : False , 'message' : 'سیستم قطع است خداحافظ'},status=status.HTTP_400_BAD_REQUEST)   
                 
+
 
 # done
 class UpdateInformationViewset(APIView) :
