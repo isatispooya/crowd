@@ -118,7 +118,19 @@ class PlanViewset(APIView):
         if information:
             information_serializer = serializers.InformationPlanSerializer(information)
             response_data['information_complete'] = information_serializer.data
-        
+        end_of_fundraising = EndOfFundraising.objects.filter(plan=plan)
+        if end_of_fundraising :
+            end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising , many = True)
+            date_profit = []
+            for i in end_of_fundraising_serializer.data :
+                date = i['date']
+                type = i['type']
+                date = datetime.datetime.strptime(date , '%Y-%m-%d')
+                date_jalali = JalaliDate.to_jalali(date)
+                date_jalali =str(date_jalali)
+                date_profit.append({'type': type, 'date': date_jalali})
+
+            response_data['date_profit'] = date_profit
         return Response(response_data, status=status.HTTP_200_OK)
         
 
@@ -954,7 +966,6 @@ class ShareholdersListExelViewset(APIView) :
 
 
 class PaymentListViewset(APIView):
-
     pass
 
 
