@@ -13,6 +13,8 @@ from plan.CrowdfundingAPIService import CrowdfundingAPI
 from django.utils import timezone
 from django.db.models import Sum
 import pandas as pd
+import datetime
+from persiantools.jdatetime import JalaliDate
 from authentication.serializers import accountsSerializer , privatePersonSerializer
 from plan.views import get_name , get_account_number
 # گزارش پیشرفت پروژه
@@ -178,6 +180,21 @@ class DashBoardUserViewset(APIView) :
         current_date = timezone.now().date()
         active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
         payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier).values('plan').distinct()
+
+        end_of_fundraising = EndOfFundraising.objects.filter(plan__in = payments)
+        end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising,many=True)
+        date_profit = []
+        for i in end_of_fundraising_serializer.data :
+            date = i['date']
+            type = i['type']
+            amount = i['amount']
+            plan = i['plan']
+            date = datetime.datetime.strptime(date , '%Y-%m-%d')
+            date_jalali = JalaliDate.to_jalali(date)
+            date_jalali =str(date_jalali)
+            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount , 'plan' : plan})
+
+        
         payments_count = payments.count()
         total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier).aggregate(total_value_sum=Sum('value'))['total_value_sum']
         if total_value is None:
@@ -186,7 +203,7 @@ class DashBoardUserViewset(APIView) :
         total_rate_of_return = InformationPlan.objects.filter(plan__in=payments).aggregate(total_rate_sum=Sum('rate_of_return'))['total_rate_sum']        
         if total_rate_of_return is None:
             total_rate_of_return = 0
-        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return }, status=status.HTTP_200_OK)
+        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return  , 'profit' : date_profit}, status=status.HTTP_200_OK)
     
 # گزارش سود دهی ادمین
 class ProfitabilityReportViewSet(APIView) :
