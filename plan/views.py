@@ -913,7 +913,8 @@ class ShareholdersListExelViewset(APIView) :
 
         if request.FILES:
             file = request.FILES['file']
-            df = pd.read_csv(file)
+            df = pd.read_excel(file)
+
             df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
             if not df.empty:
                 trace_code_values = df['شناسه طرح'].tolist()
@@ -933,10 +934,23 @@ class ShareholdersListExelViewset(APIView) :
                             date_string = str(row['تاریخ سفارش']).strip()
                             jalali_date = JalaliDateTime.strptime(date_string, '%Y/%m/%d %H:%M:%S')
                             gregorian_date = jalali_date.to_gregorian()
-                        except ValueError as e:
-                            return Response({'error': f"Invalid date format: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+                        except ValueError as ve:
+                            print(f"ValueError: {ve} - Trying as Gregorian date.")
+
+                            try:
+                                if isinstance(row['تاریخ سفارش'], pd.Timestamp):
+                                    gregorian_date = row['تاریخ سفارش'].to_pydatetime()
+                                else:
+                                    gregorian_date = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+
+                            except Exception as e:
+                                print(f"Failed to parse date: {e}")
+                                gregorian_date = None
                     else:
                         gregorian_date = None
+
+                        print(f"Gregorian Date: {gregorian_date}")
 
                     data = PaymentGateway.objects.update_or_create(
                         plan = plan,
