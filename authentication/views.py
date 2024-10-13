@@ -820,4 +820,4 @@ class UpdateInformationViewset(APIView) :
                 )
 
 
-        return Response({'success': True}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'success': True}, status=status.HTTP_200_OK)
