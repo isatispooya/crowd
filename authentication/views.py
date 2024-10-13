@@ -539,6 +539,15 @@ class UserListViewset (APIView) :
             user_tradingCodes = tradingCodes.objects.filter(user=i_user)
             serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes , many=True).data
             
+            legal_person_shareholder = legalPersonShareholders.objects.filter(user=i_user)
+            serializer_legal_person_shareholder = serializers.legalPersonShareholdersSerializer(legal_person_shareholder , many=True).data
+
+            legal_person = LegalPerson.objects.filter(user=i_user)
+            serializer_legal_person = serializers.LegalPersonSerializer(legal_person , many=True).data
+
+            legal_person_stakeholders = legalPersonStakeholders.objects.filter(user=i_user)
+            serializer_legal_person_stakeholders = serializers.legalPersonStakeholdersSerializer(legal_person_stakeholders , many=True).data
+
             combined_data = {
                 **user_data,  
                 'addresses': serializer_addresses,
@@ -546,6 +555,9 @@ class UserListViewset (APIView) :
                 'financial_info': serializer_financialInfo,
                 'job_info': serializer_jobInfo,
                 'trading_codes': serializer_tradingCodes,
+                'legal_person_shareholder': serializer_legal_person_shareholder,
+                'legal_person': serializer_legal_person,
+                'legal_person_stakeholders': serializer_legal_person_stakeholders,
             }
             
             user_list.append(combined_data)
