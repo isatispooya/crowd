@@ -141,7 +141,9 @@ class CrowdfundingAPI:
             "NationalID": national_id
         }
         response = requests.post(url, json=body)
-        return response.json()
+        if response.status_code != 200:
+            return response.json()
+        return response.content
 
 # مثال استفاده:
 # api = CrowdfundingAPI()

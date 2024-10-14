@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
-from accounting.models import Wallet
 from investor.models import Cart
 from authentication.models import privatePerson , User , accounts , LegalPerson , tradingCodes
 import datetime
@@ -14,8 +13,6 @@ import pandas as pd
 from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
-import numpy as np
-from persiantools.jdatetime import JalaliDateTime
 import os
 
 
@@ -598,7 +595,6 @@ class PaymentDocument(APIView):
             user = user.first()
             payments = PaymentGateway.objects.filter(plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
-            
             df = pd.DataFrame(response.data)
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
@@ -610,7 +606,7 @@ class PaymentDocument(APIView):
                 df['fulname'] = [get_name_user(x) for x in df['user']]
                 df = df.to_dict('records')
                 return Response(df, status=status.HTTP_200_OK)
-
+            
         
     def patch (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
@@ -642,7 +638,22 @@ class PaymentDocument(APIView):
         information.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+class PaymentUser(APIView):
+    def get(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
 
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        payments = PaymentGateway.objects.filter(plan=plan,user=user.uniqueIdentifier)
+        response = serializers.PaymentGatewaySerializer(payments,many=True)
+        return Response(response.data, status=status.HTTP_200_OK)
 
 # done
 class ParticipantViewset(APIView) :
@@ -678,7 +689,29 @@ class ParticipantViewset(APIView) :
         df = df.to_dict('records')
               
         return Response (df, status=status.HTTP_200_OK)
-    
+
+
+class Certificate(APIView):
+    def get(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        apiFarabours = CrowdfundingAPI()
+        # certificate = apiFarabours.get_project_participation_report(trace_code,user.uniqueIdentifier)
+        certificate = apiFarabours.get_project_participation_report('e7e79c55-f89a-47d7-89f9-2d3c6a1e9de8','0790418304')
+        print(certificate)
+        return Response('su', status=status.HTTP_200_OK)
+        
+            
+        
+
 # done
 class InformationPlanViewset(APIView) :
     def post (self,request,trace_code):
@@ -919,40 +952,23 @@ class ShareholdersListExelViewset(APIView) :
 
             # df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
             if not df.empty:
-                trace_code_values = df['شناسه طرح'].tolist()
-                plan = Plan.objects.filter(trace_code__in= trace_code_values).first()
-                if not plan :
-                    return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-                # df['تعداد'] = np.where(df['قیمت اسمی هر واحد'] != 0, df['مبلغ سفارش'] / df['قیمت اسمی هر واحد'], np.nan)
                 for index, row in df.iterrows(): 
+                    trace_code_values = row['شناسه طرح']
+                    plan = Plan.objects.filter(trace_code= trace_code_values).first()
+                
+                    if not plan :
+                        return Response({'error': f'plan not found {trace_code_values}'}, status=status.HTTP_400_BAD_REQUEST)
                     national_code = str(row['کد ملی']) if not pd.isna(row['کد ملی']) else ''
                     national_code = str(national_code).replace("'", "")
                     if row['روش پرداخت'] == 'اینترنتی' :
                         document = False
                     else :
                         document = True
-                    if not pd.isna(row['تاریخ سفارش']):
-                        try:
-                            date_string = str(row['تاریخ سفارش']).strip()
-                            jalali_date = JalaliDateTime.strptime(date_string, '%Y/%m/%d %H:%M:%S')
-                            gregorian_date = jalali_date.to_gregorian()
 
-                        except ValueError as ve:
-                            print(f"ValueError: {ve} - Trying as Gregorian date.")
 
-                            try:
-                                if isinstance(row['تاریخ سفارش'], pd.Timestamp):
-                                    gregorian_date = row['تاریخ سفارش'].to_pydatetime()
-                                else:
-                                    gregorian_date = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+                    date_string = str(row['تاریخ سفارش']).strip()
+                    gregorian_date = datetime.datetime.strptime(date_string, '%d/%m/%Y %H:%M')
 
-                            except Exception as e:
-                                print(f"Failed to parse date: {e}")
-                                gregorian_date = None
-                    else:
-                        gregorian_date = None
-
-                        print(f"Gregorian Date: {gregorian_date}")
 
                     data = PaymentGateway.objects.update_or_create(
                         plan = plan,
@@ -966,15 +982,22 @@ class ShareholdersListExelViewset(APIView) :
                         status =  True,
                         send_farabours = True,
                         name_status = False,
-
                     )
 # update information plan 
-                value =df['مبلغ سفارش'].sum()
-                information = InformationPlan.objects.filter(plan=plan).first()
-                if not information :
-                    return Response ({'error' :'Not Found  InformationPlan'} , status = status.HTTP_400_BAD_REQUEST)
-                information.amount_collected_now = value
-                information.save()
+                df['مبلغ سفارش'] = df['مبلغ سفارش'].apply(int)
+                value =df[['مبلغ سفارش','شناسه طرح']].groupby(by=['شناسه طرح']).sum()
+                for i in value.index:
+                    plan = Plan.objects.filter(trace_code= i).first()
+
+                    if not plan :
+                        return Response ({'error' :'Not Found  plan'} , status = status.HTTP_400_BAD_REQUEST)
+
+                    information = InformationPlan.objects.filter(plan=plan).first()
+
+                    if not information :
+                        return Response ({'error' :'Not Found  planInformation'} , status = status.HTTP_400_BAD_REQUEST)
+                    information.amount_collected_now = value['مبلغ سفارش'][i]
+                    information.save()
 
 
         return Response( True , status=status.HTTP_200_OK)
