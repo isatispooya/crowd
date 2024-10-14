@@ -99,7 +99,9 @@ class PlanViewset(APIView):
         shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)
         if shareholder.exists():
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
-            
+        
+        picture_plan = PicturePlan.objects.filter(plan=plan).first()
+        picture_plan = serializers.PicturePlanSerializer(picture_plan)
         company = ProjectOwnerCompan.objects.filter(plan=plan)
         if company.exists():
             company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
@@ -108,8 +110,8 @@ class PlanViewset(APIView):
             'plan': plan_serializer.data ,
             'board_member' : board_members_serializer.data , 
             'shareholder' : shareholder_serializer.data,
-            'company': company_serializer.data
-
+            'company': company_serializer.data,
+            'picture_plan': picture_plan.data,
         }
         information = InformationPlan.objects.filter(plan=plan).first()
         if information:
@@ -148,11 +150,15 @@ class PlansViewset(APIView):
             board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
             company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
+            picture_plan = PicturePlan.objects.filter(plan=plan).first()
+            picture_plan = serializers.PicturePlanSerializer(picture_plan)
+        
             data = {
                 'plan': plan_serializer.data,
                 'board_members': board_members_serializer.data , 
                 'shareholder': shareholder_serializer.data  ,
                 'company': company_serializer.data  ,
+                'picture_plan': picture_plan.data
             }
             if information:
                 information_serializer =serializers.InformationPlanSerializer(information)
@@ -704,13 +710,8 @@ class Certificate(APIView):
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         apiFarabours = CrowdfundingAPI()
-        # certificate = apiFarabours.get_project_participation_report(trace_code,user.uniqueIdentifier)
-        certificate = apiFarabours.get_project_participation_report('e7e79c55-f89a-47d7-89f9-2d3c6a1e9de8','0790418304')
-        print(certificate)
-        return Response('su', status=status.HTTP_200_OK)
-        
-            
-        
+        certificate = apiFarabours.get_project_participation_report(trace_code,user.uniqueIdentifier)
+        return Response(certificate, status=status.HTTP_200_OK)
 
 # done
 class InformationPlanViewset(APIView) :

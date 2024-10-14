@@ -1,7 +1,8 @@
 import requests
 from dataclasses import dataclass
 import os
-
+from django.conf import settings
+from django.core.files.base import ContentFile
 @dataclass
 class ProjectFinancingProvider:
     """
@@ -143,7 +144,12 @@ class CrowdfundingAPI:
         response = requests.post(url, json=body)
         if response.status_code != 200:
             return response.json()
-        return response.content
+        file_name = f"{project_id}_{national_id}.pdf"
+        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', file_name)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as pdf_file:
+            pdf_file.write(response.content)
+        return f'/media/reports/{file_name}'
 
 # مثال استفاده:
 # api = CrowdfundingAPI()
