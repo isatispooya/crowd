@@ -119,17 +119,21 @@ class PlanViewset(APIView):
             response_data['information_complete'] = information_serializer.data
         end_of_fundraising = EndOfFundraising.objects.filter(plan=plan)
         if end_of_fundraising :
-            end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising , many = True)
-            date_profit = []
-            for i in end_of_fundraising_serializer.data :
-                date = i['date_operator']
-                type = i['type']
-                date = datetime.datetime.strptime(date , '%Y-%m-%d')
-                date_jalali = JalaliDate.to_jalali(date)
-                date_jalali =str(date_jalali)
-                date_profit.append({'type': type, 'date': date_jalali})
+            try:
+                end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising , many = True)
+                date_profit = []
+                for i in end_of_fundraising_serializer.data :
+                    date = i['date_operator']
+                    type = i['type']
+                    date = datetime.datetime.strptime(date , '%Y-%m-%d')
+                    date_jalali = JalaliDate.to_jalali(date)
+                    date_jalali =str(date_jalali)
+                    date_profit.append({'type': type, 'date': date_jalali})
 
-            response_data['date_profit'] = date_profit
+                response_data['date_profit'] = date_profit
+            except :
+                response_data['date_profit'] = []
+
         return Response(response_data, status=status.HTTP_200_OK)
         
 
@@ -830,9 +834,12 @@ class EndOfFundraisingViewset(APIView) :
             else:
                 amount_fundraising = 0
             information = InformationPlan.objects.filter(plan=plan).first()
-            if information:
-                date = information.payment_date
 
+            if not information:
+                return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+            date = information.payment_date
+            if date is None :
+                return Response({'error': 'payment date not found'}, status=status.HTTP_404_NOT_FOUND)
             if isinstance(date, str):
                 date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
             date = date + relativedelta(months=3) # از سه ماه اینده سود دهی شروع میشود
