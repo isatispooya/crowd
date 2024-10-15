@@ -176,17 +176,23 @@ class InformationPlan (models.Model):
     status_second = models.CharField (max_length=50 , choices=status_second_option , null=True, blank=True )
     status_show = models.BooleanField (default=False)
     amount_collected_now = models.BigIntegerField (null=True, blank=True)
+    payment_date = models.DateTimeField (null=True, blank=True)
     def __str__(self) :
          return str(self.plan.persian_name)
          
 
 class EndOfFundraising (models.Model) :
-    amount = models.IntegerField(null=True, blank=True)
+    amount_operator = models.IntegerField(null=True, blank=True)
+    amount_systemic = models.IntegerField(null=True, blank=True)
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     type = models.CharField(max_length=100  , null=True, blank=True)
-    date = models.DateField(null=True, blank=True)
-    date_capitalization = models.DateField(null=True, blank=True)
+    date_operator = models.DateField(null=True, blank=True)
+    date_systemic = models.DateField(null=True, blank=True)
+    date_capitalization_operator = models.DateField(null=True, blank=True)
+    date_capitalization_systemic = models.DateField(null=True, blank=True)
 
     def __str__(self) :
          return self.plan.persian_name + '-' + self.type
+       
+
        
