@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset, DocumentationViewset, AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, PlanViewset,PaymentUser,Certificate, DocumentationViewset, AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -12,6 +12,8 @@ urlpatterns = [
     path('comment/user/<str:trace_code>/', CommentViewset.as_view(), name='comment-user'),
     path('comment/admin/<str:trace_code>/', CommentAdminViewset.as_view(), name='comment-admin'),
     path('payment/document/<str:trace_code>/', PaymentDocument.as_view(), name='payment-admin'),
+    path('payment/user/<str:trace_code>/', PaymentUser.as_view(), name='payment-user'),
+    path('certificate/user/<str:trace_code>/', Certificate.as_view(), name='participant-user'),
     path('participant/user/<str:trace_code>/', ParticipantViewset.as_view(), name='participant-user'),
     path('information/plan/admin/<str:trace_code>/', InformationPlanViewset.as_view(), name='add-information-plan-admin'),
     path('end/fundraising/admin/<str:trace_code>/', EndOfFundraisingViewset.as_view(), name='end-fundraising-plan-admin'),

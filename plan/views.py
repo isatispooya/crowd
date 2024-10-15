@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
-from accounting.models import Wallet
 from investor.models import Cart
 from authentication.models import privatePerson , User , accounts , LegalPerson , tradingCodes
 import datetime
@@ -14,9 +13,8 @@ import pandas as pd
 from .CrowdfundingAPIService import CrowdfundingAPI , ProjectFinancingProvider
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
-import numpy as np
-from persiantools.jdatetime import JalaliDateTime
-
+import os
+from django.conf import settings
 
 
 
@@ -35,6 +33,13 @@ def get_name (uniqueIdentifier) :
         full_name = 'نامشخص'
     return full_name
         
+
+def get_name_user (uniqueIdentifier) :
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+
+    full_name = 'نامشخص'
+    return full_name
+
 
 def get_fname (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
@@ -94,7 +99,9 @@ class PlanViewset(APIView):
         shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)
         if shareholder.exists():
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
-            
+        
+        picture_plan = PicturePlan.objects.filter(plan=plan).first()
+        picture_plan = serializers.PicturePlanSerializer(picture_plan)
         company = ProjectOwnerCompan.objects.filter(plan=plan)
         if company.exists():
             company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
@@ -103,14 +110,26 @@ class PlanViewset(APIView):
             'plan': plan_serializer.data ,
             'board_member' : board_members_serializer.data , 
             'shareholder' : shareholder_serializer.data,
-            'company': company_serializer.data
-
+            'company': company_serializer.data,
+            'picture_plan': picture_plan.data,
         }
         information = InformationPlan.objects.filter(plan=plan).first()
         if information:
             information_serializer = serializers.InformationPlanSerializer(information)
             response_data['information_complete'] = information_serializer.data
-        
+        end_of_fundraising = EndOfFundraising.objects.filter(plan=plan)
+        if end_of_fundraising :
+            end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising , many = True)
+            date_profit = []
+            for i in end_of_fundraising_serializer.data :
+                date = i['date']
+                type = i['type']
+                date = datetime.datetime.strptime(date , '%Y-%m-%d')
+                date_jalali = JalaliDate.to_jalali(date)
+                date_jalali =str(date_jalali)
+                date_profit.append({'type': type, 'date': date_jalali})
+
+            response_data['date_profit'] = date_profit
         return Response(response_data, status=status.HTTP_200_OK)
         
 
@@ -131,11 +150,15 @@ class PlansViewset(APIView):
             board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
             company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
+            picture_plan = PicturePlan.objects.filter(plan=plan).first()
+            picture_plan = serializers.PicturePlanSerializer(picture_plan)
+        
             data = {
                 'plan': plan_serializer.data,
                 'board_members': board_members_serializer.data , 
                 'shareholder': shareholder_serializer.data  ,
                 'company': company_serializer.data  ,
+                'picture_plan': picture_plan.data
             }
             if information:
                 information_serializer =serializers.InformationPlanSerializer(information)
@@ -154,6 +177,13 @@ class PlansViewset(APIView):
         admin = admin.first()
         crowd_founding_api = CrowdfundingAPI()
         plan_list = crowd_founding_api.get_company_projects()
+        
+        BASE_URL = os.getenv('BASE_URL')
+        API_KEY = os.getenv('API_KEY')
+        print('s',BASE_URL)
+        print('ss',API_KEY)
+        print(plan_list)
+
         for i in plan_list : 
             if not Plans.objects.filter(plan_id = i).exists () :
                 plan = Plans.objects.create(plan_id=i)
@@ -564,19 +594,25 @@ class PaymentDocument(APIView):
                 return Response([], status=status.HTTP_200_OK)
             df['fulname'] = [get_name(x) for x in df['user']]
             df = df.to_dict('records')
+
             return Response(df, status=status.HTTP_200_OK)
         
         if user:
             user = user.first()
-            payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier, plan=plan)
+            payments = PaymentGateway.objects.filter(plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
             df = pd.DataFrame(response.data)
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
-            df['fulname'] = [get_name(x) for x in df['user']]
-            df = df.to_dict('records')
-            return Response(response.data, status=status.HTTP_200_OK)
-
+            if df['name_status'] is True :
+                df['fulname'] = [get_name(x) for x in df['user']]
+                df = df.to_dict('records')
+                return Response(df, status=status.HTTP_200_OK)
+            else :
+                df['fulname'] = [get_name_user(x) for x in df['user']]
+                df = df.to_dict('records')
+                return Response(df, status=status.HTTP_200_OK)
+            
         
     def patch (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
@@ -608,7 +644,22 @@ class PaymentDocument(APIView):
         information.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+class PaymentUser(APIView):
+    def get(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
 
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        payments = PaymentGateway.objects.filter(plan=plan,user=user.uniqueIdentifier)
+        response = serializers.PaymentGatewaySerializer(payments,many=True)
+        return Response(response.data, status=status.HTTP_200_OK)
 
 # done
 class ParticipantViewset(APIView) :
@@ -644,7 +695,31 @@ class ParticipantViewset(APIView) :
         df = df.to_dict('records')
               
         return Response (df, status=status.HTTP_200_OK)
-    
+
+
+class Certificate(APIView):
+    def post(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        apiFarabours = CrowdfundingAPI()
+        participation = apiFarabours.get_project_participation_report(trace_code , user.uniqueIdentifier)
+        if participation.status_code != 200:
+            return Response(participation.json(),status=status.HTTP_200_OK)
+        file_name = f"{trace_code}_{user.uniqueIdentifier}.pdf"
+        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', file_name)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as pdf_file:
+            pdf_file.write(participation.content)
+        return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
+
 # done
 class InformationPlanViewset(APIView) :
     def post (self,request,trace_code):
@@ -880,34 +955,33 @@ class ShareholdersListExelViewset(APIView) :
         if request.FILES:
             file = request.FILES['file']
             df = pd.read_csv(file)
-            df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
+
+
+
+            # df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
             if not df.empty:
-                trace_code_values = df['شناسه طرح'].tolist()
-                plan = Plan.objects.filter(trace_code__in= trace_code_values).first()
-                if not plan :
-                    return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-                df['تعداد'] = np.where(df['قیمت اسمی هر واحد'] != 0, df['مبلغ سفارش'] / df['قیمت اسمی هر واحد'], np.nan)
                 for index, row in df.iterrows(): 
+                    trace_code_values = row['شناسه طرح']
+                    plan = Plan.objects.filter(trace_code= trace_code_values).first()
+                
+                    if not plan :
+                        return Response({'error': f'plan not found {trace_code_values}'}, status=status.HTTP_400_BAD_REQUEST)
                     national_code = str(row['کد ملی']) if not pd.isna(row['کد ملی']) else ''
-                    national_code = national_code.replace("'", "")
+                    national_code = str(national_code).replace("'", "")
                     if row['روش پرداخت'] == 'اینترنتی' :
                         document = False
                     else :
                         document = True
-                    if not pd.isna(row['تاریخ سفارش']):
-                        try:
-                            date_string = str(row['تاریخ سفارش']).strip()
-                            jalali_date = JalaliDateTime.strptime(date_string, '%Y/%m/%d %H:%M:%S')
-                            gregorian_date = jalali_date.to_gregorian()
-                        except ValueError as e:
-                            return Response({'error': f"Invalid date format: {e}"}, status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        gregorian_date = None
+
+
+                    date_string = str(row['تاریخ سفارش']).strip()
+                    gregorian_date = datetime.datetime.strptime(date_string, '%d/%m/%Y %H:%M')
+
 
                     data = PaymentGateway.objects.update_or_create(
                         plan = plan,
-                        user =  row['کد ملی'].replace("'", ""),
-                        amount =  row['تعداد'],
+                        user =str ( row['کد ملی']).replace("'", ""),
+                        amount =  row['تعداد گواهی'],
                         value =  row['مبلغ سفارش'],
                         payment_id =  row['شناسه سفارش'],
                         document = document,
@@ -916,15 +990,22 @@ class ShareholdersListExelViewset(APIView) :
                         status =  True,
                         send_farabours = True,
                         name_status = False,
-
                     )
 # update information plan 
-                value =df['مبلغ سفارش'].sum()
-                information = InformationPlan.objects.filter(plan=plan).first()
-                if not information :
-                    return Response ({'error' :'Not Found  InformationPlan'} , status = status.HTTP_400_BAD_REQUEST)
-                information.amount_collected_now = value
-                information.save()
+                df['مبلغ سفارش'] = df['مبلغ سفارش'].apply(int)
+                value =df[['مبلغ سفارش','شناسه طرح']].groupby(by=['شناسه طرح']).sum()
+                for i in value.index:
+                    plan = Plan.objects.filter(trace_code= i).first()
+
+                    if not plan :
+                        return Response ({'error' :'Not Found  plan'} , status = status.HTTP_400_BAD_REQUEST)
+
+                    information = InformationPlan.objects.filter(plan=plan).first()
+
+                    if not information :
+                        return Response ({'error' :'Not Found  planInformation'} , status = status.HTTP_400_BAD_REQUEST)
+                    information.amount_collected_now = value['مبلغ سفارش'][i]
+                    information.save()
 
 
         return Response( True , status=status.HTTP_200_OK)
@@ -932,7 +1013,6 @@ class ShareholdersListExelViewset(APIView) :
 
 
 class PaymentListViewset(APIView):
-
     pass
 
 

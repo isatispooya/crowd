@@ -1,7 +1,8 @@
 import requests
 from dataclasses import dataclass
 import os
-
+from django.conf import settings
+from django.core.files.base import ContentFile
 @dataclass
 class ProjectFinancingProvider:
     """
@@ -46,6 +47,8 @@ class CrowdfundingAPI:
 
     BASE_URL = os.getenv('BASE_URL')
     API_KEY = os.getenv('API_KEY')
+    print('s',BASE_URL)
+    print('ss',API_KEY)
 
     def __init__(self):
         """
@@ -139,7 +142,9 @@ class CrowdfundingAPI:
             "NationalID": national_id
         }
         response = requests.post(url, json=body)
-        return response.json()
+        return response
+
+
 
 # مثال استفاده:
 # api = CrowdfundingAPI()

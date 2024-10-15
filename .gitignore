@@ -7,3 +7,6 @@ media/
 participant1.xlsx
 .env
 *.sqlite3
+*.csv
+db.sqlite3
+db.sqlite3

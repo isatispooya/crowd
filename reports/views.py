@@ -13,8 +13,13 @@ from plan.CrowdfundingAPIService import CrowdfundingAPI
 from django.utils import timezone
 from django.db.models import Sum
 import pandas as pd
+import datetime
+from persiantools.jdatetime import JalaliDate
 from authentication.serializers import accountsSerializer , privatePersonSerializer
 from plan.views import get_name , get_account_number
+import os
+from django.conf import settings
+from django.core.files.base import ContentFile
 # گزارش پیشرفت پروژه
 # done
 class ProgressReportViewset(APIView) :
@@ -133,10 +138,19 @@ class ParticipationReportViewset(APIView) :
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         national_id =   user.uniqueIdentifier
         crowd_api = CrowdfundingAPI()
-        participation = crowd_api.get_project_participation_report(plan.id , national_id)
-        return Response (participation, status=status.HTTP_200_OK)
+        participation = crowd_api.get_project_participation_report(trace_code , national_id)
+        if participation.status_code != 200:
+          return participation
+        file_name = f"{trace_code}_{national_id}.pdf"
+        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', file_name)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as pdf_file:
+            pdf_file.write(participation.content)
+        return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
 
 
 # داشبورد ادمین 
@@ -191,6 +205,21 @@ class DashBoardUserViewset(APIView) :
         current_date = timezone.now().date()
         active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
         payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier).values('plan').distinct()
+
+        end_of_fundraising = EndOfFundraising.objects.filter(plan__in = payments)
+        end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising,many=True)
+        date_profit = []
+        for i in end_of_fundraising_serializer.data :
+            date = i['date']
+            type = i['type']
+            amount = i['amount']
+            plan = i['plan']
+            date = datetime.datetime.strptime(date , '%Y-%m-%d')
+            date_jalali = JalaliDate.to_jalali(date)
+            date_jalali =str(date_jalali)
+            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount , 'plan' : plan})
+
+        
         payments_count = payments.count()
         total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier).aggregate(total_value_sum=Sum('value'))['total_value_sum']
         if total_value is None:
@@ -199,7 +228,7 @@ class DashBoardUserViewset(APIView) :
         total_rate_of_return = InformationPlan.objects.filter(plan__in=payments).aggregate(total_rate_sum=Sum('rate_of_return'))['total_rate_sum']        
         if total_rate_of_return is None:
             total_rate_of_return = 0
-        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return }, status=status.HTTP_200_OK)
+        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return  , 'profit' : date_profit}, status=status.HTTP_200_OK)
     
 # گزارش سود دهی ادمین
 class ProfitabilityReportViewSet(APIView) :

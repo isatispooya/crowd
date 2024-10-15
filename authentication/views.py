@@ -25,8 +25,9 @@ class OtpViewset(APIView) :
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        if not captcha  :
-        # if False : 
+        # if not captcha  :
+
+        if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -34,11 +35,11 @@ class OtpViewset(APIView) :
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
         if user :
             code = random.randint(10000,99999)
-            otp = Otp(mobile=user.mobile, code=code)
+            otp = Otp()
             otp.save()
-            message = Message()
-            message.otpSMS(code, user.mobile)
-            message.otpEmail(code, user.email)
+            message = Message(code,user.mobile,user.email)
+            message.otpSMS()
+            # message.otpEmail(code, user.email)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
@@ -306,7 +307,6 @@ class InformationViewset (APIView) :
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()   
         user = User.objects.filter(id=user.id).first() if user else None
-        print(user)
         
         if not user:
             return Response({'error': 'User not found in database'}, status=status.HTTP_404_NOT_FOUND)
@@ -402,7 +402,6 @@ class LoginViewset(APIView) :
         otp = request.data.get('otp')
         if not uniqueIdentifier or not otp:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
             user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
         except:
@@ -412,6 +411,8 @@ class LoginViewset(APIView) :
         try:
             mobile = user.mobile
             otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
+            # if otp_obj is None : 
+            #     return Response({'message' : 'otp ذخیره نمیشود'},status=status.HTTP_404_NOT_FOUND)
         except :
             return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -421,15 +422,20 @@ class LoginViewset(APIView) :
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
             
         otp = serializers.OtpSerializer(otp_obj).data
-        dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+        # if 'date' in otp:
+        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+        # else  :
+        #     return Response({"error": "Date field is missing in OTP data."}, status=400)
         
-        dt = dt.total_seconds()
+        # dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+        # dt = dt.total_seconds()
 
-        if dt >120 :
-            result = {'message': 'زمان کد منقضی شده است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        # if dt >120 :
+        #     result = {'message': 'زمان کد منقضی شده است'}
+        #     return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
     
-        otp_obj.delete()
+        # otp_obj.delete()
         token = fun.encryptionUser(user)
         return Response({'access': token} , status=status.HTTP_200_OK)
 
@@ -443,8 +449,8 @@ class OtpAdminViewset(APIView) :
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        if not captcha  :
-        # if False : 
+        # if not captcha  :
+        if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -538,6 +544,15 @@ class UserListViewset (APIView) :
             user_tradingCodes = tradingCodes.objects.filter(user=i_user)
             serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes , many=True).data
             
+            legal_person_shareholder = legalPersonShareholders.objects.filter(user=i_user)
+            serializer_legal_person_shareholder = serializers.legalPersonShareholdersSerializer(legal_person_shareholder , many=True).data
+
+            legal_person = LegalPerson.objects.filter(user=i_user)
+            serializer_legal_person = serializers.LegalPersonSerializer(legal_person , many=True).data
+
+            legal_person_stakeholders = legalPersonStakeholders.objects.filter(user=i_user)
+            serializer_legal_person_stakeholders = serializers.legalPersonStakeholdersSerializer(legal_person_stakeholders , many=True).data
+
             combined_data = {
                 **user_data,  
                 'addresses': serializer_addresses,
@@ -545,6 +560,9 @@ class UserListViewset (APIView) :
                 'financial_info': serializer_financialInfo,
                 'job_info': serializer_jobInfo,
                 'trading_codes': serializer_tradingCodes,
+                'legal_person_shareholder': serializer_legal_person_shareholder,
+                'legal_person': serializer_legal_person,
+                'legal_person_stakeholders': serializer_legal_person_stakeholders,
             }
             
             user_list.append(combined_data)
@@ -596,14 +614,14 @@ class OtpUpdateViewset(APIView) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        uniqueIdentifier = user.uniqueIdentifier
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        uniqueIdentifier = request.data.get("uniqueIdentifier")
         if not uniqueIdentifier :
             return Response ({'errot' : 'uniqueIdentifier not found '} ,  status=status.HTTP_400_BAD_REQUEST) 
-
+        user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         if user:
             url = "http://31.40.4.92:8870/otp"
             payload = json.dumps({
@@ -621,6 +639,7 @@ class OtpUpdateViewset(APIView) :
         return Response({'registered' : False , 'message' : 'سیستم قطع است خداحافظ'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
+
 # done
 class UpdateInformationViewset(APIView) :
     def patch(self, request):
@@ -628,14 +647,14 @@ class UpdateInformationViewset(APIView) :
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = fun.decryptionUser(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        user = user.first()
+        admin = admin.first()
         
         otp = request.data.get('otp')
-        uniqueIdentifier = user.uniqueIdentifier
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
         if not otp:
             return Response({'error': 'otp not found'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -664,9 +683,9 @@ class UpdateInformationViewset(APIView) :
         if new_user:
             new_user.agent = data.get('agent', new_user.agent)
             new_user.email = data.get('email', new_user.email)
-            new_user.legalPerson = data.get('legalPerson', new_user.legalPerson)
-            new_user.legalPersonShareholders = data.get('legalPersonShareholders', new_user.legalPersonShareholders)
-            new_user.legalPersonStakeholders = data.get('legalPersonStakeholders', new_user.legalPersonStakeholders)
+            # new_user.legalPerson = data.get('legalPerson', new_user.legalPerson)
+            # new_user.legalPersonShareholders = data.get('legalPersonShareholders', new_user.legalPersonShareholders)
+            # new_user.legalPersonStakeholders = data.get('legalPersonStakeholders', new_user.legalPersonStakeholders)
             new_user.mobile = data.get('mobile', new_user.mobile)
             new_user.status = data.get('status', new_user.status)
             new_user.type = data.get('type', new_user.type)
@@ -689,7 +708,47 @@ class UpdateInformationViewset(APIView) :
                             'sheba': account_data['sheba']
                         }
                     )
-            
+            if len(data['legalPersonStakeholders']) > 0:
+                for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
+                    new_legalPersonStakeholders = legalPersonStakeholders(
+                    user = new_user ,
+                    uniqueIdentifier =legalPersonStakeholders_data['uniqueIdentifier'] ,
+                    type = legalPersonStakeholders_data['type'],
+                    startAt = legalPersonStakeholders_data ['startAt'],
+                    positionType = legalPersonStakeholders_data ['positionType'],
+                    lastName = legalPersonStakeholders_data ['lastName'],
+                    isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
+                    firstName = legalPersonStakeholders_data ['firstName'],
+                    endAt = legalPersonStakeholders_data ['endAt'] ,)
+                new_legalPersonStakeholders.save()
+
+            if data['legalPerson']:
+                new_LegalPerson = LegalPerson(
+                user = new_user ,
+                citizenshipCountry =data['legalPerson']['citizenshipCountry'] ,
+                economicCode = data['legalPerson']['economicCode'],
+                evidenceExpirationDate = data['legalPerson'] ['evidenceExpirationDate'],
+                evidenceReleaseCompany = data['legalPerson'] ['evidenceReleaseCompany'],
+                evidenceReleaseDate = data['legalPerson'] ['evidenceReleaseDate'],
+                legalPersonTypeSubCategory = data['legalPerson'] ['legalPersonTypeSubCategory'],
+                registerDate = data['legalPerson'] ['registerDate'],
+                legalPersonTypeCategory = data['legalPerson'] ['legalPersonTypeCategory'],
+                registerPlace = data['legalPerson'] ['registerPlace'] ,
+                registerNumber = data['legalPerson'] ['registerNumber'] ,)
+                new_LegalPerson.save()
+
+            if len(data['legalPersonShareholders']) > 0:
+                for legalPersonShareholders_data in data['legalPersonShareholders'] :
+                    new_legalPersonShareholders = legalPersonShareholders(
+                    user = new_user ,
+                    uniqueIdentifier = legalPersonShareholders_data['uniqueIdentifier'],
+                    postalCode = legalPersonShareholders_data ['postalCode'],
+                    positionType = legalPersonShareholders_data ['positionType'],
+                    percentageVotingRight = legalPersonShareholders_data ['percentageVotingRight'],
+                    firstName = legalPersonShareholders_data ['firstName'],
+                    lastName = legalPersonShareholders_data ['lastName'],
+                    address = legalPersonShareholders_data ['address'] )
+                new_legalPersonShareholders.save()
             if len(data['addresses']) > 0:
                 for address_data in data['addresses']:
                     address_obj, created = addresses.objects.update_or_create(
@@ -778,4 +837,4 @@ class UpdateInformationViewset(APIView) :
                 )
 
 
-        return Response({'success': True}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'success': True}, status=status.HTTP_200_OK)
