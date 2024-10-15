@@ -17,6 +17,9 @@ import datetime
 from persiantools.jdatetime import JalaliDate
 from authentication.serializers import accountsSerializer , privatePersonSerializer
 from plan.views import get_name , get_account_number
+import os
+from django.conf import settings
+from django.core.files.base import ContentFile
 # گزارش پیشرفت پروژه
 # done
 class ProgressReportViewset(APIView) :
@@ -135,10 +138,19 @@ class ParticipationReportViewset(APIView) :
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         national_id =   user.uniqueIdentifier
         crowd_api = CrowdfundingAPI()
-        participation = crowd_api.get_project_participation_report(plan.id , national_id)
-        return Response (participation, status=status.HTTP_200_OK)
+        participation = crowd_api.get_project_participation_report(trace_code , national_id)
+        if participation.status_code != 200:
+          return participation
+        file_name = f"{trace_code}_{national_id}.pdf"
+        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', file_name)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as pdf_file:
+            pdf_file.write(participation.content)
+        return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
 
 
 # داشبورد ادمین 

@@ -142,14 +142,9 @@ class CrowdfundingAPI:
             "NationalID": national_id
         }
         response = requests.post(url, json=body)
-        if response.status_code != 200:
-            return response.json()
-        file_name = f"{project_id}_{national_id}.pdf"
-        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', file_name)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, 'wb') as pdf_file:
-            pdf_file.write(response.content)
-        return f'/media/reports/{file_name}'
+        return response
+
+
 
 # مثال استفاده:
 # api = CrowdfundingAPI()
