@@ -12,3 +12,6 @@ GuardPyCaptcha
 decouple
 python-dotenv
 dj-database-url
+gunicorn
+django-cors-headers
+opencv-python
