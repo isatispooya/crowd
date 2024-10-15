@@ -109,9 +109,8 @@ class SignUpViewset(APIView):
                 try :
                    reference_user = User.objects.get(uniqueIdentifier=reference)
                    Reagent.objects.create(reference=reference_user, referrer=new_user)
-                   print("رکورد Reagent با موفقیت ساخته شد")
                 except User.DoesNotExist:
-                    print("معرف مورد تایید نیست")
+                    pass
                 
         if len(data['legalPersonStakeholders']) > 0:
                 for legalPersonStakeholders_data in data['legalPersonStakeholders'] :

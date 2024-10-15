@@ -116,7 +116,6 @@ class SetCartAdminViewset(APIView) :
         ]
         for i in update_fields:
             
-            print(i)
             if i in data:
                 setattr(cart, i, data.get(i))
         cart.save()
