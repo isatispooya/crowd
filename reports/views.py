@@ -164,16 +164,29 @@ class DashBoardAdminViewset (APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         admin = admin.first()
-
         plan_all = Plan.objects.all().count()
         now = timezone.now()
         expire_plan = Plan.objects.filter(suggested_underwriting_end_date__lt=now).count()
+        show_plan = InformationPlan.objects.filter(status_show=True).count()
         current_date = timezone.now().date()
         active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
         cart_all = Cart.objects.all().count()
         expire_cart = Cart.objects.filter(finish_cart = True).count()
         active_cart = Cart.objects.filter(finish_cart = False).count()
-        return Response ({'all plan':plan_all ,'expire plan' : expire_plan , 'active plan' : active_plan , 'all cart' : cart_all, 'expire cart' : expire_cart , 'active cart' : active_cart} , status=status.HTTP_200_OK)
+        
+        statics = {
+            'all plan': plan_all,
+            'expire plan': expire_plan,
+            'active plan': active_plan,
+            'show_plan': show_plan,
+            'all cart': cart_all,
+            'expire cart': expire_cart,
+            'active cart': active_cart
+            }
+        
+        tasks = []
+        
+        return Response (statics, status=status.HTTP_200_OK)
    
 
 

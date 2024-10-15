@@ -180,9 +180,7 @@ class PlansViewset(APIView):
         
         BASE_URL = os.getenv('BASE_URL')
         API_KEY = os.getenv('API_KEY')
-        print('s',BASE_URL)
-        print('ss',API_KEY)
-        print(plan_list)
+
 
         for i in plan_list : 
             if not Plans.objects.filter(plan_id = i).exists () :
@@ -925,9 +923,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         for i in payment_serializer :
             uniqueIdentifier = i['user']
             user_obj = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-            print('-'*55)
-            print(get_account_number (uniqueIdentifier))
-            print('+'*55)
+
             if user_obj is not None:
                 user_fname = get_fname(uniqueIdentifier)
                 user_lname = get_lname(uniqueIdentifier)
