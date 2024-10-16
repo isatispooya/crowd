@@ -35,7 +35,7 @@ class OtpViewset(APIView) :
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
         if user :
             code = random.randint(10000,99999)
-            otp = Otp()
+            otp = Otp(mobile=user.mobile , code=code)
             otp.save()
             message = Message(code,user.mobile,user.email)
             message.otpSMS()
@@ -410,8 +410,8 @@ class LoginViewset(APIView) :
         try:
             mobile = user.mobile
             otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
-            # if otp_obj is None : 
-            #     return Response({'message' : 'otp ذخیره نمیشود'},status=status.HTTP_404_NOT_FOUND)
+            if otp_obj is None : 
+                return Response({'message' : 'otp ذخیره نمیشود'},status=status.HTTP_404_NOT_FOUND)
         except :
             return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -421,20 +421,20 @@ class LoginViewset(APIView) :
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
             
         otp = serializers.OtpSerializer(otp_obj).data
-        # if 'date' in otp:
-        #     dt = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
-        # else  :
-        #     return Response({"error": "Date field is missing in OTP data."}, status=400)
+        if 'date' in otp:
+            dt = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+        else  :
+            return Response({"error": "Date field is missing in OTP data."}, status=400)
         
-        # dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
-        # dt = dt.total_seconds()
+        dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
+        dt = dt.total_seconds()
 
-        # if dt >120 :
-        #     result = {'message': 'زمان کد منقضی شده است'}
-        #     return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        if dt >120 :
+            result = {'message': 'زمان کد منقضی شده است'}
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
     
-        # otp_obj.delete()
+        otp_obj.delete()
         token = fun.encryptionUser(user)
         return Response({'access': token} , status=status.HTTP_200_OK)
 
