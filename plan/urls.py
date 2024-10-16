@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset,PaymentUser,Certificate, DocumentationViewset, AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, PlanViewset,PaymentUser,Certificate, DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -20,5 +20,6 @@ urlpatterns = [
     path('send/payment/farabours/admin/<str:trace_code>/', SendPaymentToFarabours.as_view(), name='send-payment-farabours-admin'),
     path('send/participation/certificate/farabours/admin/<str:trace_code>/', SendParticipationCertificateToFaraboursViewset.as_view(), name='send-participation-certificate-farabours-admin'),
     path('read/exel/shareholder/admin/<str:key>/', ShareholdersListExelViewset.as_view(), name='exel-shareholders-admin'),
+    path('warranty/admin/<str:key>/', WarrantyAdminViewset.as_view(), name='warranty-admin'),
 
 ]

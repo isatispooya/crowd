@@ -1,4 +1,4 @@
-from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ListOfProjectBoardMembers,ProjectOwnerCompan , PaymentGateway ,PicturePlan , InformationPlan , EndOfFundraising ,ListOfProjectBigShareHolders
+from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ListOfProjectBoardMembers,ProjectOwnerCompan , PaymentGateway ,PicturePlan ,Warranty, InformationPlan , EndOfFundraising ,ListOfProjectBigShareHolders
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -1032,9 +1032,115 @@ class ShareholdersListExelViewset(APIView) :
         return Response( True , status=status.HTTP_200_OK)
     
 
+# ضمانت نامه
+class WarrantyAdminViewset(APIView) :
+    def post (self, request  ,*args, **kwargs) :
+        trace_code = kwargs.get('key')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        date = request.data.get('date')
+        if date:
+            try:
+                timestamp = int(date) / 1000
+                date = datetime.datetime.fromtimestamp(timestamp)
+            except (ValueError, TypeError):
+                return Response({'error': 'Invalid date format'}, status=400)
+        else:
+            date = None
 
-class PaymentListViewset(APIView):
-    pass
+       
+        warranty = Warranty.objects.create(
+            plan = plan,
+            exporter = request.data.get('exporter'),
+            date = date,
+            kind_of_warranty = request.data.get('kind_of_warranty'),
+        )
+        warranties = Warranty.objects.filter(plan=plan)
+        serializer = serializers.WarrantySerializer (warranties , many = True)
+
+        return Response (serializer.data ,  status= status.HTTP_200_OK)
+
+    def get (self, request  ,*args, **kwargs) :
+        trace_code = kwargs.get('key')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        warranties = Warranty.objects.filter(plan=plan)
+        serializer = serializers.WarrantySerializer (warranties , many = True)
+        return Response (serializer.data ,  status= status.HTTP_200_OK)
+
+    def patch (self,request , *args, **kwargs):
+        trace_code = kwargs.get('key')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
+        
+        warranties_id = data.get('id')
+        if not warranties_id:
+            return Response({'error': 'warranty ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        warranties = Warranty.objects.filter(plan=plan , id = warranties_id).first()
+        if not warranties :
+            return Response({'error': 'warranty not found '}, status=status.HTTP_400_BAD_REQUEST)
+        if data.get('date'):
+            try:
+                timestamp = int(data['date']) / 1000
+                data['date'] = datetime.datetime.fromtimestamp(timestamp)
+            except (ValueError, TypeError):
+                return Response({'error': 'Invalid date format'}, status=400)
+
+        serializer = serializers.WarrantySerializer(warranties , data= data ,  partial = True )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data ,  status= status.HTTP_200_OK)
+        return Response ({'message': 'update is not succsesfuly'} ,  status=status.HTTP_400_BAD_REQUEST  )
+
+
+    def delete (self, request, *args, **kwargs):
+        trace_code = kwargs.get('key')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
+        warranties_id = data.get('id')
+        if not warranties_id:
+            return Response({'error': 'warranty ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        warranties = Warranty.objects.filter(plan=plan , id = warranties_id).first()
+        if not warranties :
+            return Response({'error': 'warranty not found '}, status=status.HTTP_400_BAD_REQUEST)
+        warranties.delete()
+        return Response(True , status=status.HTTP_200_OK)
+
 
 
 

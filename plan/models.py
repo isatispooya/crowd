@@ -196,3 +196,10 @@ class EndOfFundraising (models.Model) :
        
 
        
+class Warranty (models.Model):
+    plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
+    kind_of_warranty = models.CharField(max_length = 250 , blank = True , null = True)
+    date = models.DateTimeField (blank = True , null = True)
+    exporter = models.CharField (max_length = 500)
+    def __str__(self):
+        return self.plan.persian_name 

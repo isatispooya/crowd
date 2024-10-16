@@ -44,6 +44,12 @@ class EndOfFundraisingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class WarrantySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Warranty
+        fields = '__all__'
+
+
 
 class DocumentationSerializer(serializers.ModelSerializer):
     plan = PlanSerializer(many=True, read_only=True, source='plan_set')
