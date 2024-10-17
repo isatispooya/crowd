@@ -140,8 +140,6 @@ class PaymentGateway(models.Model) :
     payment_id = models.CharField(max_length=256) #شناسه پرداخت
     description = models.CharField(max_length=2500 , null=True, blank=True)
     code = models.CharField(max_length=2500 , null=True, blank=True) #کد 
-    cart_number =  models.CharField(max_length=50 , null=True, blank=True)
-    cart_hashpan =  models.CharField(max_length=50 , null=True, blank=True)
     create_date =  models.DateTimeField(null=True, blank=True, default=timezone.now) # تاریخ ایجاد مشارکت 
     risk_statement = models.BooleanField(default=True) # بیانیه ریسک
     name_status = models.BooleanField (default=False)
@@ -149,10 +147,15 @@ class PaymentGateway(models.Model) :
     document =  models.BooleanField (default=True)
     picture = models.FileField(null=True, blank = True  , upload_to='static/')
     send_farabours = models.BooleanField (default=False)
+    url_id = models.CharField(max_length=10000 , null= True , blank=True)
+    mobile = models.CharField(max_length=13 , null= True , blank=True)
+    invoice = models.CharField (max_length=150 , null= True , blank=True)
+    invoice_date =  models.DateTimeField(null=True, blank=True, default=timezone.now)
+    name = models.CharField (max_length=200 , null= True , blank=True)
+    service_code = models.CharField (max_length = 10 , null= True , blank = True)
     def __str__(self) :
             return self.user
         
-
 
 
 

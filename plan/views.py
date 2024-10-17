@@ -15,6 +15,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 import os
 from django.conf import settings
+from plan.PeymentPEP import PasargadPaymentGateway
 
 
 
@@ -995,8 +996,8 @@ class ShareholdersListExelViewset(APIView) :
                         document = True
 
 
-                    date_string = str(row['تاریخ سفارش']).strip()
-                    gregorian_date = datetime.datetime.strptime(date_string, '%d/%m/%Y %H:%M')
+                    # date_string = str(row['تاریخ سفارش']).strip()
+                    # gregorian_date = datetime.datetime.strptime(date_string, '%d/%m/%Y %H:%M')
 
 
                     data = PaymentGateway.objects.update_or_create(
@@ -1006,7 +1007,7 @@ class ShareholdersListExelViewset(APIView) :
                         value =  row['مبلغ سفارش'],
                         payment_id =  row['شناسه سفارش'],
                         document = document,
-                        create_date =  gregorian_date,
+                        create_date =  None,
                         risk_statement = True,
                         status =  True,
                         send_farabours = True,
@@ -1027,11 +1028,11 @@ class ShareholdersListExelViewset(APIView) :
                         return Response ({'error' :'Not Found  planInformation'} , status = status.HTTP_400_BAD_REQUEST)
                     information.amount_collected_now = value['مبلغ سفارش'][i]
                     information.save()
-
+                    
 
         return Response( True , status=status.HTTP_200_OK)
     
-
+# done
 # ضمانت نامه
 class WarrantyAdminViewset(APIView) :
     def post (self, request  ,*args, **kwargs) :
@@ -1140,6 +1141,78 @@ class WarrantyAdminViewset(APIView) :
             return Response({'error': 'warranty not found '}, status=status.HTTP_400_BAD_REQUEST)
         warranties.delete()
         return Response(True , status=status.HTTP_200_OK)
+
+class TransmissionViewset(APIView) : 
+    def post(self,request ,*args, **kwargs):
+        trace_code = kwargs.get('key')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        value = request.data.get('amount')
+        user = User.objects.filter(uniqueIdentifier = user).first()
+        full_name = get_name(user.uniqueIdentifier)
+        
+        pep = PasargadPaymentGateway()
+        try:
+            pep.get_token()
+        except:
+            pass # پرداخت ناموفق 
+        invoice_data = {
+            'invoice' : pep.generator_invoice_number(),
+            'invoiceDate': pep.generator_date(),
+            'description': 'تست'
+            
+        }
+        created = pep.create_purchase(
+            invoice  = invoice_data['invoice'],
+            invoiceDate = invoice_data['invoiceDate'],
+            amount = value ,
+            callback_url = 'https://mycrowd.isatispooya.com/success/',
+            mobile_number = user.mobile,
+            service_code =  '8' ,
+            payerName = full_name,
+            description = invoice_data['description'] 
+        )
+        print(created)
+        payment = PaymentGateway.objects.create(
+            plan = plan,
+            user = user.uniqueIdentifier,
+            amount = int(value / plan.unit_price),
+            value = value,
+            payment_id = invoice_data['invoice'],
+            description = invoice_data['description'],
+            code = None,
+            create_date = datetime.datetime.now(),
+            risk_statement = True,
+            name_status = False,
+            status = True,
+            document = False,
+            picture = None , 
+            send_farabours = True,
+            url_id = "" , 
+            mobile = user.mobile,
+            invoice = invoice_data['invoice'],
+            invoice_date = invoice_data['invoiceDate'],
+            name = full_name(user.uniqueIdentifier),
+            service_code = '8'
+        )
+        payment.save()
+
+
+
+        return Response({'url' : '' }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
 
 
 
