@@ -157,6 +157,7 @@ class Admin(models.Model):
     lastName = models.CharField(max_length=32)
     mobile = models.CharField(max_length=11)
     uniqueIdentifier = models.CharField(max_length=10)
+    email = models.EmailField()
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
         return f'{uniqueIdentifier}'

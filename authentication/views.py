@@ -25,9 +25,8 @@ class OtpViewset(APIView) :
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        # if not captcha  :
-
-        if False : 
+        if not captcha  :
+        # if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -448,8 +447,8 @@ class OtpAdminViewset(APIView) :
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        # if not captcha  :
-        if False : 
+        if not captcha  :
+        # # if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -461,12 +460,13 @@ class OtpAdminViewset(APIView) :
 
         admin.save()
         mobile = admin.mobile
-        result = {'registered' : True , 'message' : 'کد تایید ارسال شد'}    
-        code = 11111 #random.randint(10000,99999)
+        email= admin.email
+        code = random.randint(10000,99999)
         otp = Otp( mobile=mobile, code=code)
         otp.save()
-        # SendSms(mobile ,code)
-        return Response(result,status=status.HTTP_200_OK)
+        message = Message(code,mobile,email)
+        message.otpSMS()
+        return Response({'registered' : True , 'message' : 'کد تایید ارسال شد'}  ,status=status.HTTP_200_OK)
     
 
 
