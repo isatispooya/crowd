@@ -143,7 +143,10 @@ class Cart (models.Model) :
     year_of_establishment = models.DateTimeField(null=True, blank=True)
     lock_year_of_establishment = models.BooleanField(default=False) 
 
-    finish_cart =  models.BooleanField(default=False) #اتمام کارت
+    finish_cart =  models.BooleanField(default=False) # اتمام کارت
+    
+    risk_committee = models.BooleanField(default=False) # کمیته ریسک
+    evaluation_committee = models.BooleanField(default=False) #کمیته ارزیابی
 
     role_141 = models.BooleanField(default=False)  #  ماده 141
     lock_contract = models.BooleanField(default=False) 

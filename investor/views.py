@@ -644,3 +644,51 @@ class FinishCartViewset(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+# done
+# اپدیت کمیته ریسک
+class RiskCommitteeViewset(APIView) :
+    def post (self, request,id) : 
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        risk_committee = request.data.get('risk_committee')
+        if risk_committee is None:
+            return Response({'error': 'risk_committee is required'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.CartSerializer(cart, data={'risk_committee': risk_committee}, partial=True)
+        if serializer.is_valid():
+            serializer.save()  
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response ({'error': 'Cart not found'}, status.HTTP_400_BAD_REQUEST)
+
+
+# done
+# اپدیت کمیته ارزیابی
+class EvaluationCommitteeViewset(APIView) :
+    def post (self, request,id) : 
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+        admin = admin.first()
+        cart = models.Cart.objects.filter(id=id).first()
+        if not cart:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+        evaluation_committee = request.data.get('evaluation_committee')
+        if evaluation_committee is None:
+            return Response({'error': 'evaluation_committee is required'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.CartSerializer(cart, data={'evaluation_committee': evaluation_committee}, partial=True)
+        if serializer.is_valid():
+            serializer.save()  
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response ({'error': 'Cart not found'}, status.HTTP_400_BAD_REQUEST)
