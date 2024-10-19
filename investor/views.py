@@ -564,11 +564,15 @@ class AddInfromationAdminViewset (APIView) :
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         addinformation = AddInformation.objects.filter(cart=cart).first()
         data = request.data.copy()
- 
+        if not addinformation : 
+            addinformation = AddInformation(cart=cart)
+            addinformation.save()
+
+            
         for file_field in ['announcement_of_changes_managers','announcement_of_changes_capital','bank_account_turnover',
                            'statutes','assets_and_liabilities','latest_insurance_staf','claims_status'
                            ,'product_catalog','licenses','auditor_representative','announcing_account_number']:
-
+            
             if file_field in data:
                 field_value = request.data.get(file_field)
                 if field_value in ['null', 'undefined', None , '']:
