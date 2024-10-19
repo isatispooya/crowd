@@ -210,9 +210,9 @@ class DashBoardUserViewset(APIView) :
         end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising,many=True)
         date_profit = []
         for i in end_of_fundraising_serializer.data :
-            date = i['date']
+            date = i['date_operator']
             type = i['type']
-            amount = i['amount']
+            amount = i['amount_operator']
             plan = i['plan']
             date = datetime.datetime.strptime(date , '%Y-%m-%d')
             date_jalali = JalaliDate.to_jalali(date)
