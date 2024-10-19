@@ -1175,7 +1175,7 @@ class TransmissionViewset(APIView) :
             invoice  = invoice_data['invoice'],
             invoiceDate = invoice_data['invoiceDate'],
             amount = value ,
-            callback_url = 'http://localhost:3030/paymentresult/',
+            callback_url = 'https://apicrowd.isatispooya.com/paymentresult/',
             mobile_number = user.mobile,
             service_code =  '8' ,
             payerName = full_name,
