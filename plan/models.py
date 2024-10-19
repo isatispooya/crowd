@@ -133,7 +133,6 @@ class Comment(models.Model):
 
 class PaymentGateway(models.Model) :
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
-    # user = models.ForeignKey(User , to_field='uniqueIdentifier',  on_delete=models.CASCADE)
     user = models.CharField(max_length=15)
     amount = models.BigIntegerField() #تعداد سهم
     value = models.BigIntegerField() #ارزش کل 

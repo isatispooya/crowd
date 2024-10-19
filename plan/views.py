@@ -1142,6 +1142,8 @@ class WarrantyAdminViewset(APIView) :
         warranties.delete()
         return Response(True , status=status.HTTP_200_OK)
 
+# done
+# درگاه بانکی
 class TransmissionViewset(APIView) : 
     def post(self,request ,*args, **kwargs):
         trace_code = kwargs.get('key')
@@ -1172,10 +1174,11 @@ class TransmissionViewset(APIView) :
             invoice  = invoice_data['invoice'],
             invoiceDate = invoice_data['invoiceDate'],
             amount = value ,
-            callback_url = 'https://mycrowd.isatispooya.com/success/',
+            callback_url = 'http://localhost:3030/success/',
             mobile_number = user.mobile,
             service_code =  '8' ,
             payerName = full_name,
+            nationalCode = user.uniqueIdentifier,
             description = invoice_data['description'] 
         )
         print(created)
@@ -1187,32 +1190,58 @@ class TransmissionViewset(APIView) :
             payment_id = invoice_data['invoice'],
             description = invoice_data['description'],
             code = None,
-            create_date = datetime.datetime.now(),
             risk_statement = True,
-            name_status = False,
             status = True,
             document = False,
             picture = None , 
             send_farabours = True,
-            url_id = "" , 
+            url_id = created['urlId'] , 
             mobile = user.mobile,
             invoice = invoice_data['invoice'],
-            invoice_date = invoice_data['invoiceDate'],
-            name = full_name(user.uniqueIdentifier),
-            service_code = '8'
+            name = get_name(user.uniqueIdentifier),
+            service_code = '8',
+            name_status = request.data.get('name_status')
         )
         payment.save()
 
-
-
-        return Response({'url' : '' }, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
+        return Response({'url' : created['url'] }, status=status.HTTP_200_OK)
+    
+    def patch (self,request,*args, **kwargs):
+        trace_code = kwargs.get('key')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        pep = PasargadPaymentGateway()
+        invoice = request.data.get('invoice')
+        payment = PaymentGateway.objects.filter(invoice = invoice ,plan=plan).first()
+        if not payment :
+            return Response({'error': 'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
+        payment.status = True
+        payment.save()
+        pep.get_token()
+        payment_value = PaymentGateway.objects.filter(plan=plan , status = True)
+        serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
+        payment_value = pd.DataFrame(serializer.data)
+        print(payment_value)
+        payment_value = payment_value['value'].sum()
+        
+        information = InformationPlan.objects.filter(plan=plan).first()
+        if not information :
+            return Response({'error': 'information plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        information.amount_collected_now = payment_value
+        information.save()
+        try :
+            pep = pep.confirm_transaction(payment.invoice , payment.url_id)
+        except :
+            return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(True , status=status.HTTP_200_OK)
 
 
 

@@ -24,7 +24,7 @@ class PasargadPaymentGateway:
         while not duplicate_number:
             
             invoice = str(random.randint(100, 999))+str(date.year)+str(date.month)+str(date.day)+str(date.hour)+str(date.minute)+str(random.randint(1000000000, 9999999999))
-            duplicate_number = models.PaymentGateway.objects.filter(invoice=invoice).count()>0
+            duplicate_number = models.PaymentGateway.objects.filter(invoice=invoice).count() ==0
 
         return invoice
     def generator_date(self):
@@ -42,7 +42,7 @@ class PasargadPaymentGateway:
         response = requests.post(url, json=data)
         if response.status_code == 200 and response.json()['resultCode'] == 0:
             self.token = response.json()['token']
-            print(f"Token received: {self.token}")
+            # print(f"Token received: {self.token}")
         else:
             raise Exception(f"Error getting token: {response.json()}")
 
