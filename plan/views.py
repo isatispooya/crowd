@@ -17,6 +17,7 @@ import os
 from django.conf import settings
 from plan.PeymentPEP import PasargadPaymentGateway
 from django.db import transaction
+from django.db.models import Q
 
 
 
@@ -641,7 +642,7 @@ class PaymentDocument(APIView):
         payment = PaymentGateway.objects.filter(plan=plan ,id = payment_id)
         value = 0
         for i in payment : 
-            if i.status == True:
+            if i.status == '2' or i.status == '3':
                value += i.value
         information = InformationPlan.objects.filter(plan=plan ).first()
         information.amount_collected_now = value
@@ -922,7 +923,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         plan = Plan.objects.filter(trace_code = trace_code).first()
         if not plan :
             return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
-        payment = PaymentGateway.objects.filter(plan=plan , status = True , send_farabours = False)
+        payment = PaymentGateway.objects.filter(plan=plan , status = '3' , send_farabours = False)
         if not payment :
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1192,7 +1193,7 @@ class TransmissionViewset(APIView) :
             description = invoice_data['description'],
             code = None,
             risk_statement = True,
-            status = True,
+            status = '2',
             document = False,
             picture = None , 
             send_farabours = True,
@@ -1224,7 +1225,7 @@ class TransmissionViewset(APIView) :
         payment.status = True
         payment.save()
         pep.get_token()
-        payment_value = PaymentGateway.objects.filter(plan=payment.plan, status = True)
+        payment_value = PaymentGateway.objects.filter(plan=payment.plan).filter(Q(status='2') | Q(status='3'))
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
         payment_value = pd.DataFrame(serializer.data)
         payment_value = payment_value['value'].sum()

@@ -250,7 +250,7 @@ class ProfitabilityReportViewSet(APIView) :
         if not end_plan.exists():
             return Response({'error': 'plan not end'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         end_plan = serializers.EndOfFundraisingSerializer(end_plan,many=True)
-        user_peyment = PaymentGateway.objects.filter(plan=plan,status=True)
+        user_peyment = PaymentGateway.objects.filter(plan=plan,status='3')
         if user_peyment is None:
             return Response({'error': 'payment not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         user_peyment = serializers.PaymentGatewaySerializer(user_peyment,many=True)

@@ -148,7 +148,7 @@ class PaymentGateway(models.Model) :
          ('2','2'), #تایید موقت
          ('3','3'), #تایید نهایی
     ]
-    status =  models.CharField (max_length=10 , choices= status_option ,  null= True , blank=True )
+    status =  models.CharField (max_length=10 , choices= status_option , default='1' )
     document =  models.BooleanField (default=True)
     picture = models.FileField(null=True, blank = True  , upload_to='static/')
     send_farabours = models.BooleanField (default=False)
