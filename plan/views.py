@@ -16,6 +16,7 @@ from datetime import timedelta
 import os
 from django.conf import settings
 from plan.PeymentPEP import PasargadPaymentGateway
+from django.db import transaction
 
 
 
@@ -1174,7 +1175,7 @@ class TransmissionViewset(APIView) :
             invoice  = invoice_data['invoice'],
             invoiceDate = invoice_data['invoiceDate'],
             amount = value ,
-            callback_url = 'http://localhost:3030/success/',
+            callback_url = 'http://localhost:3030/paymentresult/',
             mobile_number = user.mobile,
             service_code =  '8' ,
             payerName = full_name,
@@ -1206,8 +1207,8 @@ class TransmissionViewset(APIView) :
 
         return Response({'url' : created['url'] }, status=status.HTTP_200_OK)
     
-    def patch (self,request,*args, **kwargs):
-        trace_code = kwargs.get('key')
+    @transaction.atomic
+    def get (self,request,*args, **kwargs):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1215,24 +1216,20 @@ class TransmissionViewset(APIView) :
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        plan = Plan.objects.filter(trace_code=trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         pep = PasargadPaymentGateway()
-        invoice = request.data.get('invoice')
-        payment = PaymentGateway.objects.filter(invoice = invoice ,plan=plan).first()
+        invoice = kwargs.get('key')
+        payment = PaymentGateway.objects.filter(invoice = invoice).first()
         if not payment :
             return Response({'error': 'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = True
         payment.save()
         pep.get_token()
-        payment_value = PaymentGateway.objects.filter(plan=plan , status = True)
+        payment_value = PaymentGateway.objects.filter(plan=payment.plan, status = True)
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
         payment_value = pd.DataFrame(serializer.data)
-        print(payment_value)
         payment_value = payment_value['value'].sum()
         
-        information = InformationPlan.objects.filter(plan=plan).first()
+        information = InformationPlan.objects.filter(plan=payment.plan).first()
         if not information :
             return Response({'error': 'information plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         information.amount_collected_now = payment_value
