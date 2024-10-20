@@ -32,7 +32,7 @@ def get_name (uniqueIdentifier) :
         legalperson = LegalPerson.objects.filter(user=user).first()
         full_name = legalperson.companyName
     else :
-        full_name = 'نامشخص'
+        full_name = 'N/A'
     return full_name
 
 def get_name_user (uniqueIdentifier) :
@@ -569,7 +569,8 @@ class PaymentDocument(APIView):
             payment_id = payment_id,
             description = description,
             name_status = name_status,
-            picture = picture
+            picture = picture,
+            
         )
         payment.save()
         return Response('success')
@@ -600,15 +601,20 @@ class PaymentDocument(APIView):
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
             df['fulname'] = [get_name(x) for x in df['user']]
+            print(df)
             df = df.to_dict('records')
+
 
             return Response(df, status=status.HTTP_200_OK)
         
         if user:
+            print(user)
             user = user.first()
             payments = PaymentGateway.objects.filter(plan=plan , status = '3')
+            print(payments)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
             df = pd.DataFrame(response.data)
+            print(df)
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
             if df['name_status'] is True :
@@ -726,8 +732,7 @@ class Certificate(APIView):
         with open(file_path, 'wb') as pdf_file:
             pdf_file.write(participation.content)
         return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
-
-# done
+    
 class InformationPlanViewset(APIView) :
     def post (self,request,trace_code):
         Authorization = request.headers.get('Authorization')
@@ -1013,7 +1018,7 @@ class ShareholdersListExelViewset(APIView) :
                         document = document,
                         create_date =  None,
                         risk_statement = True,
-                        status =  True,
+                        status =  '3',
                         send_farabours = True,
                         name_status = False,
                     )

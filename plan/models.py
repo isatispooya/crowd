@@ -139,7 +139,7 @@ class PaymentGateway(models.Model) :
     payment_id = models.CharField(max_length=256) #شناسه پرداخت
     description = models.CharField(max_length=2500 , null=True, blank=True)
     code = models.CharField(max_length=2500 , null=True, blank=True) #کد 
-    create_date =  models.DateTimeField(null=True, blank=True, default=timezone.now) # تاریخ ایجاد مشارکت 
+    create_date =  models.DateTimeField(default=timezone.now) # تاریخ ایجاد مشارکت 
     risk_statement = models.BooleanField(default=True) # بیانیه ریسک
     name_status = models.BooleanField (default=False)
     status_option = [

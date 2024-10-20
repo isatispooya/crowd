@@ -24,3 +24,4 @@ urlpatterns = [
     path('transmission/user/<str:key>/', TransmissionViewset.as_view(), name='transmission-user'), # درگاه پرداخت
 
 ]
+
