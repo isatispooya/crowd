@@ -688,7 +688,7 @@ class ParticipantViewset(APIView) :
         plan = Plan.objects.filter(trace_code = trace_code).first()
         if not plan :
             return Response ({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        participant = PaymentGateway.objects.filter(plan=plan , status= True)
+        participant = PaymentGateway.objects.filter(plan=plan , status= '3')
         if not participant :
             return Response ({'error': 'participant not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.PaymentGatewaySerializer(participant , many= True)
@@ -1258,6 +1258,25 @@ class BankReceiptViewset(APIView):
         
         return Response (serializer.data,status=status.HTTP_200_OK)
 
+# خط 691
+# گواهی مشارکت منو 
+class ParticipantMenuViewset(APIView):
+    def get (self,request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        plan = Plan.objects.all()
+        payment = PaymentGateway.objects.filter (user=user , plan=plan)
+        serializer = serializers.PaymentGatewaySerializer(payment,many = True)
+        return Response ( serializer.data , status=status.HTTP_200_OK)
+    
+    
+    
+    
 class RoadMapViewset(APIView) :
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
