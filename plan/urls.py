@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, PlanViewset,PaymentUser,Certificate,TransmissionViewset ,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, BankReceiptViewset ,PlanViewset,PaymentUser,Certificate,TransmissionViewset ,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -22,6 +22,8 @@ urlpatterns = [
     path('read/exel/shareholder/admin/<str:key>/', ShareholdersListExelViewset.as_view(), name='exel-shareholders-admin'),
     path('warranty/admin/<str:key>/', WarrantyAdminViewset.as_view(), name='warranty-admin'), #  ضمانت نامه
     path('transmission/user/<str:key>/', TransmissionViewset.as_view(), name='transmission-user'), # درگاه پرداخت
+    path('bank/reciept/payment/user/', BankReceiptViewset.as_view(), name='bank-reciept-payment-user'), # فیش بانکی های کاربر
+
 
 ]
 
