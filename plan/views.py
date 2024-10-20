@@ -20,7 +20,6 @@ from django.db import transaction
 from django.db.models import Q
 
 
-
 def get_name (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     
@@ -35,7 +34,6 @@ def get_name (uniqueIdentifier) :
     else :
         full_name = 'نامشخص'
     return full_name
-        
 
 def get_name_user (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
@@ -54,7 +52,11 @@ def get_fname (uniqueIdentifier) :
 def get_lname (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     privateperson = privatePerson.objects.filter(user=user).first()
-    last_name = privateperson.lastName
+    if privateperson :
+        last_name = privateperson.lastName
+    elif LegalPerson.objects.filter(user=user).first() :
+        legalperson = LegalPerson.objects.filter(user=user).first()
+        last_name = legalperson.companyName
     return last_name
 
 
@@ -1235,8 +1237,6 @@ class TransmissionViewset(APIView) :
         except :
             return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         return Response(True , status=status.HTTP_200_OK)
-
-
 
 
 class RoadMapViewset(APIView) :
