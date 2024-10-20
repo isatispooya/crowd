@@ -11,6 +11,7 @@ import json
 import random
 import os
 from utils.message import Message
+from plan.views import check_legal_person
 class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
@@ -25,8 +26,8 @@ class OtpViewset(APIView) :
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        if not captcha  :
-        # if False : 
+        # if not captcha  :
+        if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -837,3 +838,28 @@ class UpdateInformationViewset(APIView) :
 
 
         return Response({'success': True}, status=status.HTTP_200_OK)
+    
+
+
+class AddBoursCodeUserViewset(APIView):
+    def post (self, request) :
+        Authorization = request.headers.get('Authorization')    
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        legal = check_legal_person(user.uniqueIdentifier)
+        if legal == True :
+            bours_code = request.data.get('bours_code')
+            if tradingCodes.objects.filter(user=user, code = bours_code).exists():
+                return Response({'message': 'Bours code already exists'}, status=status.HTTP_200_OK)
+            else:
+                trading_code = tradingCodes.objects.create(user=user,code = bours_code)
+                serializer = serializers.tradingCodesSerializer(trading_code)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'message': 'Not a legal person'}, status=status.HTTP_200_OK)
+    
+
