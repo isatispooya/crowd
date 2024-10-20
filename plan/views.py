@@ -604,7 +604,7 @@ class PaymentDocument(APIView):
         
         if user:
             user = user.first()
-            payments = PaymentGateway.objects.filter(plan=plan)
+            payments = PaymentGateway.objects.filter(plan=plan , status = '3')
             response = serializers.PaymentGatewaySerializer(payments,many=True)
             df = pd.DataFrame(response.data)
             if len(df)==0:
@@ -1162,10 +1162,6 @@ class TransmissionViewset(APIView) :
         full_name = get_name(user.uniqueIdentifier)
         
         pep = PasargadPaymentGateway()
-        try:
-            pep.get_token()
-        except:
-            pass # پرداخت ناموفق 
         invoice_data = {
             'invoice' : pep.generator_invoice_number(),
             'invoiceDate': pep.generator_date(),
@@ -1176,7 +1172,7 @@ class TransmissionViewset(APIView) :
             invoice  = invoice_data['invoice'],
             invoiceDate = invoice_data['invoiceDate'],
             amount = value ,
-            callback_url = 'https://apicrowd.isatispooya.com/paymentresult/',
+            callback_url = os.getenv('callback_url'),
             mobile_number = user.mobile,
             service_code =  '8' ,
             payerName = full_name,
@@ -1224,7 +1220,6 @@ class TransmissionViewset(APIView) :
             return Response({'error': 'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = True
         payment.save()
-        pep.get_token()
         payment_value = PaymentGateway.objects.filter(plan=payment.plan).filter(Q(status='2') | Q(status='3'))
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
         payment_value = pd.DataFrame(serializer.data)
