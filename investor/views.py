@@ -393,14 +393,15 @@ class MessageAdminViewSet(APIView):
             return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = serializers.MessageSerializer(data={**request.data, 'cart': cart.id})
-        # اینجا پیامک باید بره
-        send_sms = request.query_params.get('send_sms')
         if not serializer.is_valid():
             print(serializer.errors)  
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if serializer.is_valid():
-            message = serializer.save()  
-            return Response({'status': True, 'message': serializer.data}, status=status.HTTP_201_CREATED)
+            serializer.save()  
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # اینجا پیامک باید بره
+        if serializer.data['send_sms'] is not None and True :
+            pass # ارسال پیامک 
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
     
@@ -416,7 +417,7 @@ class MessageAdminViewSet(APIView):
         cart = Cart.objects.filter(id=id).first()
         message = Message.objects.filter(cart=cart).order_by('-id').first()
         message_serializer = serializers.MessageSerializer(message)
-        return Response ({'status' : True ,  'message': message_serializer.data} ,  status=status.HTTP_200_OK )
+        return Response (message_serializer.data ,  status=status.HTTP_200_OK )
 
 
 # done

@@ -163,6 +163,7 @@ class Cart (models.Model) :
 class Message(models.Model):
     cart  = models.ForeignKey(Cart , on_delete=models.CASCADE)
     message = models.CharField(max_length=512 )
+    send_sms = models.BooleanField(default=False)
     def __str__(self):
         return self.cart.__str__() + self.message
     
