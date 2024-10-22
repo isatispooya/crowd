@@ -121,7 +121,12 @@ class PlanViewset(APIView):
         information = InformationPlan.objects.filter(plan=plan).first()
         if information:
             information_serializer = serializers.InformationPlanSerializer(information)
+            date_start = information.payment_date
+            if isinstance(date_start, str):
+                date_start = datetime.datetime.strptime(date_start, '%Y-%m-%dT%H:%M:%S')     
             response_data['information_complete'] = information_serializer.data
+            response_data['date_start'] = date_start
+
         end_of_fundraising = EndOfFundraising.objects.filter(plan=plan)
         if end_of_fundraising :
             try:
@@ -134,7 +139,6 @@ class PlanViewset(APIView):
                     date_jalali = JalaliDate.to_jalali(date)
                     date_jalali =str(date_jalali)
                     date_profit.append({'type': type, 'date': date_jalali})
-
                 response_data['date_profit'] = date_profit
             except :
                 response_data['date_profit'] = []
