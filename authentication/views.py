@@ -26,8 +26,8 @@ class OtpViewset(APIView) :
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        # if not captcha  :
-        if False : 
+        if not captcha  :
+        # if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -488,7 +488,10 @@ class LoginAdminViewset(APIView) :
         
         try:
             mobile = admin.mobile
-            otp_obj = Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
+            otp_obj = Otp.objects.filter(mobile=mobile , code = code )
+            if not otp_obj.exists() :
+                return Response({'message' : 'کد تأیید نامعتبر است'},status=status.HTTP_404_NOT_FOUND)
+            otp_obj = otp_obj.order_by('-date').first()
         except :
             return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
         
