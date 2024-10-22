@@ -530,6 +530,7 @@ class SendpicturePlanViewset(APIView) :
 
 
 # done
+# محدودیت پرداخت به دلیل امنیت غیر فعال شد
 class PaymentDocument(APIView):
     def post(self,request,trace_code):
         Authorization = request.headers.get('Authorization')
@@ -543,38 +544,38 @@ class PaymentDocument(APIView):
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        information_plan = InformationPlan.objects.filter(plan=plan).first()
+        # information_plan = InformationPlan.objects.filter(plan=plan).first()
         if not request.data.get('amount'):
             return Response({'error': 'amount not found'}, status=status.HTTP_404_NOT_FOUND)
         amount = int(request.data.get('amount')) # سهم درخواستی کاربر 
-        amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
-        plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
-        if amount > purchaseable_amount :
-            return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+        # amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
+        # plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
+        # purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        # if amount > purchaseable_amount :
+        #     return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if legal_user == True : 
-            amount_legal_min = plan.legal_person_minimum_availabe_price #حداقل سهم قابل خرید حقوقی 
-            amount_legal_max = plan.legal_person_maximum_availabe_price #حداکثر سهم قابل خرید حقوقی
+        # if legal_user == True : 
+        #     amount_legal_min = plan.legal_person_minimum_availabe_price #حداقل سهم قابل خرید حقوقی 
+        #     amount_legal_max = plan.legal_person_maximum_availabe_price #حداکثر سهم قابل خرید حقوقی
             
-            if amount_legal_min is not None and amount_legal_max is not None :
-                if amount < amount_legal_min or amount > amount_legal_max:
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            else :
-                if amount > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+        #     if amount_legal_min is not None and amount_legal_max is not None :
+        #         if amount < amount_legal_min or amount > amount_legal_max:
+        #             return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        #     else :
+        #         if amount > purchaseable_amount :
+        #             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
                   
                 
-        if legal_user == False :
-            amount_personal_min = plan.real_person_minimum_availabe_price  #حداقل سهم قابل خرید حقیقی
-            amount_personal_max = plan.real_person_maximum_available_price #حداکثر سهم قابل خرید حقیقی
-            if amount_personal_min is not None and amount_personal_max is not None:
-                if amount < amount_personal_min or amount > amount_personal_max :
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        # if legal_user == False :
+        #     amount_personal_min = plan.real_person_minimum_availabe_price  #حداقل سهم قابل خرید حقیقی
+        #     amount_personal_max = plan.real_person_maximum_available_price #حداکثر سهم قابل خرید حقیقی
+        #     if amount_personal_min is not None and amount_personal_max is not None:
+        #         if amount < amount_personal_min or amount > amount_personal_max :
+        #             return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
             
-            else :
-                if amount > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+        #     else :
+        #         if amount > purchaseable_amount :
+        #             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
                   
 
 
@@ -806,6 +807,13 @@ class EndOfFundraisingViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        information = InformationPlan.objects.filter(plan=plan).first()
+        if not information:
+            return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        date_payement = information.payment_date
+        if isinstance(date_payement, str):
+            date_payement = datetime.datetime.strptime(date_payement, '%Y-%m-%dT%H:%M:%S')
+           
         all_end_fundraising = []
         end_fundraising = EndOfFundraising.objects.filter(plan=plan)
         if not end_fundraising :
@@ -837,7 +845,7 @@ class EndOfFundraisingViewset(APIView) :
 
         serializer = serializers.EndOfFundraisingSerializer(updated_items, many=True, partial=True)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'date_payement' : serializer.data , 'date_start' : date_payement}, status=status.HTTP_200_OK)
 
 
 
@@ -852,10 +860,18 @@ class EndOfFundraisingViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
+        information = InformationPlan.objects.filter(plan=plan).first()
+        if not information:
+            return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        date_payement = information.payment_date
+        if isinstance(date_payement, str):
+            date_payement = datetime.datetime.strptime(date_payement, '%Y-%m-%dT%H:%M:%S')
+            
         end_fundraising = EndOfFundraising.objects.filter(plan=plan)
         if end_fundraising.exists():
             serializer = serializers.EndOfFundraisingSerializer(end_fundraising , many = True).data
-            return Response(serializer, status=status.HTTP_200_OK)
+
+            return Response({'date_payments' : serializer ,'date_start' :  date_payement}, status=status.HTTP_200_OK)
         if not end_fundraising.exists():
             all_end_fundraising = []
             amount_fundraising = plan.sum_of_funding_provided
@@ -863,10 +879,7 @@ class EndOfFundraisingViewset(APIView) :
                 amount_fundraising = amount_fundraising / 4
             else:
                 amount_fundraising = 0
-            information = InformationPlan.objects.filter(plan=plan).first()
-
-            if not information:
-                return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+            
             date = information.payment_date
             if date is None :
                 return Response({'error': 'payment date not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -906,7 +919,9 @@ class EndOfFundraisingViewset(APIView) :
             
             all_end_fundraising.append(end_fundraising_total)
             serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+
+            return Response({'date_payments' : serializer.data, 'date_start' : date_payement}, status=status.HTTP_200_OK)
+        
 
 # done
 class SendPaymentToFarabours(APIView) :
@@ -1173,6 +1188,7 @@ class WarrantyAdminViewset(APIView) :
 
 # done
 # درگاه بانکی
+# محدودیت پرداخت به دلیل امنیت غیر فعال شد
 class TransmissionViewset(APIView) : 
     def post(self,request ,*args, **kwargs):
         trace_code = kwargs.get('key')
@@ -1183,42 +1199,42 @@ class TransmissionViewset(APIView) :
         if not user:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        legal_user = check_legal_person(user.uniqueIdentifier)
+        # legal_user = check_legal_person(user.uniqueIdentifier)
 
         plan = Plan.objects.filter(trace_code=trace_code).first()
-        information_plan = InformationPlan.objects.filter(plan=plan).first()
+        # information_plan = InformationPlan.objects.filter(plan=plan).first()
 
 
         value = request.data.get('amount')  # مبلغ درخواستی کاربر برای خرید 
-        amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
-        plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        # amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
+        # plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
+        # purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
 
-        if value > purchaseable_amount :
-            return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+        # if value > purchaseable_amount :
+        #     return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if legal_user == True : 
-            amount_legal_min = plan.legal_person_minimum_availabe_price #حداقل سهم قابل خرید حقوقی 
-            amount_legal_max = plan.legal_person_maximum_availabe_price #حداکثر سهم قابل خرید حقوقی
+        # if legal_user == True : 
+        #     amount_legal_min = plan.legal_person_minimum_availabe_price #حداقل سهم قابل خرید حقوقی 
+        #     amount_legal_max = plan.legal_person_maximum_availabe_price #حداکثر سهم قابل خرید حقوقی
             
-            if amount_legal_min is not None and amount_legal_max is not None :
-                if value < amount_legal_min or value > amount_legal_max:
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            else :
-                if value > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+        #     if amount_legal_min is not None and amount_legal_max is not None :
+        #         if value < amount_legal_min or value > amount_legal_max:
+        #             return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        #     else :
+        #         if value > purchaseable_amount :
+        #             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
                   
                 
-        else :
-            amount_personal_min = plan.real_person_minimum_availabe_price  #حداقل سهم قابل خرید حقیقی
-            amount_personal_max = plan.real_person_maximum_available_price #حداکثر سهم قابل خرید حقیقی
-            if amount_personal_min is not None and amount_personal_max is not None :
-                if value < amount_personal_min or value > amount_personal_max :
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        # else :
+        #     amount_personal_min = plan.real_person_minimum_availabe_price  #حداقل سهم قابل خرید حقیقی
+        #     amount_personal_max = plan.real_person_maximum_available_price #حداکثر سهم قابل خرید حقیقی
+        #     if amount_personal_min is not None and amount_personal_max is not None :
+        #         if value < amount_personal_min or value > amount_personal_max :
+        #             return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
             
-            else :
-                if value > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+        #     else :
+        #         if value > purchaseable_amount :
+        #             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
                   
 
             
@@ -1253,7 +1269,7 @@ class TransmissionViewset(APIView) :
             description = invoice_data['description'],
             code = None,
             risk_statement = True,
-            status = '2',
+            status = '1',
             document = False,
             picture = None , 
             send_farabours = True,
@@ -1369,13 +1385,6 @@ class RoadMapViewset(APIView) :
         
 
         return Response({'data': list}, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
 
 
 
