@@ -246,7 +246,7 @@ class ProfitabilityReportViewSet(APIView) :
         if not plan.exists():
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         plan =plan.first()
-        end_plan = EndOfFundraising.objects.filter(plan=plan)
+        end_plan = EndOfFundraising.objects.filter(plan=plan,type=2)
         if not end_plan.exists():
             return Response({'error': 'plan not end'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         end_plan = serializers.EndOfFundraisingSerializer(end_plan,many=True)
@@ -271,7 +271,6 @@ class ProfitabilityReportViewSet(APIView) :
             if user_obj is not None:
                 account_number = get_account_number(user_obj)
                 user_name = get_name(user_obj)
-                print(user_name)
             else:
                 account_number = 'N/A' 
                 user_name = 'N/A'
@@ -281,22 +280,22 @@ class ProfitabilityReportViewSet(APIView) :
         df ['account_number'] = account_numbers
         df ['user_name'] = user_names
 
-        pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')
-        start_project = plan.project_start_date
-        pey_df['date_operator'] = pd.to_datetime(pey_df['date_operator'])
-        pey_df['date_diff'] = (pey_df['date_operator'] - pd.to_datetime(start_project))
-        pey_df['date_diff'] = [x.days for x in  pey_df['date_diff']]
+        pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')[['type','date_operator']]
+        start_project = datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None)
+        pey_df['date_operator'] = pd.to_datetime(pey_df['date_operator']).dt.tz_localize(None)
+        pey_df['start_project'] = start_project
+        pey_df['date_diff'] = (pey_df['date_operator'] - pey_df['start_project']).dt.days
+        pey_df['date_diff'] = pey_df['date_diff'] - pey_df['date_diff'].shift(1).fillna(0)
+
         pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
         pey_df = pey_df.sort_values('date_diff')
         qest = 1
         for i in pey_df.index : 
-            if pey_df['type'][i] == '2' :
-                df[f'profit{qest}'] = pey_df['profit'][i]
-                df[f'value{qest}'] = pey_df['profit'][i] * df['value']
-                df[f'date_operator{qest}'] = pey_df['date_operator'][i]
-                qest += 1
-            else :
-                df['date_base'] = pey_df['date_operator']
-        print(df)
+            df[f'profit{qest}'] = pey_df['profit'][i]
+            df[f'value{qest}'] = pey_df['profit'][i] * df['value']
+            df[f'date_operator{qest}'] = pey_df['date_operator'][i]
+            qest += 1
+
         df = df.to_dict('records')
         return Response(df, status=status.HTTP_200_OK)
+    
