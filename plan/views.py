@@ -623,8 +623,6 @@ class PaymentDocument(APIView):
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-
 
         if admin:
             admin = admin.first()
@@ -634,30 +632,22 @@ class PaymentDocument(APIView):
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
             df['fulname'] = [get_name(x) for x in df['user']]
-            print(df)
             df = df.to_dict('records')
-
 
             return Response(df, status=status.HTTP_200_OK)
         
         if user:
-            print(user)
             user = user.first()
             payments = PaymentGateway.objects.filter(plan=plan , status = '3')
-            print(payments)
             response = serializers.PaymentGatewaySerializer(payments,many=True)
             df = pd.DataFrame(response.data)
-            print(df)
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
-            if df['name_status'] is True :
-                df['fulname'] = [get_name(x) for x in df['user']]
-                df = df.to_dict('records')
-                return Response(df, status=status.HTTP_200_OK)
-            else :
-                df['fulname'] = [get_name_user(x) for x in df['user']]
-                df = df.to_dict('records')
-                return Response(df, status=status.HTTP_200_OK)
+            df['fullname'] = df.apply(lambda row: get_name(row['user']) if row['name_status'] else 'نامشخص', axis=1)
+
+            df = df.to_dict('records')
+            return Response(df, status=status.HTTP_200_OK)
+
             
         
     def patch (self,request,trace_code) :
@@ -1046,7 +1036,7 @@ class ShareholdersListExelViewset(APIView) :
                         value =  row['مبلغ سفارش'],
                         payment_id =  row['شناسه سفارش'],
                         document = document,
-                        create_date =  None,
+                        # create_date =  None,
                         risk_statement = True,
                         status =  '3',
                         send_farabours = True,
@@ -1342,7 +1332,8 @@ class ParticipantMenuViewset(APIView):
             plan = i['plan']
             plan = Plan.objects.filter(id=plan).first()
             if plan:
-                plans.append(plan) 
+                if plan not in plans:
+                    plans.append(plan) 
         plan_serializer = serializers.PlanSerializer(plans, many=True)
         return Response (plan_serializer.data,status=status.HTTP_200_OK)
     
