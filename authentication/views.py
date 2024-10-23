@@ -650,7 +650,7 @@ class UpdateInformationViewset(APIView) :
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         
-        admin = fun.decryptionUser(Authorization)
+        admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         
