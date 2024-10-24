@@ -12,6 +12,7 @@ import random
 import os
 from utils.message import Message
 from plan.views import check_legal_person
+from django.utils import timezone
 class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
@@ -26,17 +27,38 @@ class OtpViewset(APIView) :
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        if not captcha  :
-        # if False : 
+        # if not captcha  :
+        if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
+        
         if user :
+            otp = Otp.objects.filter(mobile=user.mobile).first()
+            if otp and otp.locking and timezone.now() > otp.locking :
+                otp.locking = None
+                otp.attempts = 0
+                otp.date = timezone.now()
+                user.lock_until = None
+                otp.save()
+                
+            if otp and otp.attempts >= 3:
+                otp.lock()
+                user.lock()
+
+                return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. لطفاً بعد از چند دقیقه دوباره امتحان کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
             code = random.randint(10000,99999)
-            otp = Otp(mobile=user.mobile , code=code)
+            if not otp:
+                otp = Otp(mobile=user.mobile, code=code, attempts=1)
+            else:
+                otp.code = code
+                otp.attempts += 1
+                user.attempts += 1
+
             otp.save()
+            
             message = Message(code,user.mobile,user.email)
             message.otpSMS()
             # message.otpEmail(code, user.email)
@@ -403,21 +425,31 @@ class LoginViewset(APIView) :
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
+            if user.is_locked():
+                return Response({'message': 'حساب شما قفل است، لطفا بعدا تلاش کنید'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         except:
             result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
             return Response(result, status=status.HTTP_404_NOT_FOUND)
         
         try:
             mobile = user.mobile
-            otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
+            otp_obj = Otp.objects.filter(mobile=mobile , code = otp )
+            if otp_obj.exists():
+                user.attempts += 1
+                if user.attempts >= 3:
+                    user.lock()  # قفل کردن به مدت 5 دقیقه
+                    return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            otp_obj = otp_obj.order_by('-date').first()
+            if otp_obj.locking and timezone.now() < otp_obj.locking:
+                return Response({'message': 'حساب شما قفل است، لطفاً بعداً تلاش کنید'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
             if otp_obj is None : 
-                return Response({'message' : 'otp ذخیره نمیشود'},status=status.HTTP_404_NOT_FOUND)
-        except :
+                return Response({'message' : 'otp ذخیره نشده است'},status=status.HTTP_400_NOT_FOUND)
+        except Exception as e:
             return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
-        
         otp = serializers.OtpSerializer(otp_obj).data
         if otp['code']== None :
-            result = {'message': 'کد تأیید نامعتبر است'}
+            result = {'message': 'کد تأیید اشتباه است'}
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
             
         otp = serializers.OtpSerializer(otp_obj).data
@@ -425,7 +457,6 @@ class LoginViewset(APIView) :
             dt = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
         else  :
             return Response({"error": "Date field is missing in OTP data."}, status=400)
-        
         dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
         dt = dt.total_seconds()
 
@@ -435,6 +466,8 @@ class LoginViewset(APIView) :
 
     
         otp_obj.delete()
+        user.attempts = 0
+        user.save()
         token = fun.encryptionUser(user)
         return Response({'access': token} , status=status.HTTP_200_OK)
 
@@ -636,10 +669,10 @@ class OtpUpdateViewset(APIView) :
             }
             response = requests.request("POST", url, headers=headers, data=payload)
             if response.status_code >=300 :
-                return Response ({'message' :'سجام هم گردنت نمیگیره '} , status=status.HTTP_400_BAD_REQUEST)
+                return Response ({'message' :'ارسال از طریق سجام امکان پذیر نیست '} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
 
-        return Response({'registered' : False , 'message' : 'سیستم قطع است خداحافظ'},status=status.HTTP_400_BAD_REQUEST)   
+        return Response({'registered' : False , 'message' : 'ارتباط با سجام امکان پذیر نیست'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
 

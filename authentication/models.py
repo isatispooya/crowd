@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.utils import timezone
+from datetime import timedelta
 class User(models.Model):
     agent = models.CharField(max_length= 200 , null=True, blank=True )
     email = models.EmailField( null=True, blank=True)
@@ -8,10 +9,20 @@ class User(models.Model):
     type = models.CharField(max_length=200)
     uniqueIdentifier = models.CharField(max_length=150 , unique=True)
     referal = models.CharField(max_length=14,  null=True, blank=True , unique=True) # معرف : کدملی معرف 
+    attempts = models.IntegerField(default=0)
+    lock_until = models.DateTimeField(null=True, blank=True)
+    def lock(self):
+        self.lock_until = timezone.now() + timedelta(minutes=5)     
+        self.save()
+    def is_locked(self):
+        if self.lock_until and timezone.now() < self.lock_until:
+            return True
+        return False
 
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
         return f'{uniqueIdentifier}'
+    
 
 class accounts (models.Model) :
     user = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -147,11 +158,14 @@ class tradingCodes (models.Model) :
 
 
 class Otp(models.Model):
-    code = models.CharField(max_length=4)
+    code = models.CharField(max_length=6)
     mobile = models.CharField(max_length=14)
     date = models.DateTimeField(auto_now_add=True)
-    attempet = models.IntegerField(default=0)
+    attempts  = models.IntegerField(default=0)
     locking = models.DateTimeField(blank= True , null= True) 
+    def lock(self):
+            self.locking = timezone.now() + timedelta(minutes=5)  # قفل به مدت ۵ دقیقه
+            self.save()
 
 
 class Admin(models.Model):
