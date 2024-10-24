@@ -462,7 +462,6 @@ class ValidationViewset (APIView) :
             return Response({'data': response_data}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

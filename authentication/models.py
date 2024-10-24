@@ -54,13 +54,13 @@ class LegalPerson (models.Model):
 
 class legalPersonShareholders (models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    uniqueIdentifier = models.CharField( max_length=150 , null=True , blank= True)
-    postalCode = models.CharField( max_length=150 , null=True , blank= True)
-    positionType = models.CharField( max_length=150 , null=True , blank= True)
-    percentageVotingRight = models.CharField( max_length=150 , null=True , blank= True)
-    lastName = models.CharField( max_length=150 , null=True , blank= True)
-    firstName = models.CharField( max_length=150 , null=True , blank= True)
-    address = models.CharField( max_length=150 , null=True , blank= True)
+    uniqueIdentifier = models.CharField( max_length=20 , null=True , blank= True)
+    postalCode = models.CharField( max_length=20 , null=True , blank= True)
+    positionType = models.CharField( max_length=50 , null=True , blank= True)
+    percentageVotingRight = models.CharField( max_length=50 , null=True , blank= True)
+    lastName = models.CharField( max_length=50 , null=True , blank= True)
+    firstName = models.CharField( max_length=50 , null=True , blank= True)
+    address = models.TextField( max_length=150 , null=True , blank= True)
     
 
 
