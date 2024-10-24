@@ -24,10 +24,15 @@ class CaptchaViewset(APIView) :
 class OtpViewset(APIView) :
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
+        if request.data['captcha'] == '':
+            return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
-        captcha = captcha.check_response(encrypted_response, request.data['captcha'])
+        try:
+            captcha = captcha.check_response(encrypted_response, request.data['captcha'])
+        except:
+            return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         if not captcha  :
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
