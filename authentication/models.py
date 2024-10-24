@@ -150,6 +150,8 @@ class Otp(models.Model):
     code = models.CharField(max_length=4)
     mobile = models.CharField(max_length=14)
     date = models.DateTimeField(auto_now_add=True)
+    attempet = models.IntegerField(default=0)
+    locking = models.DateTimeField(blank= True , null= True) 
 
 
 class Admin(models.Model):
