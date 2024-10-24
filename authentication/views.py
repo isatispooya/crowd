@@ -12,6 +12,8 @@ import random
 import os
 from utils.message import Message
 from plan.views import check_legal_person
+
+
 class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
@@ -27,12 +29,11 @@ class OtpViewset(APIView) :
         captcha = GuardPyCaptcha()
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
         if not captcha  :
-        # if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
-        user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
+        user = User.objects.filter(uniqueIdentifier = uniqueIdentifier).first()
         if user :
             code = random.randint(10000,99999)
             otp = Otp(mobile=user.mobile , code=code)
@@ -56,7 +57,6 @@ class OtpViewset(APIView) :
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
 
-      
         return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
@@ -95,9 +95,6 @@ class SignUpViewset(APIView):
             new_user  =User(
                 agent = data ['agent'],
                 email = data ['email'],
-                # legalPerson = data ['legalPerson'],
-                # legalPersonShareholders = data ['legalPersonShareholders'],
-                # legalPersonStakeholders = data ['legalPersonStakeholders'],
                 mobile = data ['mobile'],
                 status = data ['status'],
                 type = data ['type'],
@@ -432,8 +429,6 @@ class LoginViewset(APIView) :
         if dt >120 :
             result = {'message': 'زمان کد منقضی شده است'}
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-    
         otp_obj.delete()
         token = fun.encryptionUser(user)
         return Response({'access': token} , status=status.HTTP_200_OK)
