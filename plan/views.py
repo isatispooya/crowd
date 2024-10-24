@@ -644,7 +644,7 @@ class PaymentDocument(APIView):
             if len(df)==0:
                 return Response([], status=status.HTTP_200_OK)
             df['fullname'] = df.apply(lambda row: get_name(row['user']) if row['name_status'] else 'نامشخص', axis=1)
-
+            df = df[['amount','value','create_date','fullname']]
             df = df.to_dict('records')
             return Response(df, status=status.HTTP_200_OK)
 
