@@ -463,16 +463,11 @@ class CommentViewset (APIView):
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data
-        comment = Comment.objects.create(plan=plan , user=user)
-        if not comment:
-            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
-        if not data.get('answer'):
-            data['answer'] = 'منتظر پاسخ'
-        serializer = serializers.CommenttSerializer(comment , data=data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if not data.get('comment') or data.get('known'):
+            return Response({'error': 'Comment or known not found'}, status=status.HTTP_404_NOT_FOUND)
+        comment = Comment(plan=plan , user=user, known=data.get('known'),comment= data.get('comment'),answer='منتظر پاسخ')
+        comment.save()
+        return Response(status=status.HTTP_200_OK)
 
     def get (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
