@@ -5,10 +5,13 @@ from django.core.exceptions import ValidationError
 def validate_file_type(file):
     valid_mime_types = [
         'image/jpeg', 'image/png', 'application/pdf',
-        'application/zip', 'application/x-rar-compressed', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/zip', 'application/x-rar-compressed', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', # docx
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',       # xlsx
+        'text/csv', 'application/vnd.ms-excel'                                     # csv, xls
     ]
-    valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx']
+    
+    valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx', 'csv', 'xls']
     
     file_mime_type = file.content_type
     file_extension = file.name.split('.')[-1].lower()
