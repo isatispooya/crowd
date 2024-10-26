@@ -1,6 +1,21 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from django.core.exceptions import ValidationError
+
+def validate_file_type(file):
+    valid_mime_types = ['image/jpeg', 'image/png', 'application/pdf']
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
+    file_mime_type = file.content_type
+    file_extension = file.name.split('.')[-1].lower()
+
+    if file_mime_type not in valid_mime_types or file_extension not in valid_extensions:
+        raise ValidationError("Unsupported file type.")
+
+
+
+
+
 class User(models.Model):
     agent = models.CharField(max_length= 200 , null=True, blank=True )
     email = models.EmailField( null=True, blank=True)
@@ -145,7 +160,7 @@ class privatePerson (models.Model) :
     seriShChar = models.CharField(max_length=200, null=True, blank=True)
     serial = models.CharField(max_length=200)
     shNumber = models.CharField(max_length=200)
-    signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True) 
+    signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True,validators=[validate_file_type]) 
 
 
 class tradingCodes (models.Model) :
