@@ -17,6 +17,7 @@ from datetime import timedelta
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
+from django.conf import settings
 
 
 class CaptchaViewset(APIView) :
@@ -31,15 +32,17 @@ class OtpViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
-        # if request.data['captcha'] == '' :
-        #     return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
+
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        # if not captcha  :
-        if False : 
+        if not captcha and  not settings.DEBUG == 'True' :
+            if request.data['captcha'] == '' :
+                return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        else :
+            pass
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
@@ -72,24 +75,53 @@ class OtpViewset(APIView) :
             response = requests.request("POST", url, headers=headers, data=payload)
             if response.status_code >=300 :
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
-            return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
+            return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
 
         return Response({'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
         
-# sign up for first user sejam
+# login or sign up user
 # done
-class SignUpViewset(APIView):
+class LoginViewset(APIView):
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
         reference = request.data.get('reference')  
+        user = None
 
         if not uniqueIdentifier or not otp:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        try:
+            user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
+            if user.is_locked():
+                return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except  :
+            pass
+        if user : 
+            try:
+                mobile = user.mobile
+                otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
+                if otp_obj is None:
+                    user.attempts += 1  
+                    if user.attempts >= 3:
+                        user.lock() 
+                        return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+                    user.save()  
+                    return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+
+                if otp_obj.expire and timezone.now() > otp_obj.expire:
+                    return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
+            except Exception as e:
+                return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
+            user.attempts = 0
+            user.save()
+            otp_obj.delete()
+            token = fun.encryptionUser(user)
+            return Response({'access': token}, status=status.HTTP_200_OK)
         url = "http://31.40.4.92:8870/information"
         payload = json.dumps({
         "uniqueIdentifier": uniqueIdentifier,
@@ -359,47 +391,6 @@ class InformationViewset (APIView) :
         return Response({'received_data': True ,  'acc' : combined_data})
     
 
-
-# login for user
-# done
-class LoginViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
-    def post (self,request) :
-        uniqueIdentifier = request.data.get('uniqueIdentifier')
-        otp = request.data.get('otp')
-        if not uniqueIdentifier or not otp:
-            return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
-            if user.is_locked():
-                return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        except user.DoesNotExist:
-            return Response({'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}, status=status.HTTP_404_NOT_FOUND)
-        
-        try:
-            mobile = user.mobile
-            otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
-            if otp_obj is None:
-                user.attempts += 1  
-                if user.attempts >= 3:
-                    user.lock() 
-                    return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-                user.save()  
-                return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
-
-            if otp_obj.expire and timezone.now() > otp_obj.expire:
-                return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
-        user.attempts = 0
-        user.save()
-        otp_obj.delete()
-        token = fun.encryptionUser(user)
-        return Response({'access': token}, status=status.HTTP_200_OK)
-
-
 #otp for admin
 # done
 class OtpAdminViewset(APIView) :
@@ -407,14 +398,15 @@ class OtpAdminViewset(APIView) :
     def post (self,request) :
         captcha = GuardPyCaptcha()
         encrypted_response = request.data['encrypted_response']
-        # if request.data['captcha'] == '' :
-        #     return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        # if not captcha  :
-        if False : 
+        if not captcha and  not settings.DEBUG == 'True' :
+            if request.data['captcha'] == '' :
+                return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        else :
+            pass
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
@@ -621,7 +613,7 @@ class UpdateInformationViewset(APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
         
         admin = admin.first()
-        
+
         
         otp = request.data.get('otp')
         uniqueIdentifier = request.data.get('uniqueIdentifier')

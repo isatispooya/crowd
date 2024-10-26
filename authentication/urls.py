@@ -1,11 +1,10 @@
 from django.urls import path
-from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,UserOneViewset,LogoutViewset,AddBoursCodeUserViewset,LoginAdminViewset,SignUpViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset
+from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,UserOneViewset,LogoutViewset,AddBoursCodeUserViewset,LoginAdminViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset
 
 urlpatterns = [
     path('captcha/', CaptchaViewset.as_view(), name='captcha'),
     path('otp/', OtpViewset.as_view(), name='otp'),
     path('login/', LoginViewset.as_view(), name='login'),
-    path('signup/', SignUpViewset.as_view(), name='signup'),
     path('information/', InformationViewset.as_view(), name='information'),
     path('information/user/admin/<int:id>/', UserOneViewset.as_view(), name='information-user-for-admin'),
     path('login/admin/', LoginAdminViewset.as_view(), name='login-admin'),
