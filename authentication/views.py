@@ -52,7 +52,7 @@ class OtpViewset(APIView) :
             message = Message(code,user.mobile,user.email)
             message.otpSMS()
             # message.otpEmail(code, user.email)
-            return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
+            return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
             url = "http://31.40.4.92:8870/otp"
@@ -68,7 +68,7 @@ class OtpViewset(APIView) :
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
 
-        return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+        return Response({'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
         
@@ -350,55 +350,6 @@ class InformationViewset (APIView) :
         }
         return Response({'received_data': True ,  'acc' : combined_data})
     
-    def patch (self , request) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        user = user.first()
-        user = User.objects.filter(id=user.id).first() if user else None
-        if not user:
-            return Response({'error': 'User not found in database'}, status=status.HTTP_404_NOT_FOUND)
-        
-        data = request.data
-        if not data:
-            return Response({'error': 'No data provided'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        acc_data = data.get('acc')
-        if not acc_data:
-            return Response({'error': 'No acc data provided'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        user_serializer = serializers.UserSerializer(user, data=acc_data, partial=True)
-        if user_serializer.is_valid():
-            user_serializer.save()
-        else:
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        related_models = {
-            'accounts': (accounts, serializers.accountsSerializer),
-            'addresses': (addresses, serializers.addressesSerializer),
-            'private_person': (privatePerson, serializers.privatePersonSerializer),
-            'financial_info': (financialInfo, serializers.financialInfoSerializer),
-            'job_info': (jobInfo, serializers.jobInfoSerializer),
-            'trading_codes': (tradingCodes, serializers.tradingCodesSerializer),
-        }
-
-        for key, (model, serializer_class) in related_models.items():
-            if key in acc_data:
-                instances_data = acc_data[key]
-                for instance_data in instances_data:
-                    instance = model.objects.filter(user=user, id=instance_data.get('id')).first()
-                    if instance:
-                        serializer = serializer_class(instance, data=instance_data, partial=True)
-                        if serializer.is_valid():
-                            serializer.save()
-                        else:
-                            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({'message': 'Data updated successfully'})
-
 
 
 # login for user
@@ -628,23 +579,19 @@ class OtpUpdateViewset(APIView) :
         uniqueIdentifier = request.data.get("uniqueIdentifier")
         if not uniqueIdentifier :
             return Response ({'errot' : 'uniqueIdentifier not found '} ,  status=status.HTTP_400_BAD_REQUEST) 
-        user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-        if user:
-            url = "http://31.40.4.92:8870/otp"
-            payload = json.dumps({
-            "uniqueIdentifier": uniqueIdentifier
-            })
-            headers = {
-            'X-API-KEY': os.getenv('X-API-KEY'),
-            'Content-Type': 'application/json'
-            }
-            response = requests.request("POST", url, headers=headers, data=payload)
-            if response.status_code >=300 :
-                return Response ({'message' :'ارسال از طریق سجام امکان پذیر نیست '} , status=status.HTTP_400_BAD_REQUEST)
-            return Response ({'registered' :False , 'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
-
-        return Response({'registered' : False , 'message' : 'ارتباط با سجام امکان پذیر نیست'},status=status.HTTP_400_BAD_REQUEST)   
-                
+        url = "http://31.40.4.92:8870/otp"
+        payload = json.dumps({
+        "uniqueIdentifier": uniqueIdentifier
+        })
+        headers = {
+        'X-API-KEY': os.getenv('X-API-KEY'),
+        'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        if response.status_code >=300 :
+            return Response ({'message' :'ارسال از طریق سجام امکان پذیر نیست '} , status=status.HTTP_400_BAD_REQUEST)
+        return Response ({'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
+            
 
 
 # done
