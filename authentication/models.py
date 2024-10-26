@@ -4,8 +4,13 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 
 def validate_file_type(file):
-    valid_mime_types = ['image/jpeg', 'image/png', 'application/pdf']
-    valid_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
+    valid_mime_types = [
+        'image/jpeg', 'image/png', 'application/pdf',
+        'application/zip', 'application/x-rar-compressed', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]
+    valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx']
+    
     file_mime_type = file.content_type
     file_extension = file.name.split('.')[-1].lower()
 
@@ -13,7 +18,12 @@ def validate_file_type(file):
         raise ValidationError("Unsupported file type.")
 
 
+class BlacklistedToken(models.Model):
+    token = models.CharField(max_length=500)
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.token
 
 
 class User(models.Model):

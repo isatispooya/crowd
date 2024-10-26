@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework import status 
 import requests
-from .models import User , Otp , Admin , accounts ,addresses , financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent , legalPersonShareholders , legalPersonStakeholders , LegalPerson
+from .models import User , Otp , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent , legalPersonShareholders , legalPersonStakeholders , LegalPerson
 from . import serializers
 import datetime
 from . import fun
@@ -869,4 +869,25 @@ class AddBoursCodeUserViewset(APIView):
         else:
             return Response({'message': 'Not a legal person'}, status=status.HTTP_200_OK)
     
+
+
+
+
+
+class LogoutViewset(APIView):
+    def post(self, request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        token = Authorization.split('Bearer ')[1]
+        
+        black_list = BlacklistedToken.objects.create(token=token)
+        print(black_list)
+        return Response({'message': 'Successfully logged out'}, status=status.HTTP_201_CREATED)
+    
+
+
+
+
 
