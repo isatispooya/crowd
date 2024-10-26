@@ -37,12 +37,12 @@ class OtpViewset(APIView) :
         captcha = GuardPyCaptcha()
 
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        if not captcha and  not settings.DEBUG == 'True' :
+        if not settings.DEBUG : 
+            if not captcha :
+                return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
             if request.data['captcha'] == '' :
                 return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
-            return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        else :
-            pass
+
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
@@ -50,14 +50,16 @@ class OtpViewset(APIView) :
         
         if user :
             otp = Otp.objects.filter(mobile=user.mobile).first()
-            if otp and otp.expire > timezone.now() :
-                return Response({'error': 'برای ارسال کد مجدد 2 دقیقه منتظر بمانید '}, status=status.HTTP_400_BAD_REQUEST)
             code = random.randint(10000,99999)
-            if not otp or otp.expire < timezone.now():
+
+            if not otp:
                 otp = Otp(mobile=user.mobile, code=code , expire = timezone.now () + timedelta(minutes=2))
-  
+            elif otp.expire > timezone.now() :
+                return Response({'error': 'برای ارسال کد مجدد 2 دقیقه منتظر بمانید '}, status=status.HTTP_400_BAD_REQUEST)
+            elif otp.expire < timezone.now():
+                otp.code = code 
+                otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
-            
             message = Message(code,user.mobile,user.email)
             message.otpSMS()
             # message.otpEmail(code, user.email)
@@ -401,12 +403,12 @@ class OtpAdminViewset(APIView) :
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        if not captcha and  not settings.DEBUG == 'True' :
+        if not settings.DEBUG : 
+            if not captcha :
+                return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
             if request.data['captcha'] == '' :
                 return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
-            return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        else :
-            pass
+
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
@@ -414,17 +416,19 @@ class OtpAdminViewset(APIView) :
 
         if admin :
             otp = Otp.objects.filter(mobile=admin.mobile).first()
-            if otp and otp.expire > timezone.now() :
-                return Response({'error': 'برای ارسال کد مجدد 2 دقیقه منتظر بمانید '}, status=status.HTTP_400_BAD_REQUEST)
             code = random.randint(10000,99999)
-            if not otp or otp.expire < timezone.now():
-                otp = Otp(mobile=admin.mobile, code=code , expire = timezone.now () + timedelta(minutes=2))
 
+            if not otp:
+                otp = Otp(mobile=admin.mobile, code=code , expire = timezone.now () + timedelta(minutes=2))
+            elif otp.expire > timezone.now() :
+                return Response({'error': 'برای ارسال کد مجدد 2 دقیقه منتظر بمانید '}, status=status.HTTP_400_BAD_REQUEST)
+            elif otp.expire < timezone.now():
+                otp.code = code 
+                otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
-            
             message = Message(code,admin.mobile,admin.email)
             message.otpSMS()
-        # message.otpEmail(code, user.email)
+        # message.otpEmail(code, admin.email)
             return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
     
         return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
