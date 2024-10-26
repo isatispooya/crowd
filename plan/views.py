@@ -251,6 +251,7 @@ class PlansViewset(APIView):
                     'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
                 }
             )
+            print()
 
 
             if len(plan_detail.get('Project Owner Company', [])) > 0:
