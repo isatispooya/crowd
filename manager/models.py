@@ -1,5 +1,23 @@
 from django.db import models
 from investor.models import Cart
+from django.db import models
+from django.core.exceptions import ValidationError
+
+def validate_file_type(file):
+    valid_mime_types = [
+        'image/jpeg', 'image/png', 'application/pdf',
+        'application/zip', 'application/x-rar-compressed', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ]
+    valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx']
+    
+    file_mime_type = file.content_type
+    file_extension = file.name.split('.')[-1].lower()
+
+    if file_mime_type not in valid_mime_types or file_extension not in valid_extensions:
+        raise ValidationError("Unsupported file type.")
+
+
 
 
 
@@ -22,7 +40,7 @@ class Manager (models.Model):
 
     
 class Resume (models.Model):
-    file = models.FileField(upload_to='static/')
+    file = models.FileField(upload_to='static/',validators=[validate_file_type])
     manager = models.ForeignKey(Manager,  on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
 
@@ -45,7 +63,7 @@ class Shareholder (models.Model):
 
 
 class Validation (models.Model) :
-    file_manager = models.FileField(upload_to ='static/')
+    file_manager = models.FileField(upload_to ='static/' ,validators=[validate_file_type])
     manager = models.CharField(max_length=14)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)
@@ -57,7 +75,7 @@ class Validation (models.Model) :
 
 
 class History (models.Model) :
-    file = models.FileField(upload_to  ='static/')
+    file = models.FileField(upload_to  ='static/',validators=[validate_file_type])
     manager = models.ForeignKey(Manager,  on_delete=models.CASCADE)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     lock = models.BooleanField(default=False)

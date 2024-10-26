@@ -8,10 +8,15 @@ from authentication import fun
 from django.http import HttpResponse, HttpResponseNotAllowed
 import random
 from manager import models
+from django.http import JsonResponse
+from django_ratelimit.decorators import ratelimit   
+from django.utils.decorators import method_decorator
+
 
 
 # done
 class RequestViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self,request):
         Authorization = request.headers.get('Authorization')
         
@@ -90,7 +95,7 @@ class RequestViewset(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self,request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -107,6 +112,7 @@ class RequestViewset(APIView):
 
 # done
 class DetailCartViewset(APIView):    
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
         
@@ -129,7 +135,7 @@ class DetailCartViewset(APIView):
         return Response({'message': True, 'cart': cart_serializer}, status=status.HTTP_200_OK)
     
 
-    
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='PATCH', block=True))
     def patch(self,request, id) :
         Authorization = request.headers.get('Authorization')
         
@@ -208,6 +214,7 @@ class DetailCartViewset(APIView):
 
 # done
 class CartAdmin(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get(self , request) :
         Authorization = request.headers.get('Authorization')     
 
@@ -223,7 +230,7 @@ class CartAdmin(APIView) :
         cart_serializer = serializers.CartSerializer(cart , many = True)
         return Response ({'message' : True ,  'cart': cart_serializer.data} ,  status=status.HTTP_200_OK )
 
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='PATCH', block=True))
     def patch (self , request , id) :
         Authorization = request.headers.get('Authorization')    
 
@@ -339,7 +346,7 @@ class CartAdmin(APIView) :
     
         return Response(cart_serializer.data, status=status.HTTP_200_OK)
 
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='DELETE', block=True))
     def delete(self , request , id):
         Authorization = request.headers.get('Authorization')    
 
@@ -360,6 +367,7 @@ class CartAdmin(APIView) :
 
 # done
 class DetailCartAdminViewset(APIView):    
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
         
@@ -380,6 +388,7 @@ class DetailCartAdminViewset(APIView):
     
 # done
 class MessageAdminViewSet(APIView):
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post(self,request,id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -405,7 +414,7 @@ class MessageAdminViewSet(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
     
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get(self , request,id) :
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -422,6 +431,7 @@ class MessageAdminViewSet(APIView):
 
 # done
 class MessageUserViewSet(APIView):
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get(self , request,id) :
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -440,6 +450,7 @@ class MessageUserViewSet(APIView):
 
 # done
 class AddInformationViewset (APIView) :
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -529,7 +540,7 @@ class AddInformationViewset (APIView) :
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -552,6 +563,7 @@ class AddInformationViewset (APIView) :
 
 # done
 class AddInfromationAdminViewset (APIView) :
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -606,7 +618,7 @@ class AddInfromationAdminViewset (APIView) :
         addinformation_serializer = serializers.AddInformationSerializer(addinformation)
         return Response(addinformation_serializer.data, status=status.HTTP_201_CREATED)
 
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -629,6 +641,7 @@ class AddInfromationAdminViewset (APIView) :
 
 # done
 class FinishCartViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='PATCH', block=True))
     def patch (self,request,id) : 
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -654,6 +667,7 @@ class FinishCartViewset(APIView):
 # done
 # اپدیت کمیته ریسک
 class RiskCommitteeViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self, request,id) : 
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -673,7 +687,7 @@ class RiskCommitteeViewset(APIView) :
             serializer.save()  
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response ({'error': 'Cart not found'}, status.HTTP_400_BAD_REQUEST)
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -692,6 +706,7 @@ class RiskCommitteeViewset(APIView) :
 # done
 # اپدیت کمیته ارزیابی
 class EvaluationCommitteeViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self, request,id) : 
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -714,7 +729,7 @@ class EvaluationCommitteeViewset(APIView) :
     
 
 
-
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
     def get (self, request, id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
