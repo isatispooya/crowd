@@ -163,9 +163,7 @@ class Otp(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     attempts  = models.IntegerField(default=0)
     locking = models.DateTimeField(blank= True , null= True) 
-    def lock(self):
-            self.locking = timezone.now() + timedelta(minutes=5)  # قفل به مدت ۵ دقیقه
-            self.save()
+    expire = models.DateTimeField(blank=True, null=True)
 
 
 class Admin(models.Model):
@@ -174,6 +172,15 @@ class Admin(models.Model):
     mobile = models.CharField(max_length=11)
     uniqueIdentifier = models.CharField(max_length=10)
     email = models.EmailField()
+    attempts = models.IntegerField(default=0)
+    lock_until = models.DateTimeField(null=True, blank=True)
+    def lock(self):
+        self.lock_until = timezone.now() + timedelta(minutes=5)     
+        self.save()
+    def is_locked(self):
+        if self.lock_until and timezone.now() < self.lock_until:
+            return True
+        return False
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
         return f'{uniqueIdentifier}'

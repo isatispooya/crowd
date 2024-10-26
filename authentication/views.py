@@ -13,6 +13,8 @@ import os
 from utils.message import Message
 from plan.views import check_legal_person
 from django.utils import timezone
+from datetime import timedelta
+
 class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
@@ -23,8 +25,8 @@ class CaptchaViewset(APIView) :
 class OtpViewset(APIView) :
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
-        if request.data['captcha'] == '':
-            return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
+        # if request.data['captcha'] == '' :
+        #     return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
@@ -39,26 +41,12 @@ class OtpViewset(APIView) :
         
         if user :
             otp = Otp.objects.filter(mobile=user.mobile).first()
-            if otp and otp.locking and timezone.now() > otp.locking :
-                otp.locking = None
-                otp.attempts = 0
-                otp.date = timezone.now()
-                user.lock_until = None
-                otp.save()
-                
-            if otp and otp.attempts >= 3:
-                otp.lock()
-                user.lock()
-
-                return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. لطفاً بعد از چند دقیقه دوباره امتحان کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            if otp and otp.expire > timezone.now() :
+                return Response({'error': 'برای ارسال کد مجدد 2 دقیقه منتظر بمانید '}, status=status.HTTP_400_BAD_REQUEST)
             code = random.randint(10000,99999)
-            if not otp:
-                otp = Otp(mobile=user.mobile, code=code, attempts=1)
-            else:
-                otp.code = code
-                otp.attempts += 1
-                user.attempts += 1
-
+            if not otp or otp.expire < timezone.now():
+                otp = Otp(mobile=user.mobile, code=code , expire = timezone.now () + timedelta(minutes=2))
+  
             otp.save()
             
             message = Message(code,user.mobile,user.email)
@@ -375,48 +363,32 @@ class LoginViewset(APIView) :
         try:
             user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
             if user.is_locked():
-                return Response({'message': 'حساب شما قفل است، لطفا بعدا تلاش کنید'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        except:
-            result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
-            return Response(result, status=status.HTTP_404_NOT_FOUND)
+                return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except user.DoesNotExist:
+            return Response({'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             mobile = user.mobile
-            otp_obj = Otp.objects.filter(mobile=mobile , code = otp )
-            if otp_obj.exists():
-                user.attempts += 1
+            otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
+            if otp_obj is None:
+                user.attempts += 1  
                 if user.attempts >= 3:
-                    user.lock()  # قفل کردن به مدت 5 دقیقه
+                    user.lock() 
                     return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-            otp_obj = otp_obj.order_by('-date').first()
-            if otp_obj.locking and timezone.now() < otp_obj.locking:
-                return Response({'message': 'حساب شما قفل است، لطفاً بعداً تلاش کنید'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
-            if otp_obj is None : 
-                return Response({'message' : 'otp ذخیره نشده است'},status=status.HTTP_400_NOT_FOUND)
+                user.save()  
+                return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if otp_obj.expire and timezone.now() > otp_obj.expire:
+                return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
-        otp = serializers.OtpSerializer(otp_obj).data
-        if otp['code']== None :
-            result = {'message': 'کد تأیید اشتباه است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            
-        otp = serializers.OtpSerializer(otp_obj).data
-        if 'date' in otp:
-            dt = datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
-        else  :
-            return Response({"error": "Date field is missing in OTP data."}, status=400)
-        dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
-        dt = dt.total_seconds()
-
-        if dt >120 :
-            result = {'message': 'زمان کد منقضی شده است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-        otp_obj.delete()
         user.attempts = 0
         user.save()
+        otp_obj.delete()
         token = fun.encryptionUser(user)
-        return Response({'access': token} , status=status.HTTP_200_OK)
+        return Response({'access': token}, status=status.HTTP_200_OK)
 
 
 #otp for admin
@@ -425,30 +397,37 @@ class OtpAdminViewset(APIView) :
     def post (self,request) :
         captcha = GuardPyCaptcha()
         encrypted_response = request.data['encrypted_response']
+        # if request.data['captcha'] == '' :
+        #     return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        if not captcha  :
-        # # if False : 
+        # if not captcha  :
+        if False : 
             return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
-        try :
-            admin = Admin.objects.get(uniqueIdentifier = uniqueIdentifier)
-        except Admin.DoesNotExist:
-            return Response({'error': 'Admin not found'}, status=404)
+        admin = Admin.objects.filter(uniqueIdentifier = uniqueIdentifier).first()
 
-        admin.save()
-        mobile = admin.mobile
-        email= admin.email
-        code = random.randint(10000,99999)
-        otp = Otp( mobile=mobile, code=code)
-        otp.save()
-        message = Message(code,mobile,email)
-        message.otpSMS()
-        return Response({'registered' : True , 'message' : 'کد تایید ارسال شد'}  ,status=status.HTTP_200_OK)
+        if admin :
+            otp = Otp.objects.filter(mobile=admin.mobile).first()
+            if otp and otp.expire > timezone.now() :
+                return Response({'error': 'برای ارسال کد مجدد 2 دقیقه منتظر بمانید '}, status=status.HTTP_400_BAD_REQUEST)
+            code = random.randint(10000,99999)
+            if not otp or otp.expire < timezone.now():
+                otp = Otp(mobile=admin.mobile, code=code , expire = timezone.now () + timedelta(minutes=2))
+
+            otp.save()
+            
+            message = Message(code,admin.mobile,admin.email)
+            message.otpSMS()
+        # message.otpEmail(code, user.email)
+            return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
     
+        return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+
+
 
 
 # login for admin
@@ -462,38 +441,34 @@ class LoginAdminViewset(APIView) :
         
         try:
             admin = Admin.objects.get(uniqueIdentifier=uniqueIdentifier)
-        except:
-            result = {'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}
-            return Response(result, status=status.HTTP_404_NOT_FOUND)
+            if admin.is_locked():
+                return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except admin.DoesNotExist:
+            return Response({'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}, status=status.HTTP_404_NOT_FOUND)
         
         try:
             mobile = admin.mobile
-            otp_obj = Otp.objects.filter(mobile=mobile , code = code )
-            if not otp_obj.exists() :
-                return Response({'message' : 'کد تأیید نامعتبر است'},status=status.HTTP_404_NOT_FOUND)
-            otp_obj = otp_obj.order_by('-date').first()
-        except :
+            otp_obj = Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
+            if otp_obj is None:
+                admin.attempts += 1  
+                if admin.attempts >= 3:
+                    admin.lock() 
+                    return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+                admin.save()  
+                return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if otp_obj.expire and timezone.now() > otp_obj.expire:
+                return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
             return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        otp = serializers.OtpSerializer(otp_obj).data
-        if otp['code']== None :
-            result = {'message': 'کد تأیید نامعتبر است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-            
-        otp = serializers.OtpSerializer(otp_obj).data
-        dt = datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(otp['date'].replace("Z", "+00:00"))
-     
-
-        
-        dt = dt.total_seconds()
-
-        if dt >120 :
-            result = {'message': 'زمان کد منقضی شده است'}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-    
+        admin.attempts = 0
+        admin.save()
         otp_obj.delete()
         token = fun.encryptionadmin(admin)
-        return Response({'access': token} , status=status.HTTP_200_OK)
+        return Response({'access': token}, status=status.HTTP_200_OK)
+
 
 
 # done
