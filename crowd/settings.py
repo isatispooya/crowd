@@ -31,10 +31,10 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
-ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = ['apicrowd.isatispooya.com'] if not DEBUG else ['*']
 APPEND_SLASH = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True    
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -48,6 +48,14 @@ CORS_ALLOW_METHODS = [
 CORS_ALLOW_HEADERS = [
     '*'
 ]
+
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://admincrowd.isatispooya.com",
+        "https://mycrowd.isatispooya.com",
+    ]
 
 # Application definition
 
