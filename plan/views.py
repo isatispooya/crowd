@@ -102,14 +102,36 @@ class PlanViewset(APIView):
         if not plan:
             return Response({'message': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         plan_serializer = serializers.PlanSerializer(plan)
-        
+        board_members_list = []
         board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)
         if board_members.exists():
             board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
+            for i in board_members_serializer.data :
+                member_data = {
+                'plan' : i['plan'],
+                'first_name' : i['first_name'],
+                'last_name' : i['last_name'],
+                'organization_post_description' : i['organization_post_description'],
+                'company_name' : i['company_name'],
+                'company_national_id' : i['company_national_id'],
+                'is_agent_from_company' : i['is_agent_from_company'],
+                'organization_post_id' : i['organization_post_id'],
+                }
+                board_members_list.append(member_data)
         shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)
         if shareholder.exists():
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
-        
+            shareholder_list = []
+            for j in shareholder_serializer.data :
+                shareholder_data = {
+                    'share_percent' : j['share_percent'],
+                    'first_name' : j['first_name'],
+                    'last_name' : j['last_name'],
+                    'shareholder_type' : j['shareholder_type'],
+                    'plan' : j['plan'],
+                    }
+                
+                shareholder_list.append(shareholder_data)
         picture_plan = PicturePlan.objects.filter(plan=plan).first()
         picture_plan = serializers.PicturePlanSerializer(picture_plan)
         company = ProjectOwnerCompan.objects.filter(plan=plan)
@@ -118,8 +140,8 @@ class PlanViewset(APIView):
 
         response_data = {
             'plan': plan_serializer.data ,
-            'board_member' : board_members_serializer.data , 
-            'shareholder' : shareholder_serializer.data,
+            'board_member' :board_members_list , 
+            'shareholder' : shareholder_list,
             'company': company_serializer.data,
             'picture_plan': picture_plan.data,
         }
@@ -167,15 +189,39 @@ class PlansViewset(APIView):
             shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
             plan_serializer = serializers.PlanSerializer(plan)
             board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
+            board_members_list = []
+            for i in board_members_serializer.data :
+                member_data = {
+                'plan' : i['plan'],
+                'first_name' : i['first_name'],
+                'last_name' : i['last_name'],
+                'organization_post_description' : i['organization_post_description'],
+                'company_name' : i['company_name'],
+                'company_national_id' : i['company_national_id'],
+                'is_agent_from_company' : i['is_agent_from_company'],
+                'organization_post_id' : i['organization_post_id'],
+                }
+                board_members_list.append(member_data)
             shareholder_serializer = serializers.ListOfProjectBigShareHoldersSerializer(shareholder, many=True)
+            shareholder_list = []
+            for j in shareholder_serializer.data :
+                shareholder_data = {
+                    'share_percent' : j['share_percent'],
+                    'first_name' : j['first_name'],
+                    'last_name' : j['last_name'],
+                    'shareholder_type' : j['shareholder_type'],
+                    'plan' : j['plan'],
+                    }
+                
+                shareholder_list.append(shareholder_data)
             company_serializer = serializers.ProjectOwnerCompansSerializer(company, many=True)
             picture_plan = PicturePlan.objects.filter(plan=plan).first()
             picture_plan = serializers.PicturePlanSerializer(picture_plan)
         
             data = {
                 'plan': plan_serializer.data,
-                'board_members': board_members_serializer.data , 
-                'shareholder': shareholder_serializer.data  ,
+                'board_members': board_members_list , 
+                'shareholder': shareholder_list  ,
                 'company': company_serializer.data  ,
                 'picture_plan': picture_plan.data
             }
