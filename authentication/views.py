@@ -26,6 +26,8 @@ class CaptchaViewset(APIView) :
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
         Captcha.objects.create(encrypted_response=captcha['encrypted_response'])
+        captcha_obj = Captcha.objects.filter(encrypted_response=captcha['encrypted_response'],enabled=True).first()
+
 
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
@@ -34,15 +36,15 @@ class OtpViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
+        captcha_obj = Captcha.objects.filter(encrypted_response=request.data['encrypted_response'],enabled=True).first()
+        if not captcha_obj :
+            return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        captcha_obj.delete()
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = GuardPyCaptcha()
 
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
-        if not captcha_obj :
-            return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        captcha_obj.delete()
         if not settings.DEBUG : 
             if not captcha :
                 return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
