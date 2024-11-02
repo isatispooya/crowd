@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework import status 
 import requests
-from .models import User , Otp , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent , legalPersonShareholders , legalPersonStakeholders , LegalPerson
+from .models import User , Otp , Captcha , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent , legalPersonShareholders , legalPersonStakeholders , LegalPerson
 from . import serializers
 import datetime
 from . import fun
@@ -25,6 +25,8 @@ class CaptchaViewset(APIView) :
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
+        Captcha.objects.create(encrypted_response=captcha['encrypted_response'])
+
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
 # otp for user
@@ -37,6 +39,10 @@ class OtpViewset(APIView) :
         captcha = GuardPyCaptcha()
 
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
+        captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
+        if not captcha_obj :
+            return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        captcha_obj.delete()
         if not settings.DEBUG : 
             if not captcha :
                 return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
@@ -400,6 +406,10 @@ class OtpAdminViewset(APIView) :
     def post (self,request) :
         captcha = GuardPyCaptcha()
         encrypted_response = request.data['encrypted_response']
+        captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
+        if not captcha_obj :
+            return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        captcha_obj.delete()
         if isinstance(encrypted_response, str):
             encrypted_response = encrypted_response.encode('utf-8')
         captcha = captcha.check_response(encrypted_response , request.data['captcha'])
