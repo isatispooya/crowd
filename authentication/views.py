@@ -76,10 +76,10 @@ class OtpViewset(APIView) :
             }
             response = requests.request("POST", url, headers=headers, data=payload)
             if response.status_code >=300 :
-                return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
-            return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
+                return Response ({'message' :'اطلاعات وارد شده نادرست است '} , status=status.HTTP_400_BAD_REQUEST)
+            return Response ({ 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
 
-        return Response({'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+        return Response({'message' : 'اطلاعات وارد شده نادرست است '},status=status.HTTP_400_BAD_REQUEST)   
                 
 
         
