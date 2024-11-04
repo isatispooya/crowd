@@ -84,10 +84,10 @@ class OtpViewset(APIView) :
             }
             response = requests.request("POST", url, headers=headers, data=payload)
             if response.status_code >=300 :
-                return Response ({'message' :'اطلاعات وارد شده نادرست است '} , status=status.HTTP_400_BAD_REQUEST)
+                return Response ({ 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
             return Response ({ 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
 
-        return Response({'message' : 'اطلاعات وارد شده نادرست است '},status=status.HTTP_400_BAD_REQUEST)   
+        return Response ({ 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
                 
 
         
@@ -441,9 +441,9 @@ class OtpAdminViewset(APIView) :
             message = Message(code,admin.mobile,admin.email)
             message.otpSMS()
         # message.otpEmail(code, admin.email)
-            return Response({'registered' : True  ,'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
+            return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
     
-        return Response({'registered' : False , 'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+        return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
 
 
 
