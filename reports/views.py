@@ -214,33 +214,39 @@ class DashBoardUserViewset(APIView) :
         plan_all = Plan.objects.all().count()
         current_date = timezone.now().date()
         active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
-        payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier).values('plan').distinct()
-
+        payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier , status='3').values('plan').distinct()
         end_of_fundraising = EndOfFundraising.objects.filter(plan__in = payments)
         end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising,many=True)
-        # total_profit = 0  # متغیر جدید برای نگه‌داری مجموع profit
-        # value = payments.values('value')
         date_profit = []
         for i in end_of_fundraising_serializer.data :
             date = i['date_operator']
             type = i['type']
-            amount = i['amount_operator']
+            amount = PaymentGateway.objects.filter(user=user.uniqueIdentifier , status='3',plan=i['plan']).aggregate(total_value_sum=Sum('value'))['total_value_sum']
             plan = i['plan']
             date = datetime.datetime.strptime(date , '%Y-%m-%d')
             date_jalali = JalaliDate.to_jalali(date)
             date_jalali =str(date_jalali)
             date_profit.append({'type': type, 'date': date_jalali , 'amount': amount , 'plan' : plan})
-            # total_profit += value['value']
 
         
         payments_count = payments.count()
         total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier).aggregate(total_value_sum=Sum('value'))['total_value_sum']
         if total_value is None:
             total_value = 0
+        
 
-        total_rate_of_return = InformationPlan.objects.filter(plan__in=payments).aggregate(total_rate_sum=Sum('rate_of_return'))['total_rate_sum']        
+
+        #total_rate_of_return
+        peyment_user = PaymentGateway.objects.filter(user=user.uniqueIdentifier , status='3')
+        total_rate_of_return = 0
+        for i in peyment_user:
+            rate_of_return = InformationPlan.objects.filter(plan=i.plan).first()
+            total_rate_of_return += ((rate_of_return.rate_of_return / 100) * i.value)
+
         if total_rate_of_return is None:
             total_rate_of_return = 0
+
+
         return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return  , 'profit' : date_profit}, status=status.HTTP_200_OK)
     
 # گزارش سود دهی ادمین
