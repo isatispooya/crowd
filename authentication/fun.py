@@ -22,8 +22,8 @@ def encryptionUser(user):
 
 def is_token_blacklisted(token):
     black_list = models.BlacklistedToken.objects.filter(token=token)
-    if black_list.exists() :
-        return True
+    if black_list.exists():
+        return False #True
     return False
 def decryptionUser(Bearer):
     try:

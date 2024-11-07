@@ -21,7 +21,7 @@ from django.conf import settings
 
 
 class CaptchaViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
@@ -33,7 +33,7 @@ class CaptchaViewset(APIView) :
 
 # otp for user
 class OtpViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
         captcha_obj = Captcha.objects.filter(encrypted_response=request.data['encrypted_response'],enabled=True).first()
@@ -94,7 +94,7 @@ class OtpViewset(APIView) :
 # login or sign up user
 # done
 class LoginViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
@@ -354,7 +354,7 @@ class LoginViewset(APIView):
 
 # done
 class InformationViewset (APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -404,7 +404,7 @@ class InformationViewset (APIView) :
 #otp for admin
 # done
 class OtpAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request) :
         captcha = GuardPyCaptcha()
         encrypted_response = request.data['encrypted_response']
@@ -451,7 +451,7 @@ class OtpAdminViewset(APIView) :
 # login for admin
 # done
 class LoginAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         code = request.data.get('code')
@@ -492,7 +492,7 @@ class LoginAdminViewset(APIView) :
 
 # done
 class UserListViewset (APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self, request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -550,7 +550,7 @@ class UserListViewset (APIView) :
 
 # done
 class UserOneViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -589,7 +589,7 @@ class UserOneViewset(APIView) :
 
 # done
 class OtpUpdateViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -618,7 +618,7 @@ class OtpUpdateViewset(APIView) :
 
 # done
 class UpdateInformationViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='PATCH', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -820,7 +820,7 @@ class UpdateInformationViewset(APIView) :
 
 
 class AddBoursCodeUserViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self, request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -847,7 +847,7 @@ class AddBoursCodeUserViewset(APIView):
 
 
 class LogoutViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:

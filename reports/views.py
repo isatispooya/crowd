@@ -28,7 +28,7 @@ from django.utils.decorators import method_decorator
 # گزارش پیشرفت پروژه
 # done
 class ProgressReportViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -51,7 +51,7 @@ class ProgressReportViewset(APIView) :
     
 
 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request,trace_code) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -63,7 +63,7 @@ class ProgressReportViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='DELETE', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='DELETE', block=True))
     def delete (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -82,7 +82,7 @@ class ProgressReportViewset(APIView) :
 # گزارش حسابررسی
 # done
 class AuditReportViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -105,7 +105,7 @@ class AuditReportViewset(APIView) :
     
 
 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request,trace_code) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -117,7 +117,7 @@ class AuditReportViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='DELETE', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='DELETE', block=True))
     def delete (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -136,7 +136,7 @@ class AuditReportViewset(APIView) :
 # گزارش مشارکت کننده ها
 # done
 class ParticipationReportViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self , request, trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -164,7 +164,7 @@ class ParticipationReportViewset(APIView) :
 # داشبورد ادمین 
 # done
 class DashBoardAdminViewset (APIView) : 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self , request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -202,7 +202,7 @@ class DashBoardAdminViewset (APIView) :
 # داشبورد مشتری 
 # done
 class DashBoardUserViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request) : 
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -242,7 +242,7 @@ class DashBoardUserViewset(APIView) :
     
 # گزارش سود دهی ادمین
 class ProfitabilityReportViewSet(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get(self,request,trace_code):
         Authorization = request.headers.get('Authorization')
         if not Authorization:

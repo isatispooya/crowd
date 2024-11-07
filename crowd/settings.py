@@ -55,6 +55,8 @@ else:
     CORS_ALLOWED_ORIGINS = [
         "https://admincrowd.isatispooya.com",
         "https://mycrowd.isatispooya.com",
+        "https://crowd.isatispooya.com",
+        "109.125.151.26"
     ]
 
 # Application definition
