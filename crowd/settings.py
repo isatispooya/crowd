@@ -56,7 +56,6 @@ else:
         "https://admincrowd.isatispooya.com",
         "https://mycrowd.isatispooya.com",
         "https://crowd.isatispooya.com",
-        "109.125.151.26"
     ]
 
 # Application definition
@@ -161,7 +160,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
