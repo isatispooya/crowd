@@ -181,12 +181,13 @@ class LoginViewset(APIView):
                     isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
                     firstName = legalPersonStakeholders_data ['firstName'],
                     endAt = legalPersonStakeholders_data ['endAt'] ,)
-                new_legalPersonStakeholders.save()
+                    new_legalPersonStakeholders.save()
 
         if data['legalPerson']:
             new_LegalPerson = LegalPerson(
             user = new_user ,
             citizenshipCountry =data['legalPerson']['citizenshipCountry'] ,
+            companyName =data['legalPerson']['companyName'] ,
             economicCode = data['legalPerson']['economicCode'],
             evidenceExpirationDate = data['legalPerson'] ['evidenceExpirationDate'],
             evidenceReleaseCompany = data['legalPerson'] ['evidenceReleaseCompany'],
@@ -209,7 +210,7 @@ class LoginViewset(APIView):
                     firstName = legalPersonShareholders_data ['firstName'],
                     lastName = legalPersonShareholders_data ['lastName'],
                     address = legalPersonShareholders_data ['address'] )
-                new_legalPersonShareholders.save()
+                    new_legalPersonShareholders.save()
         if len(data['accounts']) > 0:
             for acounts_data in data['accounts'] :
                 new_accounts = accounts(
