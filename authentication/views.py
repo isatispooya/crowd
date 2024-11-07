@@ -70,7 +70,7 @@ class OtpViewset(APIView) :
             otp.save()
             message = Message(code,user.mobile,user.email)
             message.otpSMS()
-            # message.otpEmail(code, user.email)
+            message.otpEmail(code)
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
@@ -440,7 +440,7 @@ class OtpAdminViewset(APIView) :
             otp.save()
             message = Message(code,admin.mobile,admin.email)
             message.otpSMS()
-        # message.otpEmail(code, admin.email)
+            message.otpEmail(code)
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
     
         return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)

@@ -14,7 +14,7 @@ class Message():
         resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={settings.SMS_NUMBER}&to={self.mobile}&username={settings.SMS_USERNAME}&password={settings.SMS_PASSWORD}&message={txt}').json()
         print(txt)
 
-    def otpEmail(self):
+    def otpEmail(self,code):
 
         print(self.email)
 

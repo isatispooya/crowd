@@ -81,6 +81,7 @@ INSTALLED_APPS = [
 
 ]
 
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.security.SecurityMiddleware',
@@ -197,7 +198,7 @@ EMAIL_HOST_PASSWORD = os.getenv('MAIL_PASSWORD')
 EMAIL_USE_TLS = True  # Use TLS encryption
 EMAIL_FROM_ADDRESS = os.getenv('MAIL_FROM_ADDRESS')
 DEFAULT_FROM_EMAIL = os.getenv('MAIL_FROM_ADDRESS')
-
+EMAIL_USE_SSL = False
 
 #SMS SERVICE
 SMS_NUMBER = os.getenv('SMS_NUMBER')

@@ -218,6 +218,8 @@ class DashBoardUserViewset(APIView) :
 
         end_of_fundraising = EndOfFundraising.objects.filter(plan__in = payments)
         end_of_fundraising_serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising,many=True)
+        # total_profit = 0  # متغیر جدید برای نگه‌داری مجموع profit
+        # value = payments.values('value')
         date_profit = []
         for i in end_of_fundraising_serializer.data :
             date = i['date_operator']
@@ -228,6 +230,7 @@ class DashBoardUserViewset(APIView) :
             date_jalali = JalaliDate.to_jalali(date)
             date_jalali =str(date_jalali)
             date_profit.append({'type': type, 'date': date_jalali , 'amount': amount , 'plan' : plan})
+            # total_profit += value['value']
 
         
         payments_count = payments.count()
