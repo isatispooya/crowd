@@ -517,6 +517,10 @@ class UserListViewset (APIView) :
             user_financialInfo = financialInfo.objects.filter(user=i_user)
             serializer_financialInfo = serializers.financialInfoSerializer(user_financialInfo , many=True).data
             
+            
+            user_accounts = accounts.objects.filter(user=i_user)
+            serializer_accounts = serializers.accountsSerializer(user_accounts , many=True).data
+            
             user_jobInfo = jobInfo.objects.filter(user=i_user)
             serializer_jobInfo = serializers.jobInfoSerializer(user_jobInfo , many=True).data
             
@@ -535,6 +539,7 @@ class UserListViewset (APIView) :
             combined_data = {
                 **user_data,  
                 'addresses': serializer_addresses,
+                'accounts': serializer_accounts,
                 'private_person': privateperson_serializer,
                 'financial_info': serializer_financialInfo,
                 'job_info': serializer_jobInfo,

@@ -232,7 +232,7 @@ class DashBoardUserViewset(APIView) :
             amount = i['amount_operator']
             payment_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier, status='3', plan=plan_id).aggregate(total_value_sum=Sum('value'))['total_value_sum'] or 0
             if amount and plan_total:
-                amount_end = (plan_total / amount) * payment_value
+                amount_end = (amount/plan_total) * payment_value
                 amount_end = int(amount_end)
             else:
                 amount_end = 0
