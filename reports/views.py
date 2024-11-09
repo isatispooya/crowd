@@ -221,13 +221,25 @@ class DashBoardUserViewset(APIView) :
         for i in end_of_fundraising_serializer.data :
             date = i['date_operator']
             type = i['type']
-            amount = PaymentGateway.objects.filter(user=user.uniqueIdentifier , status='3',plan=i['plan']).aggregate(total_value_sum=Sum('value'))['total_value_sum']
-            plan = i['plan']
+            plan_id = i['plan']
+    
+            try:
+                plan_obj = Plan.objects.get(id=plan_id)
+                plan_total = plan_obj.total_price
+            except Plan.DoesNotExist:
+                plan_total = None
+                print("Plan not found")
+            amount = i['amount_operator']
+            payment_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier, status='3', plan=plan_id).aggregate(total_value_sum=Sum('value'))['total_value_sum'] or 0
+            if amount and plan_total:
+                amount_end = (plan_total / amount) * payment_value
+            else:
+                amount_end = 0
             date = datetime.datetime.strptime(date , '%Y-%m-%d')
             date_jalali = JalaliDate.to_jalali(date)
             date_jalali =str(date_jalali)
-            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount , 'plan' : plan})
-
+            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount_end , 'plan' : plan_id})
+            
         
         payments_count = payments.count()
         total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier).aggregate(total_value_sum=Sum('value'))['total_value_sum']
