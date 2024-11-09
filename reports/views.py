@@ -58,7 +58,7 @@ class ProgressReportViewset(APIView) :
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         progres_report = ProgressReport.objects.filter(plan=plan)
         if not progres_report.exists() :
-            return Response({'error': 'progres report not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response([], status=status.HTTP_200_OK)
         serializer = ProgressReportSerializer(progres_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
@@ -112,7 +112,7 @@ class AuditReportViewset(APIView) :
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         audit_report = AuditReport.objects.filter(plan=plan)
         if not audit_report.exists() :
-            return Response({'error': 'audit report not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response([], status=status.HTTP_200_OK)
         serializer =AuditReportSerializer(audit_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
