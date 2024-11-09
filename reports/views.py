@@ -35,7 +35,7 @@ class ProgressReportViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -58,7 +58,7 @@ class ProgressReportViewset(APIView) :
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         progres_report = ProgressReport.objects.filter(plan=plan)
         if not progres_report.exists() :
-            return Response({'error': 'progres report not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response([], status=status.HTTP_200_OK)
         serializer = ProgressReportSerializer(progres_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
@@ -70,7 +70,7 @@ class ProgressReportViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         progres_report = ProgressReport.objects.filter(id=int(trace_code))
         if not progres_report.exists() :
@@ -89,7 +89,7 @@ class AuditReportViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -112,7 +112,7 @@ class AuditReportViewset(APIView) :
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
         audit_report = AuditReport.objects.filter(plan=plan)
         if not audit_report.exists() :
-            return Response({'error': 'audit report not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response([], status=status.HTTP_200_OK)
         serializer =AuditReportSerializer(audit_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
@@ -124,7 +124,7 @@ class AuditReportViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         audit_report = AuditReport.objects.filter(id=int(trace_code))
         if not audit_report.exists() :
@@ -171,7 +171,7 @@ class DashBoardAdminViewset (APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         plan_all = Plan.objects.all().count()
         now = timezone.now()
@@ -270,7 +270,7 @@ class ProfitabilityReportViewSet(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         if not trace_code:
             return Response({'error': 'trace_code not found'}, status=status.HTTP_400_BAD_REQUEST)
