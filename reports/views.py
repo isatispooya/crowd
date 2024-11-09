@@ -233,6 +233,7 @@ class DashBoardUserViewset(APIView) :
             payment_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier, status='3', plan=plan_id).aggregate(total_value_sum=Sum('value'))['total_value_sum'] or 0
             if amount and plan_total:
                 amount_end = (plan_total / amount) * payment_value
+                amount_end = int(amount_end)
             else:
                 amount_end = 0
             date = datetime.datetime.strptime(date , '%Y-%m-%d')
