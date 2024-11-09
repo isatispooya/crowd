@@ -67,7 +67,7 @@ class ManagerAdminViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -84,7 +84,7 @@ class ManagerAdminViewset(APIView):
 
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
 
         if unique_id is None:
@@ -202,7 +202,7 @@ class ResumeAdminViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         cart = models.Cart.objects.filter(unique_id=unique_id)
         if not cart.exists():
@@ -236,7 +236,7 @@ class ResumeAdminViewset(APIView) :
         
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'Admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         managers_data = []
 
@@ -349,7 +349,7 @@ class ShareholderAdminViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -366,7 +366,7 @@ class ShareholderAdminViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         if unique_id is None:
             return Response({'error': 'Manager ID is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -555,7 +555,7 @@ class ValidationAdminViewset (APIView) :
                 return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
             admin = fun.decryptionadmin(Authorization)
             if not admin:
-                return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
             admin = admin.first()
             cart = models.Cart.objects.filter(unique_id=unique_id).first()
             if not cart:
@@ -668,7 +668,7 @@ class ValidationAdminViewset (APIView) :
                 return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
             admin = fun.decryptionadmin(Authorization)
             if not admin:
-                return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
             admin = admin.first()
             cart = models.Cart.objects.filter(unique_id=unique_id).first()
             if not cart:
@@ -829,7 +829,7 @@ class HistoryAdminViewset (APIView) :
         
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
@@ -898,7 +898,7 @@ class HistoryAdminViewset (APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
