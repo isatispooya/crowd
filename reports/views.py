@@ -228,7 +228,6 @@ class DashBoardUserViewset(APIView) :
                 plan_total = plan_obj.total_price
             except Plan.DoesNotExist:
                 plan_total = None
-                print("Plan not found")
             amount = i['amount_operator']
             payment_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier, status='3', plan=plan_id).aggregate(total_value_sum=Sum('value'))['total_value_sum'] or 0
             if amount and plan_total:

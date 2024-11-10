@@ -304,7 +304,6 @@ class PlansViewset(APIView):
                     'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
                 }
             )
-            print()
 
 
             if len(plan_detail.get('Project Owner Company', [])) > 0:
@@ -1333,7 +1332,6 @@ class TransmissionViewset(APIView) :
             nationalCode = user.uniqueIdentifier,
             description = invoice_data['description'] 
         )
-        print(created)
         payment = PaymentGateway.objects.create(
             plan = plan,
             user = user.uniqueIdentifier,

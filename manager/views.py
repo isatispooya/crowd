@@ -500,14 +500,12 @@ class ValidationViewset (APIView) :
             for manager in managers:
                 validation = Validation.objects.filter(manager=manager.national_code, cart=cart).first()
                 
-                print(validation)
 
                 if validation:
                     date = validation.date
                 else:
                     date = datetime.datetime.now()
 
-                print(date)
                 
 
                 manager_list.append({
@@ -540,7 +538,6 @@ class ValidationViewset (APIView) :
             return Response({'data': response_data}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -654,7 +651,6 @@ class ValidationAdminViewset (APIView) :
             return Response({'data': response_data}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -716,7 +712,6 @@ class ValidationAdminViewset (APIView) :
             return Response({'data': response_data}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(f"An error occurred: {e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -751,7 +746,6 @@ class HistoryViewset (APIView) :
                 date = int(date_manager[timestamp_key]) / 1000  
                 date = datetime.datetime.fromtimestamp(date)     
 
-                print(f"Date for manager {manager.national_code}: {date}")  
             except (KeyError, ValueError) as e:
                 return Response({'error': f'Invalid date format for manager {manager.national_code}'}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -854,7 +848,6 @@ class HistoryAdminViewset (APIView) :
                     
                     history = History(file=file, manager=manager, lock=lock, cart=cart, date=date)
                     history.save()
-                print(history)
                 
 
                 

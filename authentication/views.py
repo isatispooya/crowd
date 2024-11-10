@@ -69,7 +69,9 @@ class OtpViewset(APIView) :
                 otp.code = code 
                 otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
-            message = Message(code,user.mobile,user.email)
+            address = addresses.objects.filter(user=user).first()
+            address_email = address.email
+            message = Message(code,user.mobile,address_email)
             message.otpSMS()
             message.otpEmail(code)
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
@@ -850,11 +852,12 @@ class LogoutViewset(APIView):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        token = Authorization.split('Bearer ')[1]
+        try:
+            token = Authorization.split('Bearer ')[1]
+        except:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
         
         black_list = BlacklistedToken.objects.create(token=token)
-        print(black_list)
         return Response({'message': 'Successfully logged out'}, status=status.HTTP_201_CREATED)
     
 

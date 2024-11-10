@@ -69,7 +69,6 @@ class RequestViewset(APIView):
                     return Response({'error': 'Invalid timestamp for year_of_establishment'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.CartSerializer(data=data)
         if not serializer.is_valid():
-            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
@@ -390,7 +389,6 @@ class MessageAdminViewSet(APIView):
         
         serializer = serializers.MessageSerializer(data={**request.data, 'cart': cart.id})
         if not serializer.is_valid():
-            print(serializer.errors)  
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if serializer.is_valid():
             serializer.save()  
