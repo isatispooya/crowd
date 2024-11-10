@@ -151,7 +151,6 @@ class LoginViewset(APIView):
         if data == None :
             return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-        
         try :
             with transaction.atomic():
                 if  not new_user :
@@ -184,7 +183,6 @@ class LoginViewset(APIView):
                         isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
                         firstName = legalPersonStakeholders_data ['firstName'],
                         endAt = legalPersonStakeholders_data ['endAt'] ,)
-
                 if data['legalPerson']:
                     LegalPerson.objects.create(
                     user = new_user ,
@@ -227,30 +225,30 @@ class LoginViewset(APIView):
                             sheba = acounts_data ['sheba'] ,)
 
                 address = data.get('addresses',[])
-                if len (address) > 0 :
-                    for addresses_data in address:
-                        addresses.objects.create(
-                            user = new_user,
-                            alley =  addresses_data.get('alley' , ''),
-                            city =  addresses_data.get( 'city','').get('name' , ''),
-                            cityPrefix =  addresses_data.get('cityPrefix', ''),
-                            country = addresses_data.get('country','').get('name',''),
-                            countryPrefix =  addresses_data.get('countryPrefix',''),
-                            email =  addresses_data.get('email',''),
-                            emergencyTel =  addresses_data.get('emergencyTel',''),
-                            emergencyTelCityPrefix =  addresses_data.get('emergencyTelCityPrefix',''),
-                            emergencyTelCountryPrefix =  addresses_data.get('emergencyTelCountryPrefix',''),
-                            fax =  addresses_data.get('fax',''),
-                            faxPrefix =  addresses_data.get('faxPrefix',''),
-                            mobile =  addresses_data.get('mobile',''),
-                            plaque =  addresses_data.get('plaque',''),
-                            postalCode =  addresses_data.get('postalCode',''),
-                            province =  addresses_data.get('province', '' ).get('name',''),
-                            remnantAddress =  addresses_data.get('remnantAddress',''),
-                            section =  addresses_data.get('section').get('name'),
-                            tel =  addresses_data.get('tel',''),
-                            website =  addresses_data.get('website' , ''),
-                        )
+            
+                for addresses_data in address:
+                    addresses.objects.create(
+                        user = new_user,
+                        alley =  addresses_data.get('alley' , ''),
+                        city =  addresses_data.get( 'city',{}).get('name' , ''),
+                        cityPrefix =  addresses_data.get('cityPrefix', ''),
+                        country = addresses_data.get('country',{}).get('name',''),
+                        countryPrefix =  addresses_data.get('countryPrefix',''),
+                        email =  addresses_data.get('email',''),
+                        emergencyTel =  addresses_data.get('emergencyTel',''),
+                        emergencyTelCityPrefix =  addresses_data.get('emergencyTelCityPrefix',''),
+                        emergencyTelCountryPrefix =  addresses_data.get('emergencyTelCountryPrefix',''),
+                        fax =  addresses_data.get('fax',''),
+                        faxPrefix =  addresses_data.get('faxPrefix',''),
+                        mobile =  addresses_data.get('mobile',''),
+                        plaque =  addresses_data.get('plaque',''),
+                        postalCode =  addresses_data.get('postalCode',''),
+                        province =  addresses_data.get('province', {}).get('name', ''),
+                        remnantAddress =  addresses_data.get('remnantAddress',''),
+                        section =  addresses_data.get('section' , {}).get('name'),
+                        tel =  addresses_data.get('tel',''),
+                        website =  addresses_data.get('website' , ''),
+                    )
                 jobInfo_data = data.get('jobInfo')
                 if isinstance(jobInfo_data, dict):
                     jobInfo.objects.create(
