@@ -23,7 +23,7 @@ class ManagerViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -47,7 +47,7 @@ class ManagerViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -130,7 +130,7 @@ class ResumeViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
@@ -165,7 +165,7 @@ class ResumeViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = models.Cart.objects.filter(user=user,unique_id=unique_id)
         if not cart.exists():
@@ -299,7 +299,7 @@ class ShareholderViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -329,7 +329,7 @@ class ShareholderViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -401,7 +401,7 @@ class ValidationViewset (APIView) :
             
             user = fun.decryptionUser(Authorization)
             if not user:
-                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
             
             user = user.first()
             cart = models.Cart.objects.filter(unique_id=unique_id).first()
@@ -485,7 +485,7 @@ class ValidationViewset (APIView) :
             
             user = fun.decryptionUser(Authorization)
             if not user:
-                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
             
             user = user.first()
             cart = models.Cart.objects.filter(unique_id=unique_id).first()
@@ -729,7 +729,7 @@ class HistoryViewset (APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = models.Cart.objects.filter(unique_id=unique_id).first()
         if not cart:

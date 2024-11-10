@@ -362,7 +362,7 @@ class InformationViewset (APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()   
         user = User.objects.filter(id=user.id).first() if user else None
         
@@ -828,7 +828,7 @@ class AddBoursCodeUserViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         legal = check_legal_person(user.uniqueIdentifier)
         if legal == True :

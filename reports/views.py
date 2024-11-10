@@ -143,7 +143,7 @@ class ParticipationReportViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -209,7 +209,7 @@ class DashBoardUserViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         plan_all = Plan.objects.all().count()
         current_date = timezone.now().date()
