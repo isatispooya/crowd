@@ -16,11 +16,10 @@ class Message():
 
 
 
-    def otpEmail(self, code):
+    def otpEmail(self):
         print(self.email)
 
         subject = 'کد تایید ایساتیس کراد'
-        # قالب HTML برای ایمیل با جایگذاری کد پویا
         html_message = f'''
     <!DOCTYPE html>
     <html lang="fa">
@@ -99,7 +98,7 @@ class Message():
                 <!-- Logo Section -->
                 <div class="logo">
                 <img
-                    src="https://farasite.fidip.ir/static/images/crowdlogo_v5z8dCU.png"
+                    src="cid:logo"  <!-- ارجاع به لوگو -->
                     alt="Your Company Logo"
                 />
                 </div>
@@ -127,5 +126,14 @@ class Message():
             to=recipient_list,
             headers={"x-liara-tag": "test-tag"}
         )
-        email.content_subtype = "html"  # تنظیم نوع محتوا به HTML
+        email.content_subtype = "html"
+        
+        with open(os.path.join(settings.BASE_DIR, "utils/logo.png"), "rb") as f:
+            email.mixed_attach("logo.png", f.read(), "image/png", cid="logo")
+            
         email.send(fail_silently=False)
+
+
+
+ee = Message(otp=123456,mobile='09011010959',email='moeen.dehqan@gmail.com')
+ee.otpEmail()
