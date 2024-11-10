@@ -226,29 +226,30 @@ class LoginViewset(APIView):
                             type = acounts_data ['type'],
                             sheba = acounts_data ['sheba'] ,)
 
-                if len (data['addresses']) > 0 :
-                    for addresses_data in data ['addresses']:
+                address = data.get('addresses',[])
+                if len (address) > 0 :
+                    for addresses_data in address:
                         addresses.objects.create(
                             user = new_user,
-                            alley =  addresses_data ['alley'],
-                            city =  addresses_data ['city']['name'],
-                            cityPrefix =  addresses_data ['cityPrefix'],
-                            country = addresses_data ['country']['name'],
-                            countryPrefix =  addresses_data ['countryPrefix'],
-                            email =  addresses_data ['email'],
-                            emergencyTel =  addresses_data ['emergencyTel'],
-                            emergencyTelCityPrefix =  addresses_data ['emergencyTelCityPrefix'],
-                            emergencyTelCountryPrefix =  addresses_data ['emergencyTelCountryPrefix'],
-                            fax =  addresses_data ['fax'],
-                            faxPrefix =  addresses_data ['faxPrefix'],
-                            mobile =  addresses_data ['mobile'],
-                            plaque =  addresses_data ['plaque'],
-                            postalCode =  addresses_data ['postalCode'],
-                            province =  addresses_data ['province']['name'],
-                            remnantAddress =  addresses_data ['remnantAddress'],
-                            section =  addresses_data ['section']['name'],
-                            tel =  addresses_data ['tel'],
-                            website =  addresses_data ['website'],
+                            alley =  addresses_data.get('alley' , ''),
+                            city =  addresses_data.get( 'city','').get('name' , ''),
+                            cityPrefix =  addresses_data.get('cityPrefix', ''),
+                            country = addresses_data.get('country','').get('name',''),
+                            countryPrefix =  addresses_data.get('countryPrefix',''),
+                            email =  addresses_data.get('email',''),
+                            emergencyTel =  addresses_data.get('emergencyTel',''),
+                            emergencyTelCityPrefix =  addresses_data.get('emergencyTelCityPrefix',''),
+                            emergencyTelCountryPrefix =  addresses_data.get('emergencyTelCountryPrefix',''),
+                            fax =  addresses_data.get('fax',''),
+                            faxPrefix =  addresses_data.get('faxPrefix',''),
+                            mobile =  addresses_data.get('mobile',''),
+                            plaque =  addresses_data.get('plaque',''),
+                            postalCode =  addresses_data.get('postalCode',''),
+                            province =  addresses_data.get('province', '' ).get('name',''),
+                            remnantAddress =  addresses_data.get('remnantAddress',''),
+                            section =  addresses_data.get('section').get('name'),
+                            tel =  addresses_data.get('tel',''),
+                            website =  addresses_data.get('website' , ''),
                         )
                 jobInfo_data = data.get('jobInfo')
                 if isinstance(jobInfo_data, dict):
