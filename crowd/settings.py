@@ -56,6 +56,10 @@ else:
         "https://admincrowd.isatispooya.com",
         "https://mycrowd.isatispooya.com",
         "https://crowd.isatispooya.com",
+        "https://app.isatiscrowd.ir",
+        "https://isatiscrowd.ir",
+        "https://admin.isatiscrowd.ir",
+
     ]
 
 # Application definition
