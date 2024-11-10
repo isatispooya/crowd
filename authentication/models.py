@@ -63,6 +63,8 @@ class accounts (models.Model) :
     modifiedDate = models.CharField( max_length=200)
     type = models.CharField(max_length= 200)
     sheba = models.CharField(max_length= 200)
+    def __str__(self):
+        return f'{self.accountNumber} {self.bank} {self.branchName}'
 
 
 class LegalPerson (models.Model):
@@ -78,6 +80,8 @@ class LegalPerson (models.Model):
     legalPersonTypeCategory = models.CharField( max_length=150 , null=True , blank= True)
     registerPlace = models.CharField( max_length=150 , null=True , blank= True)
     registerNumber = models.CharField( max_length=150 , null=True , blank= True)
+    def __str__(self):
+        return f'{self.companyName} {self.economicCode} {self.registerNumber}'
 
 
 class legalPersonShareholders (models.Model):
@@ -89,6 +93,8 @@ class legalPersonShareholders (models.Model):
     lastName = models.CharField( max_length=50 , null=True , blank= True)
     firstName = models.CharField( max_length=50 , null=True , blank= True)
     address = models.TextField( max_length=150 , null=True , blank= True)
+    def __str__(self):
+        return f'{self.firstName} {self.lastName} {self.uniqueIdentifier}'
     
 
 
@@ -102,6 +108,8 @@ class legalPersonStakeholders (models.Model):
     isOwnerSignature = models.CharField( max_length=150 , null=True , blank= True)
     firstName = models.CharField( max_length=150 , null=True , blank= True)
     endAt = models.CharField( max_length=150 , null=True , blank= True)
+    def __str__(self):
+        return f'{self.firstName} {self.lastName} {self.uniqueIdentifier}'
 
 
 class addresses (models.Model):
@@ -125,6 +133,8 @@ class addresses (models.Model):
     section =models.CharField(max_length=1000 ,  blank=True , null= True)
     tel =  models.CharField(max_length=1000 ,  blank=True , null= True)
     website = models.CharField(max_length=1000 ,  blank=True , null= True)
+    def __str__(self):
+        return f'{self.city} {self.country} {self.email}'
 
 
 class financialInfo (models.Model) :
@@ -141,6 +151,8 @@ class financialInfo (models.Model) :
     sExchangeTransaction = models.CharField(max_length=1000 ,  blank=True , null= True)
     tradingKnowledgeLevel = models.CharField(max_length=1000 ,  blank=True , null= True)
     transactionLevel = models.CharField(max_length=1000 ,  blank=True , null= True)
+    def __str__(self):
+        return f'{self.companyPurpose} {self.financialBrokers} {self.referenceRateCompany}'
 
 
 class jobInfo (models.Model) :
@@ -158,6 +170,8 @@ class jobInfo (models.Model) :
     job = models.CharField(max_length=1000 ,  blank=True , null= True)
     jobDescription = models.CharField(max_length=1000 ,  blank=True , null= True)
     position = models.CharField(max_length=1000 ,  blank=True , null= True)
+    def __str__(self):
+        return f'{self.companyName} {self.job} {self.position}' 
 
 
 class privatePerson (models.Model) :
@@ -173,7 +187,9 @@ class privatePerson (models.Model) :
     seriShChar = models.CharField(max_length=200, null=True, blank=True)
     serial = models.CharField(max_length=200)
     shNumber = models.CharField(max_length=200)
-    signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True,validators=[validate_file_type]) 
+    signatureFile = models.FileField(upload_to='signatures/', null=True, blank=True,validators=[validate_file_type])
+    def __str__(self):
+        return f'{self.firstName} {self.lastName}'
 
 
 class tradingCodes (models.Model) :
@@ -183,6 +199,8 @@ class tradingCodes (models.Model) :
     secondPart  = models.CharField(max_length=200 , null=True, blank=True)
     thirdPart = models.CharField(max_length=200, null=True, blank=True)
     type = models.CharField(max_length=200, null=True, blank=True)
+    def __str__(self):
+        return f'{self.code}'
 
 
 class Otp(models.Model):

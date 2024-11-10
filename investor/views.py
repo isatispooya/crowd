@@ -32,7 +32,7 @@ class RequestViewset(APIView):
         user = fun.decryptionUser(Authorization)
 
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
 
         
@@ -107,7 +107,7 @@ class RequestViewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()   
         cart = Cart.objects.filter(user=user)
         cart  =cart.order_by('-id')
@@ -127,7 +127,7 @@ class DetailCartViewset(APIView):
         user = fun.decryptionUser(Authorization)
 
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()   
         cart = Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -150,7 +150,7 @@ class DetailCartViewset(APIView):
         user = fun.decryptionUser(Authorization)
 
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()  
         cart = Cart.objects.filter(unique_id=unique_id).first()
         if not cart:
@@ -425,7 +425,7 @@ class MessageUserViewSet(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = Cart.objects.filter(unique_id=unique_id).first()
         message = Message.objects.filter(cart=cart).order_by('-id').first()
@@ -444,7 +444,7 @@ class AddInformationViewset (APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         cart = Cart.objects.filter(unique_id=unique_id).first()
         if not cart:

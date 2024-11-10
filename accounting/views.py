@@ -83,7 +83,7 @@ class WalletViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()   
         wallet = Wallet.objects.filter(user=user).first()
         serializer = serializers.WalletSerializer(wallet)
@@ -190,7 +190,7 @@ class TransactionViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         wallet = Wallet.objects.filter(user=user).first()
         transaction = Transaction.objects.filter(wallet=wallet)
@@ -206,7 +206,7 @@ class TransactionViewset(APIView) :
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
         wallet = Wallet.objects.filter(user=user).first()
         if not wallet:
@@ -239,7 +239,7 @@ class Transaction2Viewset(APIView):
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
         user = fun.decryptionUser(Authorization)
         if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()  
         wallet = Wallet.objects.filter(user=user).first()
         transaction = Transaction.objects.filter(id=id , wallet=wallet).first()
