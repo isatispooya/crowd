@@ -1403,8 +1403,9 @@ class BankReceiptViewset(APIView):
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         payment = PaymentGateway.objects.filter (id=id)
+        if not payment :
+            return Response({'error': 'payment not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = serializers.PaymentGatewaySerializer(payment , many = True)
-        
         return Response (serializer.data,status=status.HTTP_200_OK)
 
 # گواهی مشارکت منو 
