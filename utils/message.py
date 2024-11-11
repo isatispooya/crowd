@@ -103,7 +103,7 @@ class Message():
                 />
                 </div>
 
-                <div class="header">کد تایید برای ورود</div>
+                <div class="header">ایساتیس کراد</div>
                 <div class="content">
                 کاربر گرامی, کد تایید برای ورود به حساب کاربری خود را در زیر مشاهده
                 می‌کنید
@@ -126,14 +126,13 @@ class Message():
             to=recipient_list,
             headers={"x-liara-tag": "test-tag"}
         )
-        email.content_subtype = "html"  # تنظیم نوع محتوا به HTML
+        email.content_subtype = "html" 
         
-        # افزودن لوگو به عنوان پیوست با استفاده از MIMEImage و تنظیم نام
-        logo_path = os.path.join(settings.BASE_DIR, "utils/logo.png")  # مسیر لوگو
+        logo_path = os.path.join(settings.BASE_DIR, "utils/logo.png") 
         with open(logo_path, "rb") as f:
             logo = MIMEImage(f.read())
-            logo.add_header('Content-ID', '<logo>')  # تنظیم Content-ID
-            logo.add_header('Content-Disposition', 'inline', filename="logo.png")  # تنظیم نام فایل
+            logo.add_header('Content-ID', '<logo>')
+            logo.add_header('Content-Disposition', 'inline', filename="logo.png") 
             email.attach(logo)
 
         email.send(fail_silently=False)
