@@ -73,7 +73,10 @@ class OtpViewset(APIView) :
             address_email = address.email
             message = Message(code,user.mobile,address_email)
             message.otpSMS()
-            message.otpEmail(code)
+            try:
+                message.otpEmail()
+            except Exception as e:
+                print(f"Failed to send OTP via email: {e}")
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
@@ -439,7 +442,10 @@ class OtpAdminViewset(APIView) :
             otp.save()
             message = Message(code,admin.mobile,admin.email)
             message.otpSMS()
-            message.otpEmail(code)
+            try:
+                message.otpEmail(code)
+            except Exception as e:
+                print(f'Error sending otp email: {e}')
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
     
         return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)

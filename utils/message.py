@@ -2,6 +2,7 @@ from django.conf import settings
 import requests
 from django.core.mail import EmailMessage
 import os
+from email.mime.image import MIMEImage
 
 
 class Message():
@@ -98,8 +99,7 @@ class Message():
                 <!-- Logo Section -->
                 <div class="logo">
                 <img
-                    src="cid:logo"  <!-- ارجاع به لوگو -->
-                    alt="Your Company Logo"
+                    src="cid:logo"  
                 />
                 </div>
 
@@ -126,14 +126,14 @@ class Message():
             to=recipient_list,
             headers={"x-liara-tag": "test-tag"}
         )
-        email.content_subtype = "html"
+        email.content_subtype = "html"  # تنظیم نوع محتوا به HTML
         
-        with open(os.path.join(settings.BASE_DIR, "utils/logo.png"), "rb") as f:
-            email.mixed_attach("logo.png", f.read(), "image/png", cid="logo")
-            
+        # افزودن لوگو به عنوان پیوست با استفاده از MIMEImage و تنظیم نام
+        logo_path = os.path.join(settings.BASE_DIR, "utils/logo.png")  # مسیر لوگو
+        with open(logo_path, "rb") as f:
+            logo = MIMEImage(f.read())
+            logo.add_header('Content-ID', '<logo>')  # تنظیم Content-ID
+            logo.add_header('Content-Disposition', 'inline', filename="logo.png")  # تنظیم نام فایل
+            email.attach(logo)
+
         email.send(fail_silently=False)
-
-
-
-ee = Message(otp=123456,mobile='09011010959',email='moeen.dehqan@gmail.com')
-ee.otpEmail()
