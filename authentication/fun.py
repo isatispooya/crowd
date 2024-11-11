@@ -1,10 +1,9 @@
-
 from . import serializers
 from cryptography.fernet import Fernet
 import base64
 from . import models
 from ast import literal_eval
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import json
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -39,7 +38,7 @@ def decryptionUser(Bearer):
         user_data = json.loads(user_data)  
 
         created_at = datetime.fromisoformat(user_data['created_at'])
-        if datetime.utcnow() - created_at > timedelta(hours=2): 
+        if datetime.now(UTC) - created_at > timedelta(hours=3): 
             print("Token has expired.")
             return None
         
@@ -78,7 +77,7 @@ def decryptionadmin(Bearer):
         admin_data = json.loads(admin_data)  
 
         created_at = datetime.fromisoformat(admin_data['created_at'])
-        if datetime.utcnow() - created_at > timedelta(hours=2):  
+        if datetime.now(UTC) - created_at > timedelta(hours=2):  
             print("Token has expired.")
             return None
         
