@@ -70,13 +70,19 @@ class OtpViewset(APIView) :
                 otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
             address = addresses.objects.filter(user=user).first()
-            address_email = address.email
-            message = Message(code,user.mobile,address_email)
-            message.otpSMS()
-            try:
-                message.otpEmail()
-            except Exception as e:
-                print(f"Failed to send OTP via email: {e}")
+            if address and address.email:
+                address_email = address.email
+                message = Message(code,user.mobile,address_email)
+                message.otpSMS()
+                try:
+                    message.otpEmail()
+                except Exception as e:
+                    print(f"Failed to send OTP via email: {e}")
+
+                else:
+                    message = Message(code, user.mobile, None)
+                    message.otpSMS()
+
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
