@@ -443,7 +443,7 @@ class OtpAdminViewset(APIView) :
             message = Message(code,admin.mobile,admin.email)
             message.otpSMS()
             try:
-                message.otpEmail(code)
+                message.otpEmail()
             except Exception as e:
                 print(f'Error sending otp email: {e}')
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
