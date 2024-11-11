@@ -222,10 +222,18 @@ class DashBoardUserViewset(APIView) :
             date = i['date_operator']
             type = i['type']
             plan_id = i['plan']
+            plan_name = Plan.objects.filter(id=plan_id).first()
+            if plan_name:
+                plan_name = plan_name.persian_name
+            else:
+                plan_name = ''
     
             try:
                 plan_obj = Plan.objects.get(id=plan_id)
-                plan_total = plan_obj.total_price
+                if plan_obj.trace_code == 'e7e79c55-f89a-47d7-89f9-2d3c6a1e9de8':
+                    plan_total = plan_obj.total_units * 0.9
+                else:
+                    plan_total = plan_obj.total_price
             except Plan.DoesNotExist:
                 plan_total = None
             amount = i['amount_operator']
@@ -238,7 +246,7 @@ class DashBoardUserViewset(APIView) :
             date = datetime.datetime.strptime(date , '%Y-%m-%d')
             date_jalali = JalaliDate.to_jalali(date)
             date_jalali =str(date_jalali)
-            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount_end , 'plan' : plan_id})
+            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount_end , 'plan' : plan_id, 'plan_name':plan_name})
             
         
         payments_count = payments.count()

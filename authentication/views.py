@@ -182,58 +182,67 @@ class LoginViewset(APIView):
                     except User.DoesNotExist:
                         pass
                 
-                if len(data['legalPersonStakeholders']) > 0:
-                    for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
-                        legalPersonStakeholders.objects.create(
-                        user = new_user ,
-                        uniqueIdentifier =legalPersonStakeholders_data['uniqueIdentifier'] ,
-                        type = legalPersonStakeholders_data['type'],
-                        startAt = legalPersonStakeholders_data ['startAt'],
-                        positionType = legalPersonStakeholders_data ['positionType'],
-                        lastName = legalPersonStakeholders_data ['lastName'],
-                        isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
-                        firstName = legalPersonStakeholders_data ['firstName'],
-                        endAt = legalPersonStakeholders_data ['endAt'] ,)
-                if data['legalPerson']:
-                    LegalPerson.objects.create(
-                    user = new_user ,
-                    citizenshipCountry =data['legalPerson']['citizenshipCountry'] ,
-                    companyName =data['legalPerson']['companyName'] ,
-                    economicCode = data['legalPerson']['economicCode'],
-                    evidenceExpirationDate = data['legalPerson'] ['evidenceExpirationDate'],
-                    evidenceReleaseCompany = data['legalPerson'] ['evidenceReleaseCompany'],
-                    evidenceReleaseDate = data['legalPerson'] ['evidenceReleaseDate'],
-                    legalPersonTypeSubCategory = data['legalPerson'] ['legalPersonTypeSubCategory'],
-                    registerDate = data['legalPerson'] ['registerDate'],
-                    legalPersonTypeCategory = data['legalPerson'] ['legalPersonTypeCategory'],
-                    registerPlace = data['legalPerson'] ['registerPlace'] ,
-                    registerNumber = data['legalPerson'] ['registerNumber'] ,)
+                    if len(data.get('legalPersonStakeholders', [])) > 0:
+                        for stakeholder_data in data['legalPersonStakeholders']:
+                            legalPersonStakeholders.objects.create(
+                                user=new_user,
+                                uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
+                                type=stakeholder_data.get('type', ''),
+                                startAt=stakeholder_data.get('startAt', ''),
+                                positionType=stakeholder_data.get('positionType', ''),
+                                lastName=stakeholder_data.get('lastName', ''),
+                                isOwnerSignature=stakeholder_data.get('isOwnerSignature', False),
+                                firstName=stakeholder_data.get('firstName', ''),
+                                endAt=stakeholder_data.get('endAt', '')
+                            )
 
 
-                if len(data['legalPersonShareholders']) > 0:
-                    for legalPersonShareholders_data in data['legalPersonShareholders'] :
+
+                    legal_person_data = data.get('legalPerson', {})
+                    if legal_person_data:
+                        LegalPerson.objects.create(
+                            user=new_user,
+                            citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
+                            companyName=legal_person_data.get('companyName', ''),
+                            economicCode=legal_person_data.get('economicCode', ''),
+                            evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
+                            evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
+                            evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
+                            legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
+                            registerDate=legal_person_data.get('registerDate', ''),
+                            legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
+                            registerPlace=legal_person_data.get('registerPlace', ''),
+                            registerNumber=legal_person_data.get('registerNumber', '')
+                        )
+
+
+                if data.get('legalPersonShareholders'):
+                    for legalPersonShareholders_data in data['legalPersonShareholders']:
                         legalPersonShareholders.objects.create(
-                        user = new_user ,
-                        uniqueIdentifier = legalPersonShareholders_data['uniqueIdentifier'],
-                        postalCode = legalPersonShareholders_data ['postalCode'],
-                        positionType = legalPersonShareholders_data ['positionType'],
-                        percentageVotingRight = legalPersonShareholders_data ['percentageVotingRight'],
-                        firstName = legalPersonShareholders_data ['firstName'],
-                        lastName = legalPersonShareholders_data ['lastName'],
-                        address = legalPersonShareholders_data ['address'] )
-                if len(data['accounts']) > 0:
-                    for acounts_data in data['accounts'] :
+                            user = new_user,
+                            uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
+                            postalCode = legalPersonShareholders_data.get('postalCode', ''),
+                            positionType = legalPersonShareholders_data.get('positionType', ''),
+                            percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
+                            firstName = legalPersonShareholders_data.get('firstName', ''),
+                            lastName = legalPersonShareholders_data.get('lastName', ''),
+                            address = legalPersonShareholders_data.get('address', '')
+                        )
+                        
+                if data.get('accounts'):
+                    for accounts_data in data['accounts']:
                         accounts.objects.create(
-                            user = new_user ,
-                            accountNumber = acounts_data['accountNumber'] ,
-                            bank = acounts_data ['bank']['name'],
-                            branchCity = acounts_data ['branchCity']['name'],
-                            branchCode = acounts_data ['branchCode'],
-                            branchName = acounts_data ['branchName'],
-                            isDefault = acounts_data ['isDefault'],
-                            modifiedDate = acounts_data ['modifiedDate'],
-                            type = acounts_data ['type'],
-                            sheba = acounts_data ['sheba'] ,)
+                            user=new_user,
+                            accountNumber=accounts_data.get('accountNumber', ''),
+                            bank=accounts_data.get('bank', {}).get('name', ''),
+                            branchCity=accounts_data.get('branchCity', {}).get('name', ''),
+                            branchCode=accounts_data.get('branchCode', ''), 
+                            branchName=accounts_data.get('branchName', ''),
+                            isDefault=accounts_data.get('isDefault', False),
+                            modifiedDate=accounts_data.get('modifiedDate', ''),
+                            type=accounts_data.get('type', ''),
+                            sheba=accounts_data.get('sheba', '')
+                        )
 
                 
                 jobInfo_data = data.get('jobInfo')
@@ -286,15 +295,16 @@ class LoginViewset(APIView):
                         signatureFile=signatureFile
                     )
 
-                if len (data['tradingCodes']) > 0 :
-                    for tradingCodes_data in data ['tradingCodes']:
+                trading_codes = data.get('tradingCodes', [])
+                if trading_codes:
+                    for tradingCodes_data in trading_codes:
                         tradingCodes.objects.create(
                             user = new_user,
-                            code = tradingCodes_data ['code'],
-                            firstPart = tradingCodes_data ['firstPart'],
-                            secondPart = tradingCodes_data ['secondPart'],
-                            thirdPart = tradingCodes_data ['thirdPart'],
-                            type = tradingCodes_data ['type'],
+                            code = tradingCodes_data.get('code', ''),
+                            firstPart = tradingCodes_data.get('firstPart', ''),
+                            secondPart = tradingCodes_data.get('secondPart', ''),
+                            thirdPart = tradingCodes_data.get('thirdPart', ''),
+                            type = tradingCodes_data.get('type', ''),
                         )
 
                 financialInfo_data = data.get('financialInfo')
@@ -302,7 +312,10 @@ class LoginViewset(APIView):
                     assetsValue = financialInfo_data.get('assetsValue', '')
                     cExchangeTransaction = financialInfo_data.get('cExchangeTransaction', '')
                     companyPurpose = financialInfo_data.get('companyPurpose', '')
-                    financialBrokers = financialInfo_data.get('financialBrokers', '')
+                    try:
+                        financialBrokers = ', '.join([broker.get('broker', {}).get('title', '') for broker in financialInfo_data.get('financialBrokers', [])])
+                    except:
+                        financialBrokers = ''
                     inComingAverage = financialInfo_data.get('inComingAverage', '')
                     outExchangeTransaction = financialInfo_data.get('outExchangeTransaction', '')
                     rate = financialInfo_data.get('rate', '')
@@ -327,30 +340,37 @@ class LoginViewset(APIView):
                         tradingKnowledgeLevel=tradingKnowledgeLevel,
                         transactionLevel=transactionLevel,
                     )
+
+
                 address = data.get('addresses',[])
             
                 for addresses_data in address:
+                    city_data = addresses_data.get('city', {}) or {}
+                    country_data = addresses_data.get('country', {}) or {}
+                    province_data = addresses_data.get('province', {}) or {}
+                    section_data = addresses_data.get('section', {}) or {}
+                    
                     addresses.objects.create(
                         user = new_user,
-                        alley =  addresses_data.get('alley' , ''),
-                        city =  addresses_data.get( 'city',{}).get('name' , ''),
-                        cityPrefix =  addresses_data.get('cityPrefix', ''),
-                        country = addresses_data.get('country',{}).get('name',''),
-                        countryPrefix =  addresses_data.get('countryPrefix',''),
-                        email =  addresses_data.get('email',''),
-                        emergencyTel =  addresses_data.get('emergencyTel',''),
-                        emergencyTelCityPrefix =  addresses_data.get('emergencyTelCityPrefix',''),
-                        emergencyTelCountryPrefix =  addresses_data.get('emergencyTelCountryPrefix',''),
-                        fax =  addresses_data.get('fax',''),
-                        faxPrefix =  addresses_data.get('faxPrefix',''),
-                        mobile =  addresses_data.get('mobile',''),
-                        plaque =  addresses_data.get('plaque',''),
-                        postalCode =  addresses_data.get('postalCode',''),
-                        province =  addresses_data.get('province', {}).get('name', ''),
-                        remnantAddress =  addresses_data.get('remnantAddress',''),
-                        section =  addresses_data.get('section' , {}).get('name'),
-                        tel =  addresses_data.get('tel',''),
-                        website =  addresses_data.get('website' , ''),
+                        alley = addresses_data.get('alley', ''),
+                        city = city_data.get('name', ''),
+                        cityPrefix = addresses_data.get('cityPrefix', ''),
+                        country = country_data.get('name', ''),
+                        countryPrefix = addresses_data.get('countryPrefix', ''),
+                        email = addresses_data.get('email', ''),
+                        emergencyTel = addresses_data.get('emergencyTel', ''),
+                        emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', ''),
+                        emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', ''),
+                        fax = addresses_data.get('fax', ''),
+                        faxPrefix = addresses_data.get('faxPrefix', ''),
+                        mobile = addresses_data.get('mobile', ''),
+                        plaque = addresses_data.get('plaque', ''),
+                        postalCode = addresses_data.get('postalCode', ''),
+                        province = province_data.get('name', ''),
+                        remnantAddress = addresses_data.get('remnantAddress', ''),
+                        section = section_data.get('name', ''),
+                        tel = addresses_data.get('tel', ''),
+                        website = addresses_data.get('website', ''),
                     )
         except Exception as e:
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
