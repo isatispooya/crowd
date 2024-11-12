@@ -230,13 +230,14 @@ class DashBoardUserViewset(APIView) :
     
             try:
                 plan_obj = Plan.objects.get(id=plan_id)
-                if plan_obj.trace_code == 'e7e79c55-f89a-47d7-89f9-2d3c6a1e9de8' and type == 2:
-                    plan_total = plan_obj.total_price * 0.9
+                plan_total = plan_obj.total_price
+                if plan_obj.trace_code != 'e7e79c55-f89a-47d7-89f9-2d3c6a1e9de8' and type == '2':
+                    amount = i['amount_operator'] /0.9
                 else:
-                    plan_total = plan_obj.total_price
+                    amount = i['amount_operator']
             except Plan.DoesNotExist:
+                amount = None
                 plan_total = None
-            amount = i['amount_operator']
             payment_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier, status='3', plan=plan_id).aggregate(total_value_sum=Sum('value'))['total_value_sum'] or 0
             if amount and plan_total:
                 amount_end = (amount/plan_total) * payment_value
