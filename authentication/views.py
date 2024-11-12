@@ -69,8 +69,8 @@ class OtpViewset(APIView) :
                 otp.code = code 
                 otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
-            address = addresses.objects.filter(user=user).first()
-            if address and address.email:
+            try : 
+                address = addresses.objects.filter(user=user).first()
                 address_email = address.email
                 message = Message(code,user.mobile,address_email)
                 message.otpSMS()
@@ -79,9 +79,10 @@ class OtpViewset(APIView) :
                 except Exception as e:
                     print(f"Failed to send OTP via email: {e}")
 
-                else:
-                    message = Message(code, user.mobile, None)
-                    message.otpSMS()
+            except:
+                message = Message(code, user.mobile, None)
+                message.otpSMS()
+            
 
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
@@ -182,53 +183,7 @@ class LoginViewset(APIView):
                     except User.DoesNotExist:
                         pass
                 
-                    if len(data.get('legalPersonStakeholders', [])) > 0:
-                        for stakeholder_data in data['legalPersonStakeholders']:
-                            legalPersonStakeholders.objects.create(
-                                user=new_user,
-                                uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
-                                type=stakeholder_data.get('type', ''),
-                                startAt=stakeholder_data.get('startAt', ''),
-                                positionType=stakeholder_data.get('positionType', ''),
-                                lastName=stakeholder_data.get('lastName', ''),
-                                isOwnerSignature=stakeholder_data.get('isOwnerSignature', False),
-                                firstName=stakeholder_data.get('firstName', ''),
-                                endAt=stakeholder_data.get('endAt', '')
-                            )
-
-
-
-                    legal_person_data = data.get('legalPerson', {})
-                    if legal_person_data:
-                        LegalPerson.objects.create(
-                            user=new_user,
-                            citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
-                            companyName=legal_person_data.get('companyName', ''),
-                            economicCode=legal_person_data.get('economicCode', ''),
-                            evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
-                            evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
-                            evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
-                            legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
-                            registerDate=legal_person_data.get('registerDate', ''),
-                            legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
-                            registerPlace=legal_person_data.get('registerPlace', ''),
-                            registerNumber=legal_person_data.get('registerNumber', '')
-                        )
-
-
-                if data.get('legalPersonShareholders'):
-                    for legalPersonShareholders_data in data['legalPersonShareholders']:
-                        legalPersonShareholders.objects.create(
-                            user = new_user,
-                            uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
-                            postalCode = legalPersonShareholders_data.get('postalCode', ''),
-                            positionType = legalPersonShareholders_data.get('positionType', ''),
-                            percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
-                            firstName = legalPersonShareholders_data.get('firstName', ''),
-                            lastName = legalPersonShareholders_data.get('lastName', ''),
-                            address = legalPersonShareholders_data.get('address', '')
-                        )
-                        
+                    
                 if data.get('accounts'):
                     for accounts_data in data['accounts']:
                         accounts.objects.create(
@@ -372,6 +327,53 @@ class LoginViewset(APIView):
                         tel = addresses_data.get('tel', ''),
                         website = addresses_data.get('website', ''),
                     )
+                if len(data.get('legalPersonStakeholders', [])) > 0:
+                    for stakeholder_data in data['legalPersonStakeholders']:
+                        legalPersonStakeholders.objects.create(
+                            user=new_user,
+                            uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
+                            type=stakeholder_data.get('type', ''),
+                            startAt=stakeholder_data.get('startAt', ''),
+                            positionType=stakeholder_data.get('positionType', ''),
+                            lastName=stakeholder_data.get('lastName', ''),
+                            isOwnerSignature=stakeholder_data.get('isOwnerSignature', False),
+                            firstName=stakeholder_data.get('firstName', ''),
+                            endAt=stakeholder_data.get('endAt', '')
+                        )
+
+
+
+                legal_person_data = data.get('legalPerson', {})
+                if legal_person_data:
+                    LegalPerson.objects.create(
+                        user=new_user,
+                        citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
+                        companyName=legal_person_data.get('companyName', ''),
+                        economicCode=legal_person_data.get('economicCode', ''),
+                        evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
+                        evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
+                        evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
+                        legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
+                        registerDate=legal_person_data.get('registerDate', ''),
+                        legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
+                        registerPlace=legal_person_data.get('registerPlace', ''),
+                        registerNumber=legal_person_data.get('registerNumber', '')
+                        )
+
+
+                if data.get('legalPersonShareholders'):
+                    for legalPersonShareholders_data in data['legalPersonShareholders']:
+                        legalPersonShareholders.objects.create(
+                            user = new_user,
+                            uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
+                            postalCode = legalPersonShareholders_data.get('postalCode', ''),
+                            positionType = legalPersonShareholders_data.get('positionType', ''),
+                            percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
+                            firstName = legalPersonShareholders_data.get('firstName', ''),
+                            lastName = legalPersonShareholders_data.get('lastName', ''),
+                            address = legalPersonShareholders_data.get('address', '')
+                        )
+                        
         except Exception as e:
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
 
