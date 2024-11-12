@@ -636,7 +636,7 @@ class OtpUpdateViewset(APIView) :
         admin = admin.first()
         uniqueIdentifier = request.data.get("uniqueIdentifier")
         if not uniqueIdentifier :
-            return Response ({'errot' : 'uniqueIdentifier not found '} ,  status=status.HTTP_400_BAD_REQUEST) 
+            return Response ({'errot' : 'کاربر یافت نشد '} ,  status=status.HTTP_400_BAD_REQUEST) 
         url = "http://31.40.4.92:8870/otp"
         payload = json.dumps({
         "uniqueIdentifier": uniqueIdentifier
