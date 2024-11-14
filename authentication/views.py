@@ -182,9 +182,24 @@ class LoginViewset(APIView):
                         reference_user = User.objects.get(uniqueIdentifier=reference)
                         Reagent.objects.create(reference=reference_user, referrer=new_user)
                     except User.DoesNotExist:
-                        print('reference_user not found')
+                        pass
 
-                
+                try :
+                    agent = data.get('agent')
+                    if isinstance(agent, dict):
+                        new_agent = {
+                        'user': new_user,
+                        'description': agent.get('description', ''),
+                        'expiration_date': agent.get('expirationDate', ''),
+                        'first_name': agent.get('firstName', ''),
+                        'is_confirmed': agent.get('isConfirmed', ''),
+                        'last_name': agent.get('lastName', ''),
+                        'type': agent.get('type', ''),
+                        'father_uniqueIdentifier': agent.get('uniqueIdentifier', ''),
+                    }
+                            
+                except :
+                    print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات وکیل')
 
                 try :
                     accounts_data = data.get('accounts',[])

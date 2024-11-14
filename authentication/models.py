@@ -244,3 +244,15 @@ class Captcha(models.Model):
     encrypted_response = models.TextField(max_length=6)
     enabled = models.BooleanField(default=True)
 
+
+
+
+# class AgentUser (models.Model): 
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     description = models.TextField(null=True, blank=True)
+#     expiration_date = models.CharField(max_length=150, null=True, blank=True)
+#     first_name = models.CharField(max_length=150, null=True, blank=True)
+#     is_confirmed = models.BooleanField( default= True)
+#     last_name = models.CharField(max_length=150, null=True, blank=True)
+#     type = models.CharField(max_length=150, null=True, blank=True)
+#     father_uniqueIdentifier = models.CharField(max_length=150, null=True, blank=True)
