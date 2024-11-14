@@ -1341,7 +1341,7 @@ class TransmissionViewset(APIView) :
             description = invoice_data['description'],
             code = None,
             risk_statement = True,
-            status = '2',
+            status = '1',
             document = False,
             picture = None , 
             send_farabours = True,
