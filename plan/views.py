@@ -1279,6 +1279,7 @@ class TransmissionViewset(APIView) :
         information_plan = InformationPlan.objects.filter(plan=plan).first()
 
         value = request.data.get('amount')  # مبلغ درخواستی کاربر برای خرید 
+        value = int(value)
         
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 

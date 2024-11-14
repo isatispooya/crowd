@@ -162,6 +162,7 @@ class LoginViewset(APIView):
             return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
         if data == None :
             return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+        print(data)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         try :
             with transaction.atomic():
@@ -181,7 +182,7 @@ class LoginViewset(APIView):
                         reference_user = User.objects.get(uniqueIdentifier=reference)
                         Reagent.objects.create(reference=reference_user, referrer=new_user)
                     except User.DoesNotExist:
-                        return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - معرف معتبر نمی باشد'}, status=status.HTTP_400_BAD_REQUEST)
+                        print('reference_user not found')
 
                 
 
@@ -203,7 +204,7 @@ class LoginViewset(APIView):
                                 sheba=account_data.get('sheba', '') 
                             )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - حساب ها'}, status=status.HTTP_400_BAD_REQUEST)
+                    raise Exception('خطا در ثبت اطلاعات اصلی کاربر - حساب ها')
 
                 
                 try :
@@ -226,8 +227,7 @@ class LoginViewset(APIView):
                             position=jobInfo_data.get('position', ''),
                         )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شغلی'}, status=status.HTTP_400_BAD_REQUEST)
-
+                    print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شغلی')
 
                 try :
                     privatePerson_data = data.get('privatePerson')
@@ -259,7 +259,7 @@ class LoginViewset(APIView):
                             signatureFile=signatureFile
                         )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شخص حقیقی'}, status=status.HTTP_400_BAD_REQUEST)
+                    raise Exception('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شخص حقیقی')
 
                 try :
                     trading_codes = data.get('tradingCodes', [])
@@ -274,7 +274,7 @@ class LoginViewset(APIView):
                                 type = tradingCodes_data.get('type', ''),
                             )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی'}, status=status.HTTP_400_BAD_REQUEST)
+                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی')
 
                 try :
                     financialInfo_data = data.get('financialInfo')
@@ -311,9 +311,7 @@ class LoginViewset(APIView):
                             transactionLevel=transactionLevel,
                         )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی'}, status=status.HTTP_400_BAD_REQUEST)
-
-
+                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
 
                 try :   
                     address = data.get('addresses',[])
@@ -346,7 +344,7 @@ class LoginViewset(APIView):
                             website = addresses_data.get('website', ''),
                         )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - آدرس ها'}, status=status.HTTP_400_BAD_REQUEST)
+                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
 
                 try :
                     if len(data.get('legalPersonStakeholders', [])) > 0:
@@ -363,7 +361,7 @@ class LoginViewset(APIView):
                                 endAt=stakeholder_data.get('endAt', '')
                             )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - هیئت مدیره'}, status=status.HTTP_400_BAD_REQUEST)
+                    print('خطا در ثبت اطلاعات اصلی کاربر - هیئت مدیره')
 
 
                 try :   
@@ -384,7 +382,7 @@ class LoginViewset(APIView):
                             registerNumber=legal_person_data.get('registerNumber', '')
                         )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت'}, status=status.HTTP_400_BAD_REQUEST)
+                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
 
 
                 try :   
@@ -401,7 +399,7 @@ class LoginViewset(APIView):
                                 address = legalPersonShareholders_data.get('address', '')
                             )
                 except :
-                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - سهامداران'}, status=status.HTTP_400_BAD_REQUEST)
+                    print('خطا در ثبت اطلاعات اصلی کاربر - سهامداران')
                         
         except Exception as e:
             print('ss',e)
