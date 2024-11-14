@@ -1393,10 +1393,12 @@ class TransmissionViewset(APIView) :
             return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
         payment.save()
-        payment_value = PaymentGateway.objects.filter(plan=payment.plan).filter(Q(status='2') | Q(status='3'))
+        payment_value = PaymentGateway.objects.filter(plan=payment.plan)
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
-        payment_value = pd.DataFrame(serializer.data)
-        payment_value = payment_value['value'].sum()
+        payment_df = pd.DataFrame(serializer.data)
+        payment_df = payment_df[payment_df['status'] != '0'] 
+        payment_df = payment_df[payment_df['status'] != '1'] 
+        payment_value = payment_df['value'].sum()
         
         information = InformationPlan.objects.filter(plan=payment.plan).first()
         if not information :
