@@ -1392,6 +1392,7 @@ class TransmissionViewset(APIView) :
         try :
             pep = pep.confirm_transaction(payment.invoice , payment.url_id)
         except :
+            payment.status = '0'
             return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
         payment.save()
