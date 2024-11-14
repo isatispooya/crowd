@@ -21,6 +21,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
+from django.db.models import Sum
 
 
 
@@ -93,6 +94,24 @@ def check_legal_person(uniqueIdentifier) :
         return True
     return False
 
+
+
+def number_of_finance_provider(trace_code) :
+    plan = Plan.objects.filter(trace_code=trace_code).first()
+    if not plan :
+        plan = 0
+    payment = PaymentGateway.objects.filter(plan=plan).filter(Q(status='2') | Q(status='3')).values('user').distinct().count()   
+
+    if not payment :
+        payment = 0
+    print(plan , payment)
+    return payment 
+
+
+
+
+
+
 # done
 # detial + information
 class PlanViewset(APIView):
@@ -101,6 +120,7 @@ class PlanViewset(APIView):
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'message': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        plan.number_of_finance_provider =number_of_finance_provider(trace_code=trace_code)
         plan_serializer = serializers.PlanSerializer(plan)
         board_members_list = []
         board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)
@@ -184,6 +204,10 @@ class PlansViewset(APIView):
 
         for plan in plans:
             #update collected
+            trace_code = plan.trace_code
+            plan_number_of_finance_provider = number_of_finance_provider(trace_code=trace_code)
+            plan.number_of_finance_provider = plan_number_of_finance_provider
+            plan.save()
             information = InformationPlan.objects.filter(plan=plan).first()
             payment_all = PaymentGateway.objects.filter(plan=plan)
             if payment_all.exists() and plan.trace_code == 'c000fbbe-3362-4541-8d4d-59e0e3f5b301':
@@ -312,11 +336,13 @@ class PlansViewset(APIView):
                     'persian_project_start_date': plan_detail.get('Persian Project Start Date', None),
                     'persian_project_end_date': plan_detail.get('Persian Project End Date', None),
                     'persian_creation_date': plan_detail.get('Persian Creation Date', None),
-                    'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
+                    # 'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
                     'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
                 }
             )
-
+            trace_code = plan.trace_code
+            plan.number_of_finance_provider = number_of_finance_provider(trace_code)
+            plan.save()
 
             if len(plan_detail.get('Project Owner Company', [])) > 0:
                 for j in plan_detail['Project Owner Company']:
