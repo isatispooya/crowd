@@ -685,7 +685,7 @@ class PaymentDocument(APIView):
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if admin:
+        if admin.exists():
             admin = admin.first()
             payments = PaymentGateway.objects.filter(plan=plan)
             response = serializers.PaymentGatewaySerializer(payments,many=True)

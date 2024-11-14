@@ -251,7 +251,7 @@ class DashBoardUserViewset(APIView) :
             
         
         payments_count = payments.count()
-        total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier).aggregate(total_value_sum=Sum('value'))['total_value_sum']
+        total_value = PaymentGateway.objects.filter(user=user.uniqueIdentifier ,  status = '3').aggregate(total_value_sum=Sum('value'))['total_value_sum']
         if total_value is None:
             total_value = 0
         
