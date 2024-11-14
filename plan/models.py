@@ -177,7 +177,7 @@ class PaymentGateway(models.Model) :
     name = models.TextField( null= True , blank=True)
     service_code = models.TextField (max_length = 10 , null= True , blank = True)
     def __str__(self) :
-            return str (self.user) + ' ' + str (self.plan.name)
+            return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.invoice)
         
 
 
