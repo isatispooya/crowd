@@ -164,7 +164,7 @@ class LoginViewset(APIView):
             return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         try :
-            # with transaction.atomic():
+            with transaction.atomic():
                 if  not new_user :
                     new_user  =User(
                     agent = data ['agent'],
