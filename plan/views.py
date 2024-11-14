@@ -1278,11 +1278,10 @@ class TransmissionViewset(APIView) :
         information_plan = InformationPlan.objects.filter(plan=plan).first()
 
         value = request.data.get('amount')  # مبلغ درخواستی کاربر برای خرید 
-        value = int(int(value)/1000)
         
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        purchaseable_amount = int((plan_total_price*10000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
         print('purchaseable_amount',purchaseable_amount,value)
         if value > purchaseable_amount :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
