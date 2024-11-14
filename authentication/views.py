@@ -182,7 +182,19 @@ class LoginViewset(APIView):
                         Reagent.objects.create(reference=reference_user, referrer=new_user)
                     except User.DoesNotExist:
                         pass
-                
+                agent = data.get('agent')
+                if isinstance(agent, dict):
+                    new_agent = {
+                    'user': new_user,
+                    'description': agent.get('description', ''),
+                    'expiration_date': agent.get('expirationDate', ''),
+                    'first_name': agent.get('firstName', ''),
+                    'is_confirmed': agent.get('isConfirmed', ''),
+                    'last_name': agent.get('lastName', ''),
+                    'type': agent.get('type', ''),
+                    'father_uniqueIdentifier': agent.get('uniqueIdentifier', ''),
+                }
+                            
                     
                 if data.get('accounts'):
                     for accounts_data in data['accounts']:
