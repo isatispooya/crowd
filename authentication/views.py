@@ -200,25 +200,27 @@ class LoginViewset(APIView):
                         )
 
                 
-                jobInfo_data = data.get('jobInfo')
-                if isinstance(jobInfo_data, dict):
-                    jobInfo.objects.create(
-                        user=new_user,
-                        companyAddress=jobInfo_data.get('companyAddress', ''),
-                        companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
-                        companyEmail=jobInfo_data.get('companyEmail', ''),
-                        companyFax=jobInfo_data.get('companyFax', ''),
-                        companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
-                        companyName=jobInfo_data.get('companyName', ''),
-                        companyPhone=jobInfo_data.get('companyPhone', ''),
-                        companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
-                        companyWebSite=jobInfo_data.get('companyWebSite', ''),
-                        employmentDate=jobInfo_data.get('employmentDate', ''),
-                        job=jobInfo_data.get('job', {}).get('title', ''),
-                        jobDescription=jobInfo_data.get('jobDescription', ''),
-                        position=jobInfo_data.get('position', ''),
-                    )
-
+                try :
+                    jobInfo_data = data.get('jobInfo')
+                    if isinstance(jobInfo_data, dict):
+                        jobInfo.objects.create(
+                            user=new_user,
+                            companyAddress=jobInfo_data.get('companyAddress', ''),
+                            companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
+                            companyEmail=jobInfo_data.get('companyEmail', ''),
+                            companyFax=jobInfo_data.get('companyFax', ''),
+                            companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
+                            companyName=jobInfo_data.get('companyName', ''),
+                            companyPhone=jobInfo_data.get('companyPhone', ''),
+                            companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
+                            companyWebSite=jobInfo_data.get('companyWebSite', ''),
+                            employmentDate=jobInfo_data.get('employmentDate', ''),
+                            job=jobInfo_data.get('job', {}).get('title', ''),
+                            jobDescription=jobInfo_data.get('jobDescription', ''),
+                            position=jobInfo_data.get('position', ''),
+                        )
+                except :
+                    pass
 
 
                 privatePerson_data = data.get('privatePerson')
@@ -262,39 +264,42 @@ class LoginViewset(APIView):
                             type = tradingCodes_data.get('type', ''),
                         )
 
-                financialInfo_data = data.get('financialInfo')
-                if isinstance(financialInfo_data, dict):
-                    assetsValue = financialInfo_data.get('assetsValue', '')
-                    cExchangeTransaction = financialInfo_data.get('cExchangeTransaction', '')
-                    companyPurpose = financialInfo_data.get('companyPurpose', '')
-                    try:
-                        financialBrokers = ', '.join([broker.get('broker', {}).get('title', '') for broker in financialInfo_data.get('financialBrokers', [])])
-                    except:
-                        financialBrokers = ''
-                    inComingAverage = financialInfo_data.get('inComingAverage', '')
-                    outExchangeTransaction = financialInfo_data.get('outExchangeTransaction', '')
-                    rate = financialInfo_data.get('rate', '')
-                    rateDate = financialInfo_data.get('rateDate', '')
-                    referenceRateCompany = financialInfo_data.get('referenceRateCompany', '')
-                    sExchangeTransaction = financialInfo_data.get('sExchangeTransaction', '')
-                    tradingKnowledgeLevel = financialInfo_data.get('tradingKnowledgeLevel', None)
-                    transactionLevel = financialInfo_data.get('transactionLevel', None)
+                try :
+                    financialInfo_data = data.get('financialInfo')
+                    if isinstance(financialInfo_data, dict):
+                        assetsValue = financialInfo_data.get('assetsValue', '')
+                        cExchangeTransaction = financialInfo_data.get('cExchangeTransaction', '')
+                        companyPurpose = financialInfo_data.get('companyPurpose', '')
+                        try:
+                            financialBrokers = ', '.join([broker.get('broker', {}).get('title', '') for broker in financialInfo_data.get('financialBrokers', [])])
+                        except:
+                            financialBrokers = ''
+                        inComingAverage = financialInfo_data.get('inComingAverage', '')
+                        outExchangeTransaction = financialInfo_data.get('outExchangeTransaction', '')
+                        rate = financialInfo_data.get('rate', '')
+                        rateDate = financialInfo_data.get('rateDate', '')
+                        referenceRateCompany = financialInfo_data.get('referenceRateCompany', '')
+                        sExchangeTransaction = financialInfo_data.get('sExchangeTransaction', '')
+                        tradingKnowledgeLevel = financialInfo_data.get('tradingKnowledgeLevel', None)
+                        transactionLevel = financialInfo_data.get('transactionLevel', None)
 
-                    financialInfo.objects.create(
-                        user=new_user,
-                        assetsValue=assetsValue,
-                        cExchangeTransaction=cExchangeTransaction,
-                        companyPurpose=companyPurpose,
-                        financialBrokers=financialBrokers,
-                        inComingAverage=inComingAverage,
-                        outExchangeTransaction=outExchangeTransaction,
-                        rate=rate,
-                        rateDate=rateDate,
-                        referenceRateCompany=referenceRateCompany,
-                        sExchangeTransaction=sExchangeTransaction,
-                        tradingKnowledgeLevel=tradingKnowledgeLevel,
-                        transactionLevel=transactionLevel,
-                    )
+                        financialInfo.objects.create(
+                            user=new_user,
+                            assetsValue=assetsValue,
+                            cExchangeTransaction=cExchangeTransaction,
+                            companyPurpose=companyPurpose,
+                            financialBrokers=financialBrokers,
+                            inComingAverage=inComingAverage,
+                            outExchangeTransaction=outExchangeTransaction,
+                            rate=rate,
+                            rateDate=rateDate,
+                            referenceRateCompany=referenceRateCompany,
+                            sExchangeTransaction=sExchangeTransaction,
+                            tradingKnowledgeLevel=tradingKnowledgeLevel,
+                            transactionLevel=transactionLevel,
+                        )
+                except :
+                    pass
 
 
                 address = data.get('addresses',[])

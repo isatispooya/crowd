@@ -56,12 +56,12 @@ class accounts (models.Model) :
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     accountNumber = models.CharField(max_length=200)
     bank = models.CharField( max_length=200)
-    branchCity = models.CharField( max_length=200)
-    branchCode = models.CharField(max_length=20)
-    branchName = models.CharField(max_length=200)
-    isDefault = models.CharField( max_length=200)
-    modifiedDate = models.CharField( max_length=200)
-    type = models.CharField(max_length= 200)
+    branchCity = models.CharField( max_length=200, null=True, blank=True)
+    branchCode = models.CharField(max_length=20, null=True, blank=True)
+    branchName = models.CharField(max_length=200, null=True, blank=True)
+    isDefault = models.CharField( max_length=200, null=True, blank=True)
+    modifiedDate = models.CharField( max_length=200, null=True, blank=True)
+    type = models.CharField(max_length= 200, null=True, blank=True)
     sheba = models.CharField(max_length= 200)
     def __str__(self):
         return f'{self.accountNumber} {self.bank} {self.branchName}'

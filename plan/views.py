@@ -610,6 +610,7 @@ class PaymentDocument(APIView):
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
         purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        print('purchaseable_amount',purchaseable_amount,plan_total_price , amount_collected_now)
         if amount > purchaseable_amount :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -735,7 +736,7 @@ class PaymentDocument(APIView):
         for i in payment : 
             if i.status == '2' or i.status == '3':
                value += i.value
-        information = InformationPlan.objects.filter(plan=plan ).first()
+        information = InformationPlan.objects.filter(plan=plan).first()
         information.amount_collected_now = value
         information.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
