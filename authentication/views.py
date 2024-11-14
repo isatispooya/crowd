@@ -389,6 +389,7 @@ class LoginViewset(APIView):
                     pass
                         
         except Exception as e:
+            print('ss',e)
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
 
         token = fun.encryptionUser(new_user)
