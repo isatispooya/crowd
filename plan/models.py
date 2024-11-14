@@ -177,6 +177,8 @@ class PaymentGateway(models.Model) :
     name = models.TextField( null= True , blank=True)
     service_code = models.TextField (max_length = 10 , null= True , blank = True)
     referenceNumber = models.TextField (null= True , blank = True, default='')
+    trackId = models.TextField (null= True , blank = True, default='')
+
     def __str__(self) :
             return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.invoice)
         
