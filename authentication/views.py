@@ -710,148 +710,174 @@ class UpdateInformationViewset(APIView):
             new_user.referal = data.get('uniqueIdentifier', new_user.referal)
             new_user.save()
 
-            if len(data['accounts']) > 0:
-                for account_data in data['accounts']:
-                    account_obj, created = accounts.objects.update_or_create(
-                        user=new_user,
-                        accountNumber=account_data['accountNumber'],
-                        defaults={
-                            'bank': account_data['bank']['name'],
-                            'branchCity': account_data['branchCity']['name'],
-                            'branchCode': account_data['branchCode'],
-                            'branchName': account_data['branchName'],
-                            'isDefault': account_data['isDefault'],
-                            'modifiedDate': account_data['modifiedDate'],
-                            'type': account_data['type'],
-                            'sheba': account_data['sheba']
-                        }
+            if data.get('accounts'):
+                    for accounts_data in data['accounts']:
+                        accounts.objects.create(
+                            user=new_user,
+                            accountNumber=accounts_data.get('accountNumber', ''),
+                            bank=accounts_data.get('bank', {}).get('name', ''),
+                            branchCity=accounts_data.get('branchCity', {}).get('name', ''),
+                            branchCode=accounts_data.get('branchCode', ''), 
+                            branchName=accounts_data.get('branchName', ''),
+                            isDefault=accounts_data.get('isDefault', False),
+                            modifiedDate=accounts_data.get('modifiedDate', ''),
+                            type=accounts_data.get('type', ''),
+                            sheba=accounts_data.get('sheba', '')
+                        )
+            if len(data.get('legalPersonStakeholders', [])) > 0:
+                    for stakeholder_data in data['legalPersonStakeholders']:
+                        legalPersonStakeholders.objects.create(
+                            user=new_user,
+                            uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
+                            type=stakeholder_data.get('type', ''),
+                            startAt=stakeholder_data.get('startAt', ''),
+                            positionType=stakeholder_data.get('positionType', ''),
+                            lastName=stakeholder_data.get('lastName', ''),
+                            isOwnerSignature=stakeholder_data.get('isOwnerSignature', False),
+                            firstName=stakeholder_data.get('firstName', ''),
+                            endAt=stakeholder_data.get('endAt', '')
+                        )
+
+            legal_person_data = data.get('legalPerson', {})
+            if legal_person_data:
+                LegalPerson.objects.create(
+                    user=new_user,
+                    citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
+                    companyName=legal_person_data.get('companyName', ''),
+                    economicCode=legal_person_data.get('economicCode', ''),
+                    evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
+                    evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
+                    evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
+                    legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
+                    registerDate=legal_person_data.get('registerDate', ''),
+                    legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
+                    registerPlace=legal_person_data.get('registerPlace', ''),
+                    registerNumber=legal_person_data.get('registerNumber', '')
                     )
-            if len(data['legalPersonStakeholders']) > 0:
-                for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
-                    new_legalPersonStakeholders = legalPersonStakeholders(
-                    user = new_user ,
-                    uniqueIdentifier =legalPersonStakeholders_data['uniqueIdentifier'] ,
-                    type = legalPersonStakeholders_data['type'],
-                    startAt = legalPersonStakeholders_data ['startAt'],
-                    positionType = legalPersonStakeholders_data ['positionType'],
-                    lastName = legalPersonStakeholders_data ['lastName'],
-                    isOwnerSignature = legalPersonStakeholders_data ['isOwnerSignature'],
-                    firstName = legalPersonStakeholders_data ['firstName'],
-                    endAt = legalPersonStakeholders_data ['endAt'] ,)
-                new_legalPersonStakeholders.save()
 
-            if data['legalPerson']:
-                new_LegalPerson = LegalPerson(
-                user = new_user ,
-                citizenshipCountry =data['legalPerson']['citizenshipCountry'] ,
-                economicCode = data['legalPerson']['economicCode'],
-                evidenceExpirationDate = data['legalPerson'] ['evidenceExpirationDate'],
-                evidenceReleaseCompany = data['legalPerson'] ['evidenceReleaseCompany'],
-                evidenceReleaseDate = data['legalPerson'] ['evidenceReleaseDate'],
-                legalPersonTypeSubCategory = data['legalPerson'] ['legalPersonTypeSubCategory'],
-                registerDate = data['legalPerson'] ['registerDate'],
-                legalPersonTypeCategory = data['legalPerson'] ['legalPersonTypeCategory'],
-                registerPlace = data['legalPerson'] ['registerPlace'] ,
-                registerNumber = data['legalPerson'] ['registerNumber'] ,)
-                new_LegalPerson.save()
+            if data.get('legalPersonShareholders'):
+                for legalPersonShareholders_data in data['legalPersonShareholders']:
+                    legalPersonShareholders.objects.create(
+                        user = new_user,
+                        uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
+                        postalCode = legalPersonShareholders_data.get('postalCode', ''),
+                        positionType = legalPersonShareholders_data.get('positionType', ''),
+                        percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
+                        firstName = legalPersonShareholders_data.get('firstName', ''),
+                        lastName = legalPersonShareholders_data.get('lastName', ''),
+                        address = legalPersonShareholders_data.get('address', '')
+                    )
 
-            if len(data['legalPersonShareholders']) > 0:
-                for legalPersonShareholders_data in data['legalPersonShareholders'] :
-                    new_legalPersonShareholders = legalPersonShareholders(
-                    user = new_user ,
-                    uniqueIdentifier = legalPersonShareholders_data['uniqueIdentifier'],
-                    postalCode = legalPersonShareholders_data ['postalCode'],
-                    positionType = legalPersonShareholders_data ['positionType'],
-                    percentageVotingRight = legalPersonShareholders_data ['percentageVotingRight'],
-                    firstName = legalPersonShareholders_data ['firstName'],
-                    lastName = legalPersonShareholders_data ['lastName'],
-                    address = legalPersonShareholders_data ['address'] )
-                new_legalPersonShareholders.save()
-            if len(data['addresses']) > 0:
-                for address_data in data['addresses']:
-                    address_obj, created = addresses.objects.update_or_create(
-                        user=new_user,
-                        postalCode=address_data['postalCode'],
-                        defaults={
-                            'alley': address_data.get('alley', ''),
-                            'city': address_data['city']['name'],
-                            'cityPrefix': address_data.get('cityPrefix', ''),
-                            'country': address_data['country']['name'],
-                            'countryPrefix': address_data.get('countryPrefix', ''),
-                            'email': address_data.get('email', ''),
-                            'emergencyTel': address_data.get('emergencyTel', ''),
-                            'emergencyTelCityPrefix': address_data.get('emergencyTelCityPrefix', ''),
-                            'emergencyTelCountryPrefix': address_data.get('emergencyTelCountryPrefix', ''),
-                            'fax': address_data.get('fax', ''),
-                            'faxPrefix': address_data.get('faxPrefix', ''),
-                            'mobile': address_data.get('mobile', ''),
-                            'plaque': address_data.get('plaque', ''),
-                            'province': address_data['province']['name'],
-                            'remnantAddress': address_data.get('remnantAddress', ''),
-                            'section': address_data['section']['name'],
-                            'tel': address_data.get('tel', ''),
-                            'website': address_data.get('website', '')
-                        }
+            address = data.get('addresses',[])
+            for addresses_data in address:
+                    city_data = addresses_data.get('city', {}) or {}
+                    country_data = addresses_data.get('country', {}) or {}
+                    province_data = addresses_data.get('province', {}) or {}
+                    section_data = addresses_data.get('section', {}) or {}
+                    
+                    addresses.objects.create(
+                        user = new_user,
+                        alley = addresses_data.get('alley', ''),
+                        city = city_data.get('name', ''),
+                        cityPrefix = addresses_data.get('cityPrefix', ''),
+                        country = country_data.get('name', ''),
+                        countryPrefix = addresses_data.get('countryPrefix', ''),
+                        email = addresses_data.get('email', ''),
+                        emergencyTel = addresses_data.get('emergencyTel', ''),
+                        emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', ''),
+                        emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', ''),
+                        fax = addresses_data.get('fax', ''),
+                        faxPrefix = addresses_data.get('faxPrefix', ''),
+                        mobile = addresses_data.get('mobile', ''),
+                        plaque = addresses_data.get('plaque', ''),
+                        postalCode = addresses_data.get('postalCode', ''),
+                        province = province_data.get('name', ''),
+                        remnantAddress = addresses_data.get('remnantAddress', ''),
+                        section = section_data.get('name', ''),
+                        tel = addresses_data.get('tel', ''),
+                        website = addresses_data.get('website', ''),
                     )
 
             jobInfo_data = data.get('jobInfo')
             if isinstance(jobInfo_data, dict):
-                jobInfo_obj, created = jobInfo.objects.update_or_create(
+                jobInfo.objects.create(
                     user=new_user,
-                    defaults={
-                        'companyAddress': jobInfo_data.get('companyAddress', ''),
-                        'companyCityPrefix': jobInfo_data.get('companyCityPrefix', ''),
-                        'companyEmail': jobInfo_data.get('companyEmail', ''),
-                        'companyFax': jobInfo_data.get('companyFax', ''),
-                        'companyFaxPrefix': jobInfo_data.get('companyFaxPrefix', ''),
-                        'companyName': jobInfo_data.get('companyName', ''),
-                        'companyPhone': jobInfo_data.get('companyPhone', ''),
-                        'companyPostalCode': jobInfo_data.get('companyPostalCode', ''),
-                        'companyWebSite': jobInfo_data.get('companyWebSite', ''),
-                        'employmentDate': jobInfo_data.get('employmentDate', ''),
-                        'job': jobInfo_data.get('job', {}).get('title', ''),
-                        'jobDescription': jobInfo_data.get('jobDescription', ''),
-                        'position': jobInfo_data.get('position', '')
-                    }
+                    companyAddress=jobInfo_data.get('companyAddress', ''),
+                    companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
+                    companyEmail=jobInfo_data.get('companyEmail', ''),
+                    companyFax=jobInfo_data.get('companyFax', ''),
+                    companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
+                    companyName=jobInfo_data.get('companyName', ''),
+                    companyPhone=jobInfo_data.get('companyPhone', ''),
+                    companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
+                    companyWebSite=jobInfo_data.get('companyWebSite', ''),
+                    employmentDate=jobInfo_data.get('employmentDate', ''),
+                    job=jobInfo_data.get('job', {}).get('title', ''),
+                    jobDescription=jobInfo_data.get('jobDescription', ''),
+                    position=jobInfo_data.get('position', ''),
                 )
             
             privatePerson_data = data.get('privatePerson')
             if isinstance(privatePerson_data, dict):
-                privatePerson_obj, created = privatePerson.objects.update_or_create(
+                birthDate = privatePerson_data.get('birthDate', '')
+                fatherName = privatePerson_data.get('fatherName', '')
+                firstName = privatePerson_data.get('firstName', '')
+                gender = privatePerson_data.get('gender', '')
+                lastName = privatePerson_data.get('lastName', '')
+                placeOfBirth = privatePerson_data.get('placeOfBirth', '')
+                placeOfIssue = privatePerson_data.get('placeOfIssue', '')
+                seriSh = privatePerson_data.get('seriSh', '')
+                serial = privatePerson_data.get('serial', '')
+                shNumber = privatePerson_data.get('shNumber', '')
+                signatureFile = privatePerson_data.get('signatureFile', None)
+
+                privatePerson.objects.create(
                     user=new_user,
-                    defaults={
-                        'birthDate': privatePerson_data.get('birthDate', ''),
-                        'fatherName': privatePerson_data.get('fatherName', ''),
-                        'firstName': privatePerson_data.get('firstName', ''),
-                        'gender': privatePerson_data.get('gender', ''),
-                        'lastName': privatePerson_data.get('lastName', ''),
-                        'placeOfBirth': privatePerson_data.get('placeOfBirth', ''),
-                        'placeOfIssue': privatePerson_data.get('placeOfIssue', ''),
-                        'seriSh': privatePerson_data.get('seriSh', ''),
-                        'serial': privatePerson_data.get('serial', ''),
-                        'shNumber': privatePerson_data.get('shNumber', ''),
-                        'signatureFile': privatePerson_data.get('signatureFile', None)
-                    }
+                    birthDate=birthDate,
+                    fatherName=fatherName,
+                    firstName=firstName,
+                    gender=gender,
+                    lastName=lastName,
+                    placeOfBirth=placeOfBirth,
+                    placeOfIssue=placeOfIssue,
+                    seriSh=seriSh,
+                    serial=serial,
+                    shNumber=shNumber,
+                    signatureFile=signatureFile
                 )
 
             financialInfo_data = data.get('financialInfo')
             if isinstance(financialInfo_data, dict):
-                financialInfo_obj, created = financialInfo.objects.update_or_create(
+                assetsValue = financialInfo_data.get('assetsValue', '')
+                cExchangeTransaction = financialInfo_data.get('cExchangeTransaction', '')
+                companyPurpose = financialInfo_data.get('companyPurpose', '')
+                try:
+                    financialBrokers = ', '.join([broker.get('broker', {}).get('title', '') for broker in financialInfo_data.get('financialBrokers', [])])
+                except:
+                    financialBrokers = ''
+                inComingAverage = financialInfo_data.get('inComingAverage', '')
+                outExchangeTransaction = financialInfo_data.get('outExchangeTransaction', '')
+                rate = financialInfo_data.get('rate', '')
+                rateDate = financialInfo_data.get('rateDate', '')
+                referenceRateCompany = financialInfo_data.get('referenceRateCompany', '')
+                sExchangeTransaction = financialInfo_data.get('sExchangeTransaction', '')
+                tradingKnowledgeLevel = financialInfo_data.get('tradingKnowledgeLevel', None)
+                transactionLevel = financialInfo_data.get('transactionLevel', None)
+
+                financialInfo.objects.create(
                     user=new_user,
-                    defaults={
-                        'assetsValue': financialInfo_data.get('assetsValue', ''),
-                        'cExchangeTransaction': financialInfo_data.get('cExchangeTransaction', ''),
-                        'companyPurpose': financialInfo_data.get('companyPurpose', ''),
-                        'financialBrokers': financialInfo_data.get('financialBrokers', ''),
-                        'inComingAverage': financialInfo_data.get('inComingAverage', ''),
-                        'outExchangeTransaction': financialInfo_data.get('outExchangeTransaction', ''),
-                        'rate': financialInfo_data.get('rate', ''),
-                        'rateDate': financialInfo_data.get('rateDate', ''),
-                        'referenceRateCompany': financialInfo_data.get('referenceRateCompany', ''),
-                        'sExchangeTransaction': financialInfo_data.get('sExchangeTransaction', ''),
-                        'tradingKnowledgeLevel': financialInfo_data.get('tradingKnowledgeLevel', None),
-                        'transactionLevel': financialInfo_data.get('transactionLevel', None)
-                    }
+                    assetsValue=assetsValue,
+                    cExchangeTransaction=cExchangeTransaction,
+                    companyPurpose=companyPurpose,
+                    financialBrokers=financialBrokers,
+                    inComingAverage=inComingAverage,
+                    outExchangeTransaction=outExchangeTransaction,
+                    rate=rate,
+                    rateDate=rateDate,
+                    referenceRateCompany=referenceRateCompany,
+                    sExchangeTransaction=sExchangeTransaction,
+                    tradingKnowledgeLevel=tradingKnowledgeLevel,
+                    transactionLevel=transactionLevel,
                 )
 
 
