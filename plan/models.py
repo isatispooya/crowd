@@ -176,9 +176,10 @@ class PaymentGateway(models.Model) :
     invoice_date =  models.DateTimeField(null=True, blank=True, default=timezone.now)
     name = models.TextField( null= True , blank=True)
     service_code = models.TextField (max_length = 10 , null= True , blank = True)
-    referenceNumber = models.TextField (null= True , blank = True, default='') #کد ارجاع شاپرک
-    trackId = models.TextField (null= True , blank = True, default='') # شماره پیگیری
+    reference_number = models.TextField (null= True , blank = True, default='') #کد ارجاع شاپرک
+    track_id = models.TextField (null= True , blank = True, default='') # شماره پیگیری
     code_status_payment = models.TextField (null= True , blank = True, default='') # کد وضعیت پرداخت پاسارگاد
+    card_number = models.TextField (null= True , blank = True, default='') # شماره کارت
 
     def __str__(self) :
             return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.invoice)
