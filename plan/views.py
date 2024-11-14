@@ -1500,7 +1500,7 @@ class RoadMapViewset(APIView) :
 
 class PaymentInquiryViewSet(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
-    def get (self,request,trace_code) :
+    def post (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1515,20 +1515,32 @@ class PaymentInquiryViewSet(APIView) :
         payment = PaymentGateway.objects.filter(plan = plan , id = data ).first()
         if not payment:
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
-        payment_invoices = payment.invoice
-        payment_inquiry = PasargadPaymentGateway.inquiry_transaction(payment_invoices)
+        payment_invoices = payment.payment_id
+        pep = PasargadPaymentGateway()
+        payment_inquiry = pep.inquiry_transaction(invoice=payment_invoices)
         
-        if  payment.reference_number != payment_inquiry['referenceNumber'] :
-            payment.reference_number = payment_inquiry['referenceNumber']
+        try :
+            if  payment.reference_number != payment_inquiry['referenceNumber'] :
+                payment.reference_number = payment_inquiry['referenceNumber']
+        except :
+            pass
+        try :   
+            if payment.track_id != payment_inquiry['trackId']:
+                payment.track_id = payment_inquiry['trackId']
+        except :
+            pass
 
-        if payment.track_id != payment_inquiry['trackId']:
-            payment.track_id = payment_inquiry['trackId']
+        try:
+            if payment.code_status_payment != payment_inquiry['status']:
+                payment.code_status_payment = payment_inquiry['status']
+        except:
+            pass
 
-        if payment.code_status_payment != payment_inquiry['status']:
-            payment.code_status_payment = payment_inquiry['status']
-
-        if payment.card_number != payment_inquiry['cardNumber']:
-            payment.card_number = payment_inquiry['cardNumber']
+        try:
+            if payment.card_number != payment_inquiry['cardNumber']:
+                payment.card_number = payment_inquiry['cardNumber']
+        except:
+            pass
 
         payment.save()
         return Response(True, status=status.HTTP_200_OK)
