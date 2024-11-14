@@ -206,17 +206,30 @@ class LoginViewset(APIView):
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
+                            accountNumber= account_data.get('accountNumber', '')
+                            try :
+                                bank= account_data.get('bank', {}).get('name', '')
+                            except:
+                                bank = ''
+                            branchCity= account_data.get('branchCity', {}).get('name', '')
+                            branchCode= account_data.get('branchCode', '')
+                            branchName= account_data.get('branchName', '')
+                            isDefault= account_data.get('isDefault', False)
+                            modifiedDate= account_data.get('modifiedDate', '')
+                            type= account_data.get('type', '')
+                            sheba= account_data.get('sheba', '')
+                            
                             accounts.objects.create(
                                 user=new_user,
-                                accountNumber=account_data.get('accountNumber', ''),
-                                bank=account_data.get('bank', {}).get('name', ''),
-                                branchCity=account_data.get('branchCity', {}).get('name', ''),
-                                branchCode=account_data.get('branchCode', ''), 
-                                branchName=account_data.get('branchName', ''),
-                                isDefault=account_data.get('isDefault', False),
-                                modifiedDate=account_data.get('modifiedDate', ''),
-                                type=account_data.get('type', ''),
-                                sheba=account_data.get('sheba', '') 
+                                accountNumber=accountNumber,
+                                bank=bank,
+                                branchCity=branchCity,
+                                branchCode=branchCode, 
+                                branchName=branchName,
+                                isDefault=isDefault,
+                                modifiedDate=modifiedDate,
+                                type=type,
+                                sheba=sheba 
                             )
                 except :
                     raise Exception('خطا در ثبت اطلاعات اصلی کاربر - حساب ها')
