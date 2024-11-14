@@ -190,10 +190,11 @@ class PlansViewset(APIView):
             if payment_all.exists():
                 payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
                 payment_df = pd.DataFrame(payment_all.data)
+                print(payment_df)
                 payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
                 collected = payment_df['value'].sum()
                 information.amount_collected_now = collected
-                print(collected)
+                print(payment_df)
                 information.save()
                 information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
