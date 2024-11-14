@@ -186,15 +186,13 @@ class PlansViewset(APIView):
             #update collected
             information = InformationPlan.objects.filter(plan=plan).first()
             payment_all = PaymentGateway.objects.filter(plan=plan)
-            print('payment_all')
-            if payment_all.exists():
+            if payment_all.exists() and plan.trace_code == 'c000fbbe-3362-4541-8d4d-59e0e3f5b301':
                 payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
                 payment_df = pd.DataFrame(payment_all.data)
-                print(payment_df)
+                payment_df = payment_df.drop(columns=['id', 'plan', 'create_date', 'description', 'code', 'document', 'picture', 'send_farabours', 'url_id', 'mobile', 'invoice', 'invoice_date', 'name', 'service_code'])
                 payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
                 collected = payment_df['value'].sum()
                 information.amount_collected_now = collected
-                print(payment_df)
                 information.save()
                 information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
