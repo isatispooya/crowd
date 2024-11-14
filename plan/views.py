@@ -1403,6 +1403,9 @@ class TransmissionViewset(APIView) :
             payment.status = '0'
             return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
+        payment.reference_number = pep['referenceNumber']
+        payment.track_id = pep['trackId']
+        payment.card_number = pep['maskedCardNumber']
         payment.save()
         payment_value = PaymentGateway.objects.filter(plan=payment.plan)
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
