@@ -628,7 +628,6 @@ class PaymentDocument(APIView):
         if legal_user == False :
             amount_personal_min = int(plan.real_person_minimum_availabe_price/1000)  #حداقل سهم قابل خرید حقیقی
             amount_personal_max = int(plan.real_person_maximum_available_price/1000) #حداکثر سهم قابل خرید حقیقی
-            print('amount_personal_min',amount_personal_min , 'amount_personal_max',amount_personal_max,'amount',amount)
             if amount_personal_min is not None and amount_personal_max is not None:
                 if amount < amount_personal_min or amount > amount_personal_max :
                     return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -714,14 +713,12 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan,id = payment_id).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
-        data = request.data
-
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
-        payment = PaymentGateway.objects.filter(plan=plan ,id = payment_id)
+        payment_all = PaymentGateway.objects.filter(plan=plan)
         value = 0
-        for i in payment : 
+        for i in payment_all : 
             if i.status == '2' or i.status == '3':
                value += i.value
         information = InformationPlan.objects.filter(plan=plan).first()
