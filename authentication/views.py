@@ -302,13 +302,13 @@ class LoginViewset(APIView):
                     pass
 
 
-                address = data.get('addresses',[])
-            
-                for addresses_data in address:
-                    city_data = addresses_data.get('city', {}) or {}
-                    country_data = addresses_data.get('country', {}) or {}
-                    province_data = addresses_data.get('province', {}) or {}
-                    section_data = addresses_data.get('section', {}) or {}
+                try :   
+                    address = data.get('addresses',[])
+                    for addresses_data in address:
+                        city_data = addresses_data.get('city', {}) or {}
+                        country_data = addresses_data.get('country', {}) or {}
+                        province_data = addresses_data.get('province', {}) or {}
+                        section_data = addresses_data.get('section', {}) or {}
                     
                     addresses.objects.create(
                         user = new_user,
@@ -330,21 +330,27 @@ class LoginViewset(APIView):
                         remnantAddress = addresses_data.get('remnantAddress', ''),
                         section = section_data.get('name', ''),
                         tel = addresses_data.get('tel', ''),
-                        website = addresses_data.get('website', ''),
-                    )
-                if len(data.get('legalPersonStakeholders', [])) > 0:
-                    for stakeholder_data in data['legalPersonStakeholders']:
-                        legalPersonStakeholders.objects.create(
-                            user=new_user,
-                            uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
-                            type=stakeholder_data.get('type', ''),
-                            startAt=stakeholder_data.get('startAt', ''),
-                            positionType=stakeholder_data.get('positionType', ''),
-                            lastName=stakeholder_data.get('lastName', ''),
+                            website = addresses_data.get('website', ''),
+                        )
+                except :
+                    pass
+
+                try :
+                    if len(data.get('legalPersonStakeholders', [])) > 0:
+                        for stakeholder_data in data['legalPersonStakeholders']:
+                            legalPersonStakeholders.objects.create(
+                                user=new_user,
+                                uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
+                                type=stakeholder_data.get('type', ''),
+                                startAt=stakeholder_data.get('startAt', ''),
+                                positionType=stakeholder_data.get('positionType', ''),
+                                lastName=stakeholder_data.get('lastName', ''),
                             isOwnerSignature=stakeholder_data.get('isOwnerSignature', False),
                             firstName=stakeholder_data.get('firstName', ''),
-                            endAt=stakeholder_data.get('endAt', '')
-                        )
+                                endAt=stakeholder_data.get('endAt', '')
+                            )
+                except :
+                    pass
 
 
 
@@ -366,18 +372,21 @@ class LoginViewset(APIView):
                         )
 
 
-                if data.get('legalPersonShareholders'):
-                    for legalPersonShareholders_data in data['legalPersonShareholders']:
-                        legalPersonShareholders.objects.create(
-                            user = new_user,
-                            uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
-                            postalCode = legalPersonShareholders_data.get('postalCode', ''),
-                            positionType = legalPersonShareholders_data.get('positionType', ''),
-                            percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
-                            firstName = legalPersonShareholders_data.get('firstName', ''),
-                            lastName = legalPersonShareholders_data.get('lastName', ''),
-                            address = legalPersonShareholders_data.get('address', '')
-                        )
+                try :   
+                    if data.get('legalPersonShareholders'):
+                        for legalPersonShareholders_data in data['legalPersonShareholders']:
+                            legalPersonShareholders.objects.create(
+                                user = new_user,
+                                uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
+                                postalCode = legalPersonShareholders_data.get('postalCode', ''),
+                                positionType = legalPersonShareholders_data.get('positionType', ''),
+                                percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
+                                firstName = legalPersonShareholders_data.get('firstName', ''),
+                                lastName = legalPersonShareholders_data.get('lastName', ''),
+                                address = legalPersonShareholders_data.get('address', '')
+                            )
+                except :
+                    pass
                         
         except Exception as e:
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
