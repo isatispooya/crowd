@@ -183,7 +183,19 @@ class PlansViewset(APIView):
         result = []
 
         for plan in plans:
+            #update collected
             information = InformationPlan.objects.filter(plan=plan).first()
+            payment_all = PaymentGateway.objects.filter(plan=plan)
+            print('payment_all')
+            if payment_all.exists():
+                payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
+                payment_df = pd.DataFrame(payment_all.data)
+                payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
+                collected = payment_df['value'].sum()
+                information.amount_collected_now = collected
+                print(collected)
+                information.save()
+                information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
             company = ProjectOwnerCompan.objects.filter(plan=plan)  
             shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
@@ -231,6 +243,7 @@ class PlansViewset(APIView):
             result.append(data)
 
         return Response(result, status=status.HTTP_200_OK)
+    
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
