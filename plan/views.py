@@ -674,40 +674,28 @@ class PaymentDocument(APIView):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
 
         admin = fun.decryptionadmin(Authorization)
 
 
-        if not admin and not user:
+        if not admin :
             return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if admin.exists():
-            admin = admin.first()
-            payments = PaymentGateway.objects.filter(plan=plan)
-            response = serializers.PaymentGatewaySerializer(payments,many=True)
-            df = pd.DataFrame(response.data)
-            if len(df)==0:
-                return Response([], status=status.HTTP_200_OK)
-            df['fulname'] = [get_name(x) for x in df['user']]
-            df = df.to_dict('records')
+        admin = admin.first()
+        payments = PaymentGateway.objects.filter(plan=plan)
+        response = serializers.PaymentGatewaySerializer(payments,many=True)
+        df = pd.DataFrame(response.data)
+        if len(df)==0:
+            return Response([], status=status.HTTP_200_OK)
+        df['fulname'] = [get_name(x) for x in df['user']]
+        df = df.to_dict('records')
 
-            return Response(df, status=status.HTTP_200_OK)
+        return Response(df, status=status.HTTP_200_OK)
+    
         
-        if user:
-            user = user.first()
-            payments = PaymentGateway.objects.filter(plan=plan , status = '3')
-            response = serializers.PaymentGatewaySerializer(payments,many=True)
-            df = pd.DataFrame(response.data)
-            if len(df)==0:
-                return Response([], status=status.HTTP_200_OK)
-            df['fullname'] = df.apply(lambda row: get_name(row['user']) if row['name_status'] else 'نامشخص', axis=1)
-            df = df[['amount','value','create_date','fullname']]
-            df = df.to_dict('records')
-            return Response(df, status=status.HTTP_200_OK)
 
             
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
@@ -740,7 +728,37 @@ class PaymentDocument(APIView):
         information.amount_collected_now = value
         information.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
+class PaymentUserReport(APIView):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get(self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'Authorization not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        user = user.first()
+        payments = PaymentGateway.objects.filter(plan=plan , status = '3')
+        response = serializers.PaymentGatewaySerializer(payments,many=True)
+        df = pd.DataFrame(response.data)
+        if len(df)==0:
+            return Response([], status=status.HTTP_200_OK)
+        df['fullname'] = df.apply(lambda row: get_name(row['user']) if row['name_status'] else 'نامشخص', axis=1)
+        df = df[['amount','value','create_date','fullname']]
+        df = df.to_dict('records')
+        return Response(df, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
 class PaymentUser(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get(self,request,trace_code):

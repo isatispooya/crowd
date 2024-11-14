@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, BankReceiptViewset ,PlanViewset,PaymentUser,Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, BankReceiptViewset ,PaymentUserReport ,PlanViewset,PaymentUser,Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     path('comment/user/<str:trace_code>/', CommentViewset.as_view(), name='comment-user'),
     path('comment/admin/<str:trace_code>/', CommentAdminViewset.as_view(), name='comment-admin'),
     path('payment/document/<str:trace_code>/', PaymentDocument.as_view(), name='payment-admin'), # مشخصات سرمایه گذران 
+    path('payment/document/user/<str:trace_code>/', PaymentUserReport.as_view(), name='payment-user'), # مشخصات سرمایه گذر کاربران برای کاربر 
     path('payment/user/<str:trace_code>/', PaymentUser.as_view(), name='payment-user'),
     path('certificate/user/<str:trace_code>/', Certificate.as_view(), name='participant-user'),
     path('participant/user/<str:trace_code>/', ParticipantViewset.as_view(), name='participant-user'),   # ???
