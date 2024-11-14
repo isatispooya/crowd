@@ -181,12 +181,14 @@ class LoginViewset(APIView):
                         reference_user = User.objects.get(uniqueIdentifier=reference)
                         Reagent.objects.create(reference=reference_user, referrer=new_user)
                     except User.DoesNotExist:
-                        pass
+                        return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - معرف معتبر نمی باشد'}, status=status.HTTP_400_BAD_REQUEST)
+
                 
-                    
-                if data.get('accounts'):
-                    for accounts_data in data['accounts']:
-                        accounts.objects.create(
+
+                try :
+                    if data.get('accounts'):
+                        for accounts_data in data['accounts']:
+                            accounts.objects.create(
                             user=new_user,
                             accountNumber=accounts_data.get('accountNumber', ''),
                             bank=accounts_data.get('bank', {}).get('name', ''),
@@ -198,6 +200,8 @@ class LoginViewset(APIView):
                             type=accounts_data.get('type', ''),
                             sheba=accounts_data.get('sheba', '')
                         )
+                except :
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - حساب ها'}, status=status.HTTP_400_BAD_REQUEST)
 
                 
                 try :
@@ -220,49 +224,55 @@ class LoginViewset(APIView):
                             position=jobInfo_data.get('position', ''),
                         )
                 except :
-                    pass
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شغلی'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-                privatePerson_data = data.get('privatePerson')
-                if isinstance(privatePerson_data, dict):
-                    birthDate = privatePerson_data.get('birthDate', '')
-                    fatherName = privatePerson_data.get('fatherName', '')
-                    firstName = privatePerson_data.get('firstName', '')
-                    gender = privatePerson_data.get('gender', '')
-                    lastName = privatePerson_data.get('lastName', '')
-                    placeOfBirth = privatePerson_data.get('placeOfBirth', '')
-                    placeOfIssue = privatePerson_data.get('placeOfIssue', '')
-                    seriSh = privatePerson_data.get('seriSh', '')
-                    serial = privatePerson_data.get('serial', '')
-                    shNumber = privatePerson_data.get('shNumber', '')
-                    signatureFile = privatePerson_data.get('signatureFile', None)
+                try :
+                    privatePerson_data = data.get('privatePerson')
+                    if isinstance(privatePerson_data, dict):
+                        birthDate = privatePerson_data.get('birthDate', '')
+                        fatherName = privatePerson_data.get('fatherName', '')
+                        firstName = privatePerson_data.get('firstName', '')
+                        gender = privatePerson_data.get('gender', '')
+                        lastName = privatePerson_data.get('lastName', '')
+                        placeOfBirth = privatePerson_data.get('placeOfBirth', '')
+                        placeOfIssue = privatePerson_data.get('placeOfIssue', '')
+                        seriSh = privatePerson_data.get('seriSh', '')
+                        serial = privatePerson_data.get('serial', '')
+                        shNumber = privatePerson_data.get('shNumber', '')
+                        signatureFile = privatePerson_data.get('signatureFile', None)
 
-                    privatePerson.objects.create(
-                        user=new_user,
-                        birthDate=birthDate,
-                        fatherName=fatherName,
-                        firstName=firstName,
-                        gender=gender,
-                        lastName=lastName,
-                        placeOfBirth=placeOfBirth,
-                        placeOfIssue=placeOfIssue,
-                        seriSh=seriSh,
-                        serial=serial,
-                        shNumber=shNumber,
-                        signatureFile=signatureFile
-                    )
+                        privatePerson.objects.create(
+                            user=new_user,
+                            birthDate=birthDate,
+                            fatherName=fatherName,
+                            firstName=firstName,
+                            gender=gender,
+                            lastName=lastName,
+                            placeOfBirth=placeOfBirth,
+                            placeOfIssue=placeOfIssue,
+                            seriSh=seriSh,
+                            serial=serial,
+                            shNumber=shNumber,
+                            signatureFile=signatureFile
+                        )
+                except :
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شخص حقیقی'}, status=status.HTTP_400_BAD_REQUEST)
 
-                trading_codes = data.get('tradingCodes', [])
-                if trading_codes:
-                    for tradingCodes_data in trading_codes:
-                        tradingCodes.objects.create(
-                            user = new_user,
+                try :
+                    trading_codes = data.get('tradingCodes', [])
+                    if trading_codes:
+                        for tradingCodes_data in trading_codes:
+                            tradingCodes.objects.create(
+                                user = new_user,
                             code = tradingCodes_data.get('code', ''),
                             firstPart = tradingCodes_data.get('firstPart', ''),
                             secondPart = tradingCodes_data.get('secondPart', ''),
                             thirdPart = tradingCodes_data.get('thirdPart', ''),
-                            type = tradingCodes_data.get('type', ''),
-                        )
+                                type = tradingCodes_data.get('type', ''),
+                            )
+                except :
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی'}, status=status.HTTP_400_BAD_REQUEST)
 
                 try :
                     financialInfo_data = data.get('financialInfo')
@@ -299,7 +309,8 @@ class LoginViewset(APIView):
                             transactionLevel=transactionLevel,
                         )
                 except :
-                    pass
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
                 try :   
@@ -333,7 +344,7 @@ class LoginViewset(APIView):
                             website = addresses_data.get('website', ''),
                         )
                 except :
-                    pass
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - آدرس ها'}, status=status.HTTP_400_BAD_REQUEST)
 
                 try :
                     if len(data.get('legalPersonStakeholders', [])) > 0:
@@ -350,26 +361,28 @@ class LoginViewset(APIView):
                                 endAt=stakeholder_data.get('endAt', '')
                             )
                 except :
-                    pass
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - هیئت مدیره'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-                legal_person_data = data.get('legalPerson', {})
-                if legal_person_data:
-                    LegalPerson.objects.create(
-                        user=new_user,
-                        citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
-                        companyName=legal_person_data.get('companyName', ''),
-                        economicCode=legal_person_data.get('economicCode', ''),
-                        evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
-                        evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
-                        evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
-                        legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
-                        registerDate=legal_person_data.get('registerDate', ''),
-                        legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
-                        registerPlace=legal_person_data.get('registerPlace', ''),
-                        registerNumber=legal_person_data.get('registerNumber', '')
+                try :   
+                    legal_person_data = data.get('legalPerson', {})
+                    if legal_person_data:
+                        LegalPerson.objects.create(
+                            user=new_user,
+                            citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
+                            companyName=legal_person_data.get('companyName', ''),
+                            economicCode=legal_person_data.get('economicCode', ''),
+                            evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
+                            evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
+                            evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
+                            legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
+                            registerDate=legal_person_data.get('registerDate', ''),
+                            legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
+                            registerPlace=legal_person_data.get('registerPlace', ''),
+                            registerNumber=legal_person_data.get('registerNumber', '')
                         )
+                except :
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت'}, status=status.HTTP_400_BAD_REQUEST)
 
 
                 try :   
@@ -386,7 +399,7 @@ class LoginViewset(APIView):
                                 address = legalPersonShareholders_data.get('address', '')
                             )
                 except :
-                    pass
+                    return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - سهامداران'}, status=status.HTTP_400_BAD_REQUEST)
                         
         except Exception as e:
             print('ss',e)
