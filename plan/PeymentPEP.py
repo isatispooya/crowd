@@ -23,7 +23,7 @@ class PasargadPaymentGateway:
         duplicate_number = False
         while not duplicate_number:
             
-            invoice = str(random.randint(100, 999))+str(date.year)+str(date.month)+str(date.day)+str(date.hour)+str(date.minute)+str(random.randint(1000000000, 9999999999))
+            invoice = str(random.randint(100, 999))+str(date.year)+str(date.month)+str(date.day)+str(date.hour)+str(date.minute)+str(random.randint(10,99))
             duplicate_number = models.PaymentGateway.objects.filter(invoice=invoice).count() ==0
 
         return invoice
