@@ -186,20 +186,22 @@ class LoginViewset(APIView):
                 
 
                 try :
-                    if data.get('accounts'):
-                        for accounts_data in data['accounts']:
+                    accounts_data = data.get('accounts',[])
+                    print(accounts_data)
+                    if accounts_data:
+                        for account_data in accounts_data:
                             accounts.objects.create(
-                            user=new_user,
-                            accountNumber=accounts_data.get('accountNumber', ''),
-                            bank=accounts_data.get('bank', {}).get('name', ''),
-                            branchCity=accounts_data.get('branchCity', {}).get('name', ''),
-                            branchCode=accounts_data.get('branchCode', ''), 
-                            branchName=accounts_data.get('branchName', ''),
-                            isDefault=accounts_data.get('isDefault', False),
-                            modifiedDate=accounts_data.get('modifiedDate', ''),
-                            type=accounts_data.get('type', ''),
-                            sheba=accounts_data.get('sheba', '')
-                        )
+                                user=new_user,
+                                accountNumber=account_data.get('accountNumber', ''),
+                                bank=account_data.get('bank', {}).get('name', ''),
+                                branchCity=account_data.get('branchCity', {}).get('name', ''),
+                                branchCode=account_data.get('branchCode', ''), 
+                                branchName=account_data.get('branchName', ''),
+                                isDefault=account_data.get('isDefault', False),
+                                modifiedDate=account_data.get('modifiedDate', ''),
+                                type=account_data.get('type', ''),
+                                sheba=account_data.get('sheba', '') 
+                            )
                 except :
                     return Response({'message': 'خطا در ثبت اطلاعات اصلی کاربر - حساب ها'}, status=status.HTTP_400_BAD_REQUEST)
 
