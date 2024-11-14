@@ -1283,7 +1283,6 @@ class TransmissionViewset(APIView) :
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
         purchaseable_amount = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
-        print('purchaseable_amount',purchaseable_amount,value)
         if value > purchaseable_amount :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         if legal_user == True : 
@@ -1301,7 +1300,6 @@ class TransmissionViewset(APIView) :
         else :
             amount_personal_min = plan.real_person_minimum_availabe_price  #حداقل سهم قابل خرید حقیقی
             amount_personal_max = plan.real_person_maximum_available_price #حداکثر سهم قابل خرید حقیقی
-            print(amount_personal_min)
             if amount_personal_min is not None and amount_personal_max is not None :
                 if value < amount_personal_min or value > amount_personal_max :
                     return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1372,7 +1370,7 @@ class TransmissionViewset(APIView) :
         payment = PaymentGateway.objects.filter(invoice = invoice).first()
         if not payment :
             return Response({'error': 'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
-        payment.status = True
+        payment.status = '2'
         payment.save()
         payment_value = PaymentGateway.objects.filter(plan=payment.plan).filter(Q(status='2') | Q(status='3'))
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
