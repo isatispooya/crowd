@@ -658,8 +658,8 @@ class PaymentDocument(APIView):
         description = request.data.get('description',None)
         if not request.data.get('risk_statement'):
             return Response({'error': 'risk_statement not found'}, status=status.HTTP_404_NOT_FOUND)
-        payment_id = request.data.get('risk_statement') == 'true'
-        if not payment_id:
+        risk_statement = request.data.get('risk_statement') == 'true'
+        if not risk_statement:
             return Response({'error': 'risk_statement not true'}, status=status.HTTP_404_NOT_FOUND)
         if not request.data.get('name_status'):
             return Response({'error': 'name_status not found'}, status=status.HTTP_404_NOT_FOUND)
