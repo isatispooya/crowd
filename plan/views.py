@@ -626,8 +626,8 @@ class PaymentDocument(APIView):
                   
                 
         if legal_user == False :
-            amount_personal_min = int(plan.real_person_minimum_availabe_price/10000)  #حداقل سهم قابل خرید حقیقی
-            amount_personal_max = int(plan.real_person_maximum_available_price/10000) #حداکثر سهم قابل خرید حقیقی
+            amount_personal_min = int(plan.real_person_minimum_availabe_price/1000)  #حداقل سهم قابل خرید حقیقی
+            amount_personal_max = int(plan.real_person_maximum_available_price/1000) #حداکثر سهم قابل خرید حقیقی
             print('amount_personal_min',amount_personal_min , 'amount_personal_max',amount_personal_max,'amount',amount)
             if amount_personal_min is not None and amount_personal_max is not None:
                 if amount < amount_personal_min or amount > amount_personal_max :
@@ -1282,8 +1282,7 @@ class TransmissionViewset(APIView) :
         
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int((plan_total_price*10000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
-        print('purchaseable_amount',purchaseable_amount,value)
+        purchaseable_amount = int((plan_total_price*1000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
         if value > purchaseable_amount :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         if legal_user == True : 
