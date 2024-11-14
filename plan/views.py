@@ -1370,6 +1370,10 @@ class TransmissionViewset(APIView) :
         payment = PaymentGateway.objects.filter(invoice = invoice).first()
         if not payment :
             return Response({'error': 'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
+        try :
+            pep = pep.confirm_transaction(payment.invoice , payment.url_id)
+        except :
+            return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
         payment.save()
         payment_value = PaymentGateway.objects.filter(plan=payment.plan).filter(Q(status='2') | Q(status='3'))
@@ -1382,10 +1386,6 @@ class TransmissionViewset(APIView) :
             return Response({'error': 'information plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         information.amount_collected_now = payment_value
         information.save()
-        try :
-            pep = pep.confirm_transaction(payment.invoice , payment.url_id)
-        except :
-            return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         return Response(True , status=status.HTTP_200_OK)
 
 # فیش بانکی های کاربر
