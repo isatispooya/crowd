@@ -15,7 +15,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 import os
 from django.conf import settings
-from plan.PeymentPEP import PasargadPaymentGateway
+from plan.PeymentPEP import PasargadPaymentGateway 
 from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
@@ -767,7 +767,6 @@ class PaymentUserReport(APIView):
 
 
 
-
 class PaymentUser(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get(self,request,trace_code):
@@ -1496,3 +1495,23 @@ class RoadMapViewset(APIView) :
 
 
 
+class PaymentInquiryViewSet(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response ({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.get('id')
+        payment = PaymentGateway.objects.filter(plan = plan , id = data ).first()
+        if not payment:
+            return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
+        payment_invoices = payment.invoice
+        payment_inquiry = PasargadPaymentGateway.inquiry_transaction(payment_invoices)
+        return Response(True, status=status.HTTP_200_OK)

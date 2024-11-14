@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, BankReceiptViewset ,PaymentUserReport ,PlanViewset,PaymentUser,Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
+from.views import PlansViewset, BankReceiptViewset ,PaymentUserReport ,PaymentInquiryViewSet,PlanViewset,PaymentUser,Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset , SendPaymentToFarabours
 
 
 urlpatterns = [
@@ -25,6 +25,7 @@ urlpatterns = [
     path('transmission/user/<str:key>/', TransmissionViewset.as_view(), name='transmission-user'), # درگاه پرداخت
     path('bank/reciept/payment/admin/<int:id>/', BankReceiptViewset.as_view(), name='bank-reciept-payment-admin'), # فیش بانکی های ادمین
     path('participant/menu/user/', ParticipantMenuViewset.as_view(), name='participant-menu-user'), # درگاه بانکی کاربر
+    path('payment/inquiry/admin/<str:trace_code>/', PaymentInquiryViewSet.as_view(), name='payment-inquiry-admin'), #چک پرداخت های درگاه بانکی
 
 
 ]
