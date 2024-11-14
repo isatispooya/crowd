@@ -1517,4 +1517,18 @@ class PaymentInquiryViewSet(APIView) :
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
         payment_invoices = payment.invoice
         payment_inquiry = PasargadPaymentGateway.inquiry_transaction(payment_invoices)
+        
+        if  payment.reference_number != payment_inquiry['referenceNumber'] :
+            payment.reference_number = payment_inquiry['referenceNumber']
+
+        if payment.track_id != payment_inquiry['trackId']:
+            payment.track_id = payment_inquiry['trackId']
+
+        if payment.code_status_payment != payment_inquiry['status']:
+            payment.code_status_payment = payment_inquiry['status']
+
+        if payment.card_number != payment_inquiry['cardNumber']:
+            payment.card_number = payment_inquiry['cardNumber']
+
+        payment.save()
         return Response(True, status=status.HTTP_200_OK)
