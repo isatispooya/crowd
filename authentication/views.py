@@ -214,55 +214,40 @@ class LoginViewset(APIView):
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
-                            new_account = accounts()
+                            accountNumber = account_data.get('accountNumber', '')
+                            bank = ''
+                            branchCity = ''
+                            branchCode = ''
+                            branchName = ''
+                            isDefault = 'False'
+                            modifiedDate = ''
+                            type = ''
+                            sheba = ''
 
-                            accountNumber= account_data.get('accountNumber', '')
-                            new_account.accountNumber = accountNumber
-                            bank = account_data.get('bank', {}).get('name', '')
-                            new_account.bank = bank
-                            
-                            try :
-                                branchCity= account_data.get('branchCity', {}).get('name', '')
-                            except:
-                                branchCity = ''
-                            try :
-                                branchCode = account_data.get('branchCode', '')
-                            except:
-                                branchCode = ''
-                            try :
-                                branchName = account_data.get('branchName', '')
-                            except:
-                                branchName = ''
-                            try :
-                                isDefault = account_data.get('isDefault', 'False')
-                            except:
-                                isDefault = ''
-                            try :
-                                modifiedDate = account_data.get('modifiedDate', '')
-                            except:
-                                modifiedDate = ''
-                            try :
-                                type = account_data.get('type', '')
-                            except:
-                                type = ''
-                            try :
-                                sheba= account_data.get('sheba', '')
-                                if not sheba :
-                                    sheba = ''
-                            except:
-                                sheba = ''
-                            
+                            if account_data.get('bank') and isinstance(account_data['bank'], dict):
+                                bank = account_data['bank'].get('name', '')
+                                
+                            if account_data.get('branchCity') and isinstance(account_data['branchCity'], dict):
+                                branchCity = account_data['branchCity'].get('name', '')
+                                
+                            branchCode = account_data.get('branchCode') or ''
+                            branchName = account_data.get('branchName') or ''
+                            isDefault = account_data.get('isDefault', False)
+                            modifiedDate = account_data.get('modifiedDate', '')
+                            type = account_data.get('type') or ''
+                            sheba = account_data.get('sheba', '')
+
                             accounts.objects.create(
                                 user=new_user,
                                 accountNumber=accountNumber,
                                 bank=bank,
                                 branchCity=branchCity,
-                                branchCode=branchCode, 
+                                branchCode=branchCode,
                                 branchName=branchName,
                                 isDefault=isDefault,
                                 modifiedDate=modifiedDate,
                                 type=type,
-                                sheba=sheba 
+                                sheba=sheba
                             )
                 except :
                     raise Exception('خطا در ثبت اطلاعات اصلی کاربر - حساب ها')
@@ -725,8 +710,8 @@ class LoginAdminViewset(APIView) :
                     admin.lock() 
                     return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
-                admin.save()  
-                return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+            admin.save()  
+            return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
 
             if otp_obj.expire and timezone.now() > otp_obj.expire:
                 return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
