@@ -159,33 +159,40 @@ class LoginViewset(APIView):
         try :
             data = response['data']
         except:
-            return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
         if data == None :
-            return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
         print(data)
+        if not data.get('uniqueIdentifier'):
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('mobile'):
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
+        
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         try :
             with transaction.atomic():
                 if  not new_user :
                     new_user  =User(
-                    agent = data ['agent'],
-                    email = data ['email'],
-                    mobile = data ['mobile'],
-                    status = data ['status'],
-                    type = data ['type'],
-                    uniqueIdentifier = data ['uniqueIdentifier'],
-                    referal = data ['uniqueIdentifier'],
+                    agent = data.get('agent'),
+                    email = data.get('email'),
+                    mobile = data.get('mobile'),
+                    status = data.get('status'),
+                    type = data.get('type'),
+                    uniqueIdentifier = data.get('uniqueIdentifier'),
+                    referal = data.get('uniqueIdentifier'),
                 )
                 new_user.save()
-                if reference:
-                    try :
+                try :
+                    if reference:
                         reference_user = User.objects.get(uniqueIdentifier=reference)
                         Reagent.objects.create(reference=reference_user, referrer=new_user)
-                    except User.DoesNotExist:
-                        pass
+                except User.DoesNotExist:
+                    pass
 
                 try :
                     agent = data.get('agent')
+                    print('-'*10,'agent','-'*10)
+                    print(agent)
                     if isinstance(agent, dict):
                         new_agent = {
                         'user': new_user,
@@ -203,6 +210,7 @@ class LoginViewset(APIView):
 
                 try :
                     accounts_data = data.get('accounts',[])
+                    print('-'*10,'accounts','-'*10)
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
@@ -211,13 +219,34 @@ class LoginViewset(APIView):
                                 bank= account_data.get('bank', {}).get('name', '')
                             except:
                                 bank = ''
-                            branchCity= account_data.get('branchCity', {}).get('name', '')
-                            branchCode= account_data.get('branchCode', '')
-                            branchName= account_data.get('branchName', '')
-                            isDefault= account_data.get('isDefault', False)
-                            modifiedDate= account_data.get('modifiedDate', '')
-                            type= account_data.get('type', '')
-                            sheba= account_data.get('sheba', '')
+                            try :
+                                branchCity= account_data.get('branchCity', {}).get('name', '')
+                            except:
+                                branchCity = ''
+                            try :
+                                branchCode = account_data.get('branchCode', '')
+                            except:
+                                branchCode = ''
+                            try :
+                                branchName = account_data.get('branchName', '')
+                            except:
+                                branchName = ''
+                            try :
+                                isDefault = account_data.get('isDefault', 'False')
+                            except:
+                                isDefault = ''
+                            try :
+                                modifiedDate = account_data.get('modifiedDate', '')
+                            except:
+                                modifiedDate = ''
+                            try :
+                                type = account_data.get('type', '')
+                            except:
+                                type = ''
+                            try :
+                                sheba= account_data.get('sheba', '')
+                            except:
+                                sheba = ''
                             
                             accounts.objects.create(
                                 user=new_user,
@@ -258,20 +287,52 @@ class LoginViewset(APIView):
                     print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شغلی')
 
                 try :
-                    privatePerson_data = data.get('privatePerson')
+                    privatePerson_data = data.get('privatePerson',{})
                     if isinstance(privatePerson_data, dict):
-                        birthDate = privatePerson_data.get('birthDate', '')
-                        fatherName = privatePerson_data.get('fatherName', '')
-                        firstName = privatePerson_data.get('firstName', '')
-                        gender = privatePerson_data.get('gender', '')
-                        lastName = privatePerson_data.get('lastName', '')
-                        placeOfBirth = privatePerson_data.get('placeOfBirth', '')
-                        placeOfIssue = privatePerson_data.get('placeOfIssue', '')
-                        seriSh = privatePerson_data.get('seriSh', '')
-                        serial = privatePerson_data.get('serial', '')
-                        shNumber = privatePerson_data.get('shNumber', '')
-                        signatureFile = privatePerson_data.get('signatureFile', None)
-
+                        try :   
+                            birthDate = privatePerson_data.get('birthDate', '')
+                        except:
+                            birthDate = ''
+                        try :
+                            fatherName = privatePerson_data.get('fatherName', '')
+                        except:
+                            fatherName = ''
+                        try :
+                            firstName = privatePerson_data.get('firstName', '')
+                        except:
+                            firstName = ''
+                        try :
+                            gender = privatePerson_data.get('gender', '')
+                        except:
+                            gender = ''
+                        try :
+                            lastName = privatePerson_data.get('lastName', '')
+                        except:
+                            lastName = ''
+                        try :
+                            placeOfBirth = privatePerson_data.get('placeOfBirth', '')
+                        except:
+                            placeOfBirth = ''
+                        try :
+                            placeOfIssue = privatePerson_data.get('placeOfIssue', '')
+                        except:
+                            placeOfIssue = ''
+                        try :
+                            seriSh = privatePerson_data.get('seriSh', '')
+                        except:
+                            seriSh = ''
+                        try :
+                            serial = privatePerson_data.get('serial', '')
+                        except:
+                            serial = ''
+                        try :
+                            shNumber = privatePerson_data.get('shNumber', '')
+                        except:
+                            shNumber = ''
+                        try :
+                            signatureFile = privatePerson_data.get('signatureFile', None)
+                        except:
+                            signatureFile = None
                         privatePerson.objects.create(
                             user=new_user,
                             birthDate=birthDate,
@@ -291,15 +352,40 @@ class LoginViewset(APIView):
 
                 try :
                     trading_codes = data.get('tradingCodes', [])
+                    print('-'*10,'tradingCodes','-'*10)
+                    print(trading_codes)
                     if trading_codes:
                         for tradingCodes_data in trading_codes:
+                            code = tradingCodes_data.get('code')
+                            if not code:
+                                raise Exception('خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی')
+                            
+                            try:
+                                firstPart = tradingCodes_data.get('firstPart', '')
+                            except:
+                                firstPart = ''
+                            try:
+                                secondPart = tradingCodes_data.get('secondPart', '')
+                            except:
+                                secondPart = ''
+                            try:
+                                thirdPart = tradingCodes_data.get('thirdPart', '')
+                            except:
+                                thirdPart = ''
+                            
+                            try:
+                                type = tradingCodes_data.get('type', '')
+                            except:
+                                type = ''
+
+                                
                             tradingCodes.objects.create(
                                 user = new_user,
-                            code = tradingCodes_data.get('code', ''),
-                            firstPart = tradingCodes_data.get('firstPart', ''),
-                            secondPart = tradingCodes_data.get('secondPart', ''),
-                            thirdPart = tradingCodes_data.get('thirdPart', ''),
-                                type = tradingCodes_data.get('type', ''),
+                                code = code,
+                                firstPart = firstPart,
+                                secondPart = secondPart,
+                                thirdPart = thirdPart,
+                                type = type,
                             )
                 except :
                     raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی')
@@ -338,41 +424,113 @@ class LoginViewset(APIView):
                             tradingKnowledgeLevel=tradingKnowledgeLevel,
                             transactionLevel=transactionLevel,
                         )
-                except :
-                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
+                except:
+                    print('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
 
                 try :   
                     address = data.get('addresses',[])
                     for addresses_data in address:
-                        city_data = addresses_data.get('city', {}) or {}
-                        country_data = addresses_data.get('country', {}) or {}
-                        province_data = addresses_data.get('province', {}) or {}
-                        section_data = addresses_data.get('section', {}) or {}
+                        try:
+                            alley = addresses_data.get('alley', '')
+                        except:
+                            alley = ''
+                        try :
+                            city = addresses_data.get('city', {}).get('name', '')
+                        except:
+                            city = ''
+                        try:
+                            cityPrefix = addresses_data.get('cityPrefix', '')
+                        except:
+                            cityPrefix = ''
+                        try :
+                            country = addresses_data.get('country', {}).get('name', '')
+                        except:
+                            country = ''
+                        try:
+                            countryPrefix = addresses_data.get('countryPrefix', '') 
+                        except:
+                            countryPrefix = ''
+                        try:
+                            email = addresses_data.get('email', '')
+                        except:
+                            email = ''
+                        try:
+                            emergencyTel = addresses_data.get('emergencyTel', '')
+                        except:
+                            emergencyTel = ''
+                        try :
+                            emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', '')
+                        except:
+                            emergencyTelCityPrefix = ''
+                        try :
+                            emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', '')
+                        except:
+                            emergencyTelCountryPrefix = ''
+                        try :
+                            fax = addresses_data.get('fax', '')
+                        except:
+                            fax = ''
+                        try :
+                            faxPrefix = addresses_data.get('faxPrefix', '')
+                        except:
+                            faxPrefix = ''
+                        try :
+                            mobile = addresses_data.get('mobile', '')
+                        except:
+                            mobile = ''
+                        try :
+                            plaque = addresses_data.get('plaque', '')
+                        except:
+                            plaque = ''
+                        try :
+                            postalCode = addresses_data.get('postalCode', '')
+                        except:
+                            postalCode = ''
+                        try :
+                            province = addresses_data.get('province', {}).get('name', '')
+                        except:
+                            province = ''
+                        try :
+                            remnantAddress = addresses_data.get('remnantAddress', '')
+                        except:
+                            remnantAddress = ''
+                        try :
+                            section = addresses_data.get('section', {}).get('name', '')
+                        except:
+                            section = ''
+                        try :
+                            tel = addresses_data.get('tel', '')
+                        except:
+                            tel = ''
+                        try :
+                            website = addresses_data.get('website', '')
+                        except:
+                            website = ''
                     
                     addresses.objects.create(
                         user = new_user,
-                        alley = addresses_data.get('alley', ''),
-                        city = city_data.get('name', ''),
-                        cityPrefix = addresses_data.get('cityPrefix', ''),
-                        country = country_data.get('name', ''),
-                        countryPrefix = addresses_data.get('countryPrefix', ''),
-                        email = addresses_data.get('email', ''),
-                        emergencyTel = addresses_data.get('emergencyTel', ''),
-                        emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', ''),
-                        emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', ''),
-                        fax = addresses_data.get('fax', ''),
-                        faxPrefix = addresses_data.get('faxPrefix', ''),
-                        mobile = addresses_data.get('mobile', ''),
-                        plaque = addresses_data.get('plaque', ''),
-                        postalCode = addresses_data.get('postalCode', ''),
-                        province = province_data.get('name', ''),
-                        remnantAddress = addresses_data.get('remnantAddress', ''),
-                        section = section_data.get('name', ''),
-                        tel = addresses_data.get('tel', ''),
-                            website = addresses_data.get('website', ''),
+                        alley = alley,
+                        city = city,
+                        cityPrefix = cityPrefix,
+                        country = country,
+                        countryPrefix = countryPrefix,
+                        email = email,
+                        emergencyTel = emergencyTel,
+                        emergencyTelCityPrefix = emergencyTelCityPrefix,
+                        emergencyTelCountryPrefix = emergencyTelCountryPrefix,
+                        fax = fax,
+                        faxPrefix = faxPrefix,
+                        mobile = mobile,
+                        plaque = plaque,
+                        postalCode = postalCode,
+                        province = province,
+                        remnantAddress = remnantAddress,
+                        section = section,
+                        tel = tel,
+                        website = website,
                         )
                 except :
-                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
+                    print('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
 
                 try :
                     if len(data.get('legalPersonStakeholders', [])) > 0:
@@ -410,7 +568,7 @@ class LoginViewset(APIView):
                             registerNumber=legal_person_data.get('registerNumber', '')
                         )
                 except :
-                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
+                    print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
 
 
                 try :   
@@ -430,7 +588,8 @@ class LoginViewset(APIView):
                     print('خطا در ثبت اطلاعات اصلی کاربر - سهامداران')
                         
         except Exception as e:
-            print('ss',e)
+            print('-'*10,'error','-'*10)
+            print(e)
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
 
         token = fun.encryptionUser(new_user)

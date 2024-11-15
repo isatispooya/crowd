@@ -104,7 +104,6 @@ def number_of_finance_provider(trace_code) :
 
     if not payment :
         payment = 0
-    print(plan , payment)
     return payment 
 
 
@@ -213,7 +212,7 @@ class PlansViewset(APIView):
             if payment_all.exists() and plan.trace_code == 'c000fbbe-3362-4541-8d4d-59e0e3f5b301':
                 payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
                 payment_df = pd.DataFrame(payment_all.data)
-                payment_df = payment_df.drop(columns=['id', 'plan', 'create_date', 'description', 'code', 'document', 'picture', 'send_farabours', 'url_id', 'mobile', 'invoice', 'invoice_date', 'name', 'service_code'])
+                payment_df = payment_df[['status', 'value']]
                 payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
                 collected = payment_df['value'].sum()
                 information.amount_collected_now = collected
@@ -778,7 +777,7 @@ class PaymentUserReport(APIView):
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        payments = PaymentGateway.objects.filter(plan=plan , status = '3')
+        payments = PaymentGateway.objects.filter(plan=plan , status__in=['2', '3'])
         response = serializers.PaymentGatewaySerializer(payments,many=True)
         df = pd.DataFrame(response.data)
         if len(df)==0:
