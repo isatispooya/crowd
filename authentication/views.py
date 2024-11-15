@@ -214,11 +214,13 @@ class LoginViewset(APIView):
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
+                            new_account = accounts()
+
                             accountNumber= account_data.get('accountNumber', '')
-                            try :
-                                bank= account_data.get('bank', {}).get('name', '')
-                            except:
-                                bank = ''
+                            new_account.accountNumber = accountNumber
+                            bank = account_data.get('bank', {}).get('name', '')
+                            new_account.bank = bank
+                            
                             try :
                                 branchCity= account_data.get('branchCity', {}).get('name', '')
                             except:
@@ -245,6 +247,8 @@ class LoginViewset(APIView):
                                 type = ''
                             try :
                                 sheba= account_data.get('sheba', '')
+                                if not sheba :
+                                    sheba = ''
                             except:
                                 sheba = ''
                             
@@ -359,7 +363,6 @@ class LoginViewset(APIView):
                             code = tradingCodes_data.get('code')
                             if not code:
                                 raise Exception('خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی')
-                            
                             try:
                                 firstPart = tradingCodes_data.get('firstPart', '')
                             except:

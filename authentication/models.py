@@ -49,14 +49,13 @@ class User(models.Model):
 
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
-        mobile = self.mobile if self.mobile else "mobile"
-        return f'{uniqueIdentifier} {mobile}'
+        return f'{uniqueIdentifier}'
     
 
 class accounts (models.Model) :
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     accountNumber = models.CharField(max_length=200)
-    bank = models.CharField( max_length=200)
+    bank = models.CharField(max_length=200)
     branchCity = models.CharField( max_length=200, null=True, blank=True)
     branchCode = models.CharField(max_length=20, null=True, blank=True)
     branchName = models.CharField(max_length=200, null=True, blank=True)
