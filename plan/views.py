@@ -1395,7 +1395,7 @@ class TransmissionViewset(APIView) :
             status = '1',
             document = False,
             picture = None , 
-            send_farabours = True,
+            send_farabours = False,
             url_id = created['urlId'] , 
             mobile = user.mobile,
             invoice = invoice_data['invoice'],
