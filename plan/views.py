@@ -52,9 +52,9 @@ def get_fname (uniqueIdentifier) :
     try:
         privateperson = privatePerson.objects.filter(user=user).first()
         first_name = privateperson.firstName
-        return first_name
     except:
         return ""
+    return first_name
 
 
 def get_lname (uniqueIdentifier) :
