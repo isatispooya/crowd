@@ -213,7 +213,7 @@ class LoginViewset(APIView):
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
-                            accountNumber = account_data.get('accountNumber', '')
+                            accountNumber = account_data.get('accountNumber') or ''
                             bank = ''
                             branchCity = ''
                             branchCode = ''
@@ -595,7 +595,7 @@ class OtpAdminViewset(APIView) :
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         admin = Admin.objects.filter(uniqueIdentifier = uniqueIdentifier).first()
-
+        print(admin)
         if admin :
             otp = Otp.objects.filter(mobile=admin.mobile).first()
             code = random.randint(10000,99999)
@@ -630,14 +630,12 @@ class LoginAdminViewset(APIView) :
         code = request.data.get('code')
         if not uniqueIdentifier or not code:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             admin = Admin.objects.get(uniqueIdentifier=uniqueIdentifier)
             if admin.is_locked():
                 return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        except admin.DoesNotExist:
+        except:
             return Response({'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}, status=status.HTTP_404_NOT_FOUND)
-        
         try:
             mobile = admin.mobile
             otp_obj = Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
@@ -649,7 +647,6 @@ class LoginAdminViewset(APIView) :
 
                 admin.save()  
                 return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
-
             if otp_obj.expire and timezone.now() > otp_obj.expire:
                 return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -848,7 +845,7 @@ class UpdateInformationViewset(APIView):
             accounts_data = data.get('accounts',[])
             if accounts_data:
                 for account_data in accounts_data:
-                    accountNumber = account_data.get('accountNumber', '')
+                    accountNumber = account_data.get('accountNumber') or ''
                     bank = ''
                     branchCity = ''
                     branchCode = ''
@@ -857,6 +854,7 @@ class UpdateInformationViewset(APIView):
                     modifiedDate = ''
                     type = ''
                     sheba = ''
+                    accountNumber = account_data.get('accountNumber') or ''
                     if account_data.get('bank') and isinstance(account_data['bank'], dict):
                         bank = account_data['bank'].get('name', '')
                         
