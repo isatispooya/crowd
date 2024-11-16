@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
 from django.db.models import Sum
-
+import time
 
 
 def get_name (uniqueIdentifier) :
@@ -1122,11 +1122,17 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 mobileNumber = mobile,
                 bankTrackingNumber = bank_tracking_number,
             )
-            api = api_farabours.register_financing(project_finance)
-            print(api)
-            payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id'], send_farabours = False).first()
-            payment_sended.send_farabours = True
-            payment_sended.save()
+            try_count = 0
+            while try_count < 3:
+                try_count += 1
+                api = api_farabours.register_financing(project_finance)
+                print('--------------------------------')
+                print(project_finance)
+                print(api)
+                time.sleep(1)
+            # payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id']).first()
+            # payment_sended.send_farabours = False
+            # payment_sended.save()
         return Response(True, status=status.HTTP_200_OK)
 
 
