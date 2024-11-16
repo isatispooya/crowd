@@ -1104,7 +1104,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 is_legal = check_legal_person (uniqueIdentifier)
             provided_finance_price = i['value']
             payment_date = i['create_date']
-            bank_tracking_number = i['payment_id']
+            bank_tracking_number = i['track_id']
 
             project_finance = ProjectFinancingProvider(
                 projectID = trace_code,
@@ -1119,7 +1119,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 mobileNumber = mobile,
                 bankTrackingNumber = bank_tracking_number,
             )
-            # api = api_farabours.register_financing(project_finance)
+            api = api_farabours.register_financing(project_finance)
         for j in payment :
             j.send_farabours = True
             j.save()
