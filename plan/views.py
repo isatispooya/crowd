@@ -49,9 +49,12 @@ def get_name_user (uniqueIdentifier) :
 
 def get_fname (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-    privateperson = privatePerson.objects.filter(user=user).first()
-    first_name = privateperson.firstName
-    return first_name
+    try:
+        privateperson = privatePerson.objects.filter(user=user).first()
+        first_name = privateperson.firstName
+        return first_name
+    expect:
+        return '
 
 
 def get_lname (uniqueIdentifier) :
