@@ -1087,6 +1087,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         plan = Plan.objects.filter(trace_code = trace_code).first()
         if not plan :
             return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        
         payment = PaymentGateway.objects.filter(plan=plan , status = '3' , send_farabours = False)
         if not payment :
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1094,6 +1095,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
         payment_serializer = payment_serializer.data
         api_farabours = CrowdfundingAPI()
+        count = 0
         for i in payment_serializer :
             uniqueIdentifier = i['user']
             user_obj = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
@@ -1122,17 +1124,24 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 mobileNumber = mobile,
                 bankTrackingNumber = bank_tracking_number,
             )
-            try_count = 0
-            while try_count < 3:
-                try_count += 1
+            payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id']).first()
+            try:
                 api = api_farabours.register_financing(project_finance)
-                print('--------------------------------')
-                print(project_finance)
-                print(api)
-                time.sleep(1)
-            # payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id']).first()
-            # payment_sended.send_farabours = False
-            # payment_sended.save()
+                if api['ErrorNo'] == '1029':
+                    payment_sended.send_farabours = True
+                else:
+                    payment_sended.send_farabours = False
+            except Exception as e:
+                payment_sended.send_farabours = False
+            count += 1
+            print(count,'--------------------------------')
+            print('<',payment_sended.send_farabours,'>')
+            print(project_finance)
+            print(api)
+            payment_sended.save()
+
+
+
         return Response(True, status=status.HTTP_200_OK)
 
 
