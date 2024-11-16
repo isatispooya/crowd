@@ -2,6 +2,7 @@ from django.db import models
 from authentication.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+import magic
 
 def validate_file_type(file):
     valid_mime_types = [
@@ -14,11 +15,21 @@ def validate_file_type(file):
     
     valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx', 'csv', 'xls']
     
-    file_mime_type = file.content_type
+    # بررسی پسوند فایل
     file_extension = file.name.split('.')[-1].lower()
-
-    if file_mime_type not in valid_mime_types or file_extension not in valid_extensions:
-        raise ValidationError("Unsupported file type.")
+    if file_extension not in valid_extensions:
+        raise ValidationError("پسوند فایل پشتیبانی نمی‌شود.")
+        
+    # بررسی نوع واقعی فایل با استفاده از python-magic
+    try:
+        mime = magic.from_buffer(file.read(1024), mime=True)
+        file.seek(0)  # برگرداندن اشاره‌گر فایل به ابتدا
+        
+        if mime not in valid_mime_types:
+            raise ValidationError("نوع فایل پشتیبانی نمی‌شود.")
+    except:
+        # اگر نتوانستیم نوع فایل را تشخیص دهیم، فقط بر اساس پسوند تصمیم می‌گیریم
+        pass
 
 
 
