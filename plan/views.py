@@ -55,8 +55,6 @@ def get_fname (uniqueIdentifier) :
         return first_name
     except:
         return ""
-    finally:
-        return: ""
 
 
 def get_lname (uniqueIdentifier) :
