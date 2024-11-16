@@ -53,7 +53,7 @@ def get_fname (uniqueIdentifier) :
         privateperson = privatePerson.objects.filter(user=user).first()
         first_name = privateperson.firstName
         return first_name
-    expect:
+    except:
         return ""
 
 
