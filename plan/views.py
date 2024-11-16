@@ -1123,6 +1123,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 bankTrackingNumber = bank_tracking_number,
             )
             api = api_farabours.register_financing(project_finance)
+            print(api)
             payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id'], send_farabours = False).first()
             payment_sended.send_farabours = True
             payment_sended.save()
