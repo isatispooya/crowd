@@ -1055,7 +1055,7 @@ class UpdateInformationViewset(APIView):
                 print('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
 
 
-            try :    
+            try:
                 if len(data.get('legalPersonStakeholders', [])) > 0:
                     for stakeholder_data in data['legalPersonStakeholders']:
                         legalPersonStakeholders.objects.create(
@@ -1069,7 +1069,7 @@ class UpdateInformationViewset(APIView):
                             firstName=stakeholder_data.get('firstName', ''),
                             endAt=stakeholder_data.get('endAt', '')
                         )
-            except :
+            except:
                 print('خطا در ثبت اطلاعات اصلی کاربر - هیئت مدیره')
 
             try :

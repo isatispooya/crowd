@@ -646,7 +646,7 @@ class PaymentDocument(APIView):
         amount = int(request.data.get('amount')) # سهم درخواستی کاربر 
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int(int(plan_total_price*10000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        purchaseable_amount = int(int(plan_total_price*1000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
         if amount > purchaseable_amount :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         
