@@ -693,7 +693,7 @@ class LoginAdminViewset(APIView) :
         code = request.data.get('code')
         if not uniqueIdentifier or not code:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             admin = Admin.objects.get(uniqueIdentifier=uniqueIdentifier)
             if admin.is_locked():
@@ -710,8 +710,8 @@ class LoginAdminViewset(APIView) :
                     admin.lock() 
                     return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
-            admin.save()  
-            return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+                admin.save()  
+                return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
 
             if otp_obj.expire and timezone.now() > otp_obj.expire:
                 return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
