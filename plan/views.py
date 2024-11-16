@@ -71,7 +71,7 @@ def get_lname (uniqueIdentifier) :
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     economi_code = tradingCodes.objects.filter(user=user).first()
-    economi_code = economi_code.code
+    economi_code=economi_code.code.strip()
     return economi_code
 
 
