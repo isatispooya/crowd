@@ -54,7 +54,7 @@ def get_fname (uniqueIdentifier) :
         first_name = privateperson.firstName
         return first_name
     expect:
-        return '
+        return ''
 
 
 def get_lname (uniqueIdentifier) :
