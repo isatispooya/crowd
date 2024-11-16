@@ -193,7 +193,7 @@ class PaymentGateway(models.Model) :
     card_number = models.TextField (null= True , blank = True, default='') # شماره کارت
 
     def __str__(self) :
-            return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.invoice)
+            return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.track_id)
         
 
 
