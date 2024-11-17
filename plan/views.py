@@ -893,6 +893,37 @@ class Certificate(APIView):
         with open(file_path, 'wb') as pdf_file:
             pdf_file.write(participation.content)
         return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
+    
+# گواهی مشارکت ادمین
+class CertificateAdminViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def post (self,request , trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        data = request.data.get('uniqueIdentifier')
+        if not data:
+            return Response({'error': 'uniqueIdentifier is required'}, status=status.HTTP_400_BAD_REQUEST)  
+        user = User.objects.filter(uniqueIdentifier=data).first()
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)  
+        apiFarabours = CrowdfundingAPI()
+        participation = apiFarabours.get_project_participation_report(trace_code , user.uniqueIdentifier)
+        if participation.status_code != 200:
+            return Response(participation.json(),status=status.HTTP_200_OK)
+        file_name = f"{trace_code}_{user.uniqueIdentifier}.pdf"
+        file_path = os.path.join(settings.MEDIA_ROOT, 'reports', file_name)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as pdf_file:
+            pdf_file.write(participation.content)
+        return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
+        
+
+
 
  
 class InformationPlanViewset(APIView) :
