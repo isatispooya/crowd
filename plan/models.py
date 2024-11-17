@@ -2,6 +2,7 @@ from django.db import models
 from authentication.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+import magic
 
 def validate_file_type(file):
     valid_mime_types = [
@@ -14,11 +15,21 @@ def validate_file_type(file):
     
     valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx', 'csv', 'xls']
     
-    file_mime_type = file.content_type
+    # بررسی پسوند فایل
     file_extension = file.name.split('.')[-1].lower()
-
-    if file_mime_type not in valid_mime_types or file_extension not in valid_extensions:
-        raise ValidationError("Unsupported file type.")
+    if file_extension not in valid_extensions:
+        raise ValidationError("پسوند فایل پشتیبانی نمی‌شود.")
+        
+    # بررسی نوع واقعی فایل با استفاده از python-magic
+    try:
+        mime = magic.from_buffer(file.read(1024), mime=True)
+        file.seek(0)  # برگرداندن اشاره‌گر فایل به ابتدا
+        
+        if mime not in valid_mime_types:
+            raise ValidationError("نوع فایل پشتیبانی نمی‌شود.")
+    except:
+        # اگر نتوانستیم نوع فایل را تشخیص دهیم، فقط بر اساس پسوند تصمیم می‌گیریم
+        pass
 
 
 
@@ -169,15 +180,27 @@ class PaymentGateway(models.Model) :
     status =  models.CharField (max_length=10 , choices= status_option , default='1' )
     document =  models.BooleanField (default=True)
     picture = models.FileField(null=True, blank = True  , upload_to='static/',validators=[validate_file_type])
+    #### Farabourse #####
     send_farabours = models.BooleanField (default=False)
+    trace_code_payment_farabourse = models.TextField (null=True, blank=True,default='')
+    provided_finance_price_farabourse = models.IntegerField (null=True, blank=True,default=0)
+    message_farabourse = models.TextField (null=True, blank=True,default='')
+    error_no_farabourse = models.IntegerField (null=True, blank=True,default=0)
+    ######################
     url_id = models.TextField ( null= True , blank=True)
     mobile = models.TextField( null= True , blank=True)
     invoice = models.TextField( null= True , blank=True)
     invoice_date =  models.DateTimeField(null=True, blank=True, default=timezone.now)
     name = models.TextField( null= True , blank=True)
     service_code = models.TextField (max_length = 10 , null= True , blank = True)
+    reference_number = models.TextField (null= True , blank = True, default='') #کد ارجاع شاپرک
+    track_id = models.TextField (null= True , blank = True, default='') # شماره پیگیری
+    code_status_payment = models.TextField (null= True , blank = True, default='') # کد وضعیت پرداخت پاسارگاد
+    card_number = models.TextField (null= True , blank = True, default='') # شماره کارت
+
+
     def __str__(self) :
-            return str (self.user) + ' ' + str (self.plan.name)
+            return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.track_id)
         
 
 

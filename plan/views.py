@@ -15,13 +15,14 @@ from dateutil.relativedelta import relativedelta
 from datetime import timedelta
 import os
 from django.conf import settings
-from plan.PeymentPEP import PasargadPaymentGateway
+from plan.PeymentPEP import PasargadPaymentGateway 
 from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
-
+from django.db.models import Sum
+import time
 
 
 def get_name (uniqueIdentifier) :
@@ -48,8 +49,11 @@ def get_name_user (uniqueIdentifier) :
 
 def get_fname (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-    privateperson = privatePerson.objects.filter(user=user).first()
-    first_name = privateperson.firstName
+    try:
+        privateperson = privatePerson.objects.filter(user=user).first()
+        first_name = privateperson.firstName
+    except:
+        return ""
     return first_name
 
 
@@ -67,7 +71,7 @@ def get_lname (uniqueIdentifier) :
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     economi_code = tradingCodes.objects.filter(user=user).first()
-    economi_code = economi_code.code
+    economi_code=economi_code.code.strip()
     return economi_code
 
 
@@ -93,6 +97,23 @@ def check_legal_person(uniqueIdentifier) :
         return True
     return False
 
+
+
+def number_of_finance_provider(trace_code) :
+    plan = Plan.objects.filter(trace_code=trace_code).first()
+    if not plan :
+        plan = 0
+    payment = PaymentGateway.objects.filter(plan=plan).filter(Q(status='2') | Q(status='3')).values('user').distinct().count()   
+
+    if not payment :
+        payment = 0
+    return payment 
+
+
+
+
+
+
 # done
 # detial + information
 class PlanViewset(APIView):
@@ -101,6 +122,7 @@ class PlanViewset(APIView):
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'message': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        plan.number_of_finance_provider =number_of_finance_provider(trace_code=trace_code)
         plan_serializer = serializers.PlanSerializer(plan)
         board_members_list = []
         board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)
@@ -183,7 +205,22 @@ class PlansViewset(APIView):
         result = []
 
         for plan in plans:
+            #update collected
+            trace_code = plan.trace_code
+            plan_number_of_finance_provider = number_of_finance_provider(trace_code=trace_code)
+            plan.number_of_finance_provider = plan_number_of_finance_provider
+            plan.save()
             information = InformationPlan.objects.filter(plan=plan).first()
+            payment_all = PaymentGateway.objects.filter(plan=plan)
+            if payment_all.exists() and plan.trace_code == 'c000fbbe-3362-4541-8d4d-59e0e3f5b301':
+                payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
+                payment_df = pd.DataFrame(payment_all.data)
+                payment_df = payment_df[['status', 'value']]
+                payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
+                collected = payment_df['value'].sum()
+                information.amount_collected_now = collected
+                information.save()
+                information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
             company = ProjectOwnerCompan.objects.filter(plan=plan)  
             shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
@@ -231,6 +268,7 @@ class PlansViewset(APIView):
             result.append(data)
 
         return Response(result, status=status.HTTP_200_OK)
+    
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
@@ -300,11 +338,13 @@ class PlansViewset(APIView):
                     'persian_project_start_date': plan_detail.get('Persian Project Start Date', None),
                     'persian_project_end_date': plan_detail.get('Persian Project End Date', None),
                     'persian_creation_date': plan_detail.get('Persian Creation Date', None),
-                    'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
+                    # 'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
                     'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
                 }
             )
-
+            trace_code = plan.trace_code
+            plan.number_of_finance_provider = number_of_finance_provider(trace_code)
+            plan.save()
 
             if len(plan_detail.get('Project Owner Company', [])) > 0:
                 for j in plan_detail['Project Owner Company']:
@@ -599,55 +639,73 @@ class PaymentDocument(APIView):
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
+
         legal_user = check_legal_person(user.uniqueIdentifier)
+
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         information_plan = InformationPlan.objects.filter(plan=plan).first()
+
         if not request.data.get('amount'):
             return Response({'error': 'amount not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         amount = int(request.data.get('amount')) # سهم درخواستی کاربر 
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
-        plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int(int(plan_total_price*10000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
-        if amount > purchaseable_amount :
+        plan_unit_price = plan.unit_price 
+        value = plan_unit_price * amount
+        plan_total_price = plan.total_price # کل قیمت قابل عرضه برای طرح 
+
+        if not request.data.get('payment_id'):
+            return Response({'error': 'payment_id not found'}, status=status.HTTP_404_NOT_FOUND)
+        payment_id = request.data.get('payment_id')
+        
+        purchaseable_value = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        if value > purchaseable_value :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         
         if legal_user == True : 
             amount_legal_min = plan.legal_person_minimum_availabe_price #حداقل سهم قابل خرید حقوقی 
             amount_legal_max = plan.legal_person_maximum_availabe_price #حداکثر سهم قابل خرید حقوقی
             
-            if amount_legal_min is not None and amount_legal_max is not None :
-                if amount < amount_legal_min or amount > amount_legal_max:
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            else :
-                if amount > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
-                  
+            if not amount_legal_min :
+                amount_legal_min = plan_unit_price
+            if not amount_legal_max :
+                amount_legal_max = purchaseable_value
+
+            if value < amount_legal_min :
+                return Response({'error': 'مبلغ  کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            if value > amount_legal_max:
+                return Response({'error': 'مبلغ بیشتر  از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            if value > purchaseable_value :
+                return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
                 
-        if legal_user == False :
-            amount_personal_min = int(plan.real_person_minimum_availabe_price/1000)  #حداقل سهم قابل خرید حقیقی
-            amount_personal_max = int(plan.real_person_maximum_available_price/1000) #حداکثر سهم قابل خرید حقیقی
-            print('amount_personal_min',amount_personal_min , 'amount_personal_max',amount_personal_max,'amount',amount)
-            if amount_personal_min is not None and amount_personal_max is not None:
-                if amount < amount_personal_min or amount > amount_personal_max :
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        else :
+            amount_personal_min = int(plan.real_person_minimum_availabe_price)  #حداقل سهم قابل خرید حقیقی
+            amount_personal_max = int(plan.real_person_maximum_available_price) #حداکثر سهم قابل خرید حقیقی
+            if not amount_personal_min :
+                amount_personal_min = plan_unit_price
+            if not amount_personal_max :
+                amount_personal_max = purchaseable_value
+
+            if value < amount_personal_min :
+                return Response({'error': 'مبلغ  کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            if value > amount_personal_max :
+                return Response({'error': 'مبلغ بیشتر  از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
             
-            else :
-                if amount > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
-                  
+            if value > purchaseable_value :
+                return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+                
 
 
-        value = plan.unit_price * amount
-        if not request.data.get('payment_id'):
-            return Response({'error': 'payment_id not found'}, status=status.HTTP_404_NOT_FOUND)
-        payment_id = request.data.get('payment_id')
         description = request.data.get('description',None)
         if not request.data.get('risk_statement'):
             return Response({'error': 'risk_statement not found'}, status=status.HTTP_404_NOT_FOUND)
-        payment_id = request.data.get('risk_statement') == 'true'
-        if not payment_id:
+            
+        risk_statement = request.data.get('risk_statement') == 'true'
+        if not risk_statement:
             return Response({'error': 'risk_statement not true'}, status=status.HTTP_404_NOT_FOUND)
         if not request.data.get('name_status'):
             return Response({'error': 'name_status not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -714,14 +772,12 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan,id = payment_id).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
-        data = request.data
-
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
-        payment = PaymentGateway.objects.filter(plan=plan ,id = payment_id)
+        payment_all = PaymentGateway.objects.filter(plan=plan)
         value = 0
-        for i in payment : 
+        for i in payment_all : 
             if i.status == '2' or i.status == '3':
                value += i.value
         information = InformationPlan.objects.filter(plan=plan).first()
@@ -743,7 +799,7 @@ class PaymentUserReport(APIView):
         if not plan:
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         user = user.first()
-        payments = PaymentGateway.objects.filter(plan=plan , status = '3')
+        payments = PaymentGateway.objects.filter(plan=plan , status__in=['2', '3'])
         response = serializers.PaymentGatewaySerializer(payments,many=True)
         df = pd.DataFrame(response.data)
         if len(df)==0:
@@ -752,7 +808,6 @@ class PaymentUserReport(APIView):
         df = df[['amount','value','create_date','fullname']]
         df = df.to_dict('records')
         return Response(df, status=status.HTTP_200_OK)
-
 
 
 
@@ -1051,6 +1106,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         plan = Plan.objects.filter(trace_code = trace_code).first()
         if not plan :
             return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        
         payment = PaymentGateway.objects.filter(plan=plan , status = '3' , send_farabours = False)
         if not payment :
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1058,6 +1114,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
         payment_serializer = payment_serializer.data
         api_farabours = CrowdfundingAPI()
+        count = 0
         for i in payment_serializer :
             uniqueIdentifier = i['user']
             user_obj = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
@@ -1071,7 +1128,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 is_legal = check_legal_person (uniqueIdentifier)
             provided_finance_price = i['value']
             payment_date = i['create_date']
-            bank_tracking_number = i['payment_id']
+            bank_tracking_number = i['track_id']
 
             project_finance = ProjectFinancingProvider(
                 projectID = trace_code,
@@ -1086,12 +1143,20 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 mobileNumber = mobile,
                 bankTrackingNumber = bank_tracking_number,
             )
-            # api = api_farabours.register_financing(project_finance)
-        for j in payment :
-            j.send_farabours = True
-            j.save()
-            
-            
+            payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id'])
+            payment_sended = payment_sended.first()
+            response, status_code = api_farabours.register_financing(project_finance)
+            if status_code < 300:
+                payment_sended.send_farabours = True
+                payment_sended.trace_code_payment_farabourse = response['TraceCode']
+                payment_sended.provided_finance_price_farabourse = response['ProvidedFinancePrice']
+                payment_sended.message_farabourse = response['Message']
+            else:
+                payment_sended.message_farabourse = response['ErrorMessage']
+                payment_sended.error_no_farabourse = response['ErrorNo']
+                payment_sended.send_farabours = False
+            print(response)
+            payment_sended.save()
         return Response(True, status=status.HTTP_200_OK)
 
 
@@ -1293,7 +1358,7 @@ class TransmissionViewset(APIView) :
         legal_user = check_legal_person(user.uniqueIdentifier)
 
         plan = Plan.objects.filter(trace_code=trace_code).first()
-        
+        plan_unit_price = plan.unit_price #قیمت هر سهم به ریال 
         information_plan = InformationPlan.objects.filter(plan=plan).first()
 
         value = request.data.get('amount')  # مبلغ درخواستی کاربر برای خرید 
@@ -1301,28 +1366,42 @@ class TransmissionViewset(APIView) :
         
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
-        purchaseable_amount = int((plan_total_price*1000) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        purchaseable_amount = int((plan_total_price*plan_unit_price) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
         if value > purchaseable_amount :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         if legal_user == True : 
             amount_legal_min = plan.legal_person_minimum_availabe_price #حداقل سهم قابل خرید حقوقی 
             amount_legal_max = plan.legal_person_maximum_availabe_price #حداکثر سهم قابل خرید حقوقی
+            if not amount_legal_min :
+                amount_legal_min = plan_unit_price
+            if not amount_legal_max :
+                amount_legal_max = purchaseable_amount
+
+            if value < amount_legal_min :
+                return Response({'error': 'مبلغ  کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            if value > amount_legal_max:
+                return Response({'error': 'مبلغ بیشتراز  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
             
-            if amount_legal_min is not None and amount_legal_max is not None :
-                if value < amount_legal_min or value > amount_legal_max:
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            else :
-                if value > purchaseable_amount :
-                    return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
-                  
+            if value > purchaseable_amount :
+                return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
+                
                 
         else :
             amount_personal_min = plan.real_person_minimum_availabe_price  #حداقل سهم قابل خرید حقیقی
             amount_personal_max = plan.real_person_maximum_available_price #حداکثر سهم قابل خرید حقیقی
-            if amount_personal_min is not None and amount_personal_max is not None :
-                if value < amount_personal_min or value > amount_personal_max :
-                    return Response({'error': 'مبلغ بیشتر یا کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+            if not amount_personal_min :
+                amount_personal_min = plan_unit_price
+
+            if not amount_personal_max :
+                amount_personal_max = purchaseable_amount
+
+            if value < amount_personal_min :
+                return Response({'error': 'مبلغ   کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            if value > amount_personal_max :
+                return Response({'error': 'مبلغ بیشتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        
             else :
                 if value > purchaseable_amount :
                     return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1362,7 +1441,7 @@ class TransmissionViewset(APIView) :
             status = '1',
             document = False,
             picture = None , 
-            send_farabours = True,
+            send_farabours = False,
             url_id = created['urlId'] , 
             mobile = user.mobile,
             invoice = invoice_data['invoice'],
@@ -1392,13 +1471,19 @@ class TransmissionViewset(APIView) :
         try :
             pep = pep.confirm_transaction(payment.invoice , payment.url_id)
         except :
+            payment.status = '0'
             return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
+        payment.reference_number = pep['referenceNumber']
+        payment.track_id = pep['trackId']
+        payment.card_number = pep['maskedCardNumber']
         payment.save()
-        payment_value = PaymentGateway.objects.filter(plan=payment.plan).filter(Q(status='2') | Q(status='3'))
+        payment_value = PaymentGateway.objects.filter(plan=payment.plan)
         serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
-        payment_value = pd.DataFrame(serializer.data)
-        payment_value = payment_value['value'].sum()
+        payment_df = pd.DataFrame(serializer.data)
+        payment_df = payment_df[payment_df['status'] != '0'] 
+        payment_df = payment_df[payment_df['status'] != '1'] 
+        payment_value = payment_df['value'].sum()
         
         information = InformationPlan.objects.filter(plan=payment.plan).first()
         if not information :
@@ -1484,3 +1569,49 @@ class RoadMapViewset(APIView) :
 
 
 
+class PaymentInquiryViewSet(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def post (self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response ({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.get('id')
+        payment = PaymentGateway.objects.filter(plan = plan , id = data ).first()
+        if not payment:
+            return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
+        payment_invoices = payment.payment_id
+        pep = PasargadPaymentGateway()
+        payment_inquiry = pep.inquiry_transaction(invoice=payment_invoices)
+        
+        try :
+            if  payment.reference_number != payment_inquiry['referenceNumber'] :
+                payment.reference_number = payment_inquiry['referenceNumber']
+        except :
+            pass
+        try :   
+            if payment.track_id != payment_inquiry['trackId']:
+                payment.track_id = payment_inquiry['trackId']
+        except :
+            pass
+
+        try:
+            if payment.code_status_payment != payment_inquiry['status']:
+                payment.code_status_payment = payment_inquiry['status']
+        except:
+            pass
+
+        try:
+            if payment.card_number != payment_inquiry['cardNumber']:
+                payment.card_number = payment_inquiry['cardNumber']
+        except:
+            pass
+
+        payment.save()
+        return Response(True, status=status.HTTP_200_OK)

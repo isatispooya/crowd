@@ -46,7 +46,7 @@ class OtpViewset(APIView) :
         captcha = GuardPyCaptcha()
 
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        if not settings.DEBUG : 
+        if True:#not settings.DEBUG : 
             if not captcha :
                 return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
             if request.data['captcha'] == '' :
@@ -104,8 +104,7 @@ class OtpViewset(APIView) :
                 
 
         
-# login or sign up user
-# done
+
 class LoginViewset(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self, request) :
@@ -159,33 +158,39 @@ class LoginViewset(APIView):
         try :
             data = response['data']
         except:
-            return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
         if data == None :
-            return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
-        print(data)
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('uniqueIdentifier'):
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
+        if not data.get('mobile'):
+            return Response({'message' :'مجددا تلاش کنید'}, status=status.HTTP_400_BAD_REQUEST)
+        
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         try :
             with transaction.atomic():
                 if  not new_user :
                     new_user  =User(
-                    agent = data ['agent'],
-                    email = data ['email'],
-                    mobile = data ['mobile'],
-                    status = data ['status'],
-                    type = data ['type'],
-                    uniqueIdentifier = data ['uniqueIdentifier'],
-                    referal = data ['uniqueIdentifier'],
+                    agent = data.get('agent'),
+                    email = data.get('email'),
+                    mobile = data.get('mobile'),
+                    status = data.get('status'),
+                    type = data.get('type'),
+                    uniqueIdentifier = data.get('uniqueIdentifier'),
+                    referal = data.get('uniqueIdentifier'),
                 )
                 new_user.save()
-                if reference:
-                    try :
+                try :
+                    if reference:
                         reference_user = User.objects.get(uniqueIdentifier=reference)
                         Reagent.objects.create(reference=reference_user, referrer=new_user)
-                    except User.DoesNotExist:
-                        pass
+                except User.DoesNotExist:
+                    pass
 
                 try :
                     agent = data.get('agent')
+                    print('-'*10,'agent','-'*10)
+                    print(agent)
                     if isinstance(agent, dict):
                         new_agent = {
                         'user': new_user,
@@ -203,33 +208,44 @@ class LoginViewset(APIView):
 
                 try :
                     accounts_data = data.get('accounts',[])
+                    print('-'*10,'accounts','-'*10)
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
-                            accountNumber= account_data.get('accountNumber', '')
-                            try :
-                                bank= account_data.get('bank', {}).get('name', '')
-                            except:
-                                bank = ''
-                            branchCity= account_data.get('branchCity', {}).get('name', '')
-                            branchCode= account_data.get('branchCode', '')
-                            branchName= account_data.get('branchName', '')
-                            isDefault= account_data.get('isDefault', False)
-                            modifiedDate= account_data.get('modifiedDate', '')
-                            type= account_data.get('type', '')
-                            sheba= account_data.get('sheba', '')
-                            
+                            accountNumber = account_data.get('accountNumber') or ''
+                            bank = ''
+                            branchCity = ''
+                            branchCode = ''
+                            branchName = ''
+                            isDefault = 'False'
+                            modifiedDate = ''
+                            type = ''
+                            sheba = ''
+
+                            if account_data.get('bank') and isinstance(account_data['bank'], dict):
+                                bank = account_data['bank'].get('name', '')
+                                
+                            if account_data.get('branchCity') and isinstance(account_data['branchCity'], dict):
+                                branchCity = account_data['branchCity'].get('name', '')
+                                
+                            branchCode = account_data.get('branchCode') or ''
+                            branchName = account_data.get('branchName') or ''
+                            isDefault = account_data.get('isDefault', False)
+                            modifiedDate = account_data.get('modifiedDate', '')
+                            type = account_data.get('type') or ''
+                            sheba = account_data.get('sheba', '')
+
                             accounts.objects.create(
                                 user=new_user,
                                 accountNumber=accountNumber,
                                 bank=bank,
                                 branchCity=branchCity,
-                                branchCode=branchCode, 
+                                branchCode=branchCode,
                                 branchName=branchName,
                                 isDefault=isDefault,
                                 modifiedDate=modifiedDate,
                                 type=type,
-                                sheba=sheba 
+                                sheba=sheba
                             )
                 except :
                     raise Exception('خطا در ثبت اطلاعات اصلی کاربر - حساب ها')
@@ -258,18 +274,31 @@ class LoginViewset(APIView):
                     print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شغلی')
 
                 try :
-                    privatePerson_data = data.get('privatePerson')
+                    privatePerson_data = data.get('privatePerson',{})
                     if isinstance(privatePerson_data, dict):
-                        birthDate = privatePerson_data.get('birthDate', '')
-                        fatherName = privatePerson_data.get('fatherName', '')
-                        firstName = privatePerson_data.get('firstName', '')
-                        gender = privatePerson_data.get('gender', '')
-                        lastName = privatePerson_data.get('lastName', '')
-                        placeOfBirth = privatePerson_data.get('placeOfBirth', '')
-                        placeOfIssue = privatePerson_data.get('placeOfIssue', '')
-                        seriSh = privatePerson_data.get('seriSh', '')
-                        serial = privatePerson_data.get('serial', '')
-                        shNumber = privatePerson_data.get('shNumber', '')
+                        birthDate = ''
+                        fatherName = ''
+                        firstName = ''
+                        gender = ''
+                        lastName = ''
+                        placeOfBirth = ''
+                        placeOfIssue = ''
+                        seriSh = ''
+                        serial = ''
+                        shNumber = ''
+                        signatureFile = None
+
+
+                        birthDate = privatePerson_data.get('birthDate', '') or ''
+                        fatherName = privatePerson_data.get('fatherName', '') or ''
+                        firstName = privatePerson_data.get('firstName', '') or ''
+                        gender = privatePerson_data.get('gender', '') or ''
+                        lastName = privatePerson_data.get('lastName', '') or ''
+                        placeOfBirth = privatePerson_data.get('placeOfBirth', '') or ''
+                        placeOfIssue = privatePerson_data.get('placeOfIssue', '') or ''
+                        seriSh = privatePerson_data.get('seriSh', '') or ''
+                        serial = privatePerson_data.get('serial', '') or ''
+                        shNumber = privatePerson_data.get('shNumber', '') or ''
                         signatureFile = privatePerson_data.get('signatureFile', None)
 
                         privatePerson.objects.create(
@@ -291,15 +320,33 @@ class LoginViewset(APIView):
 
                 try :
                     trading_codes = data.get('tradingCodes', [])
+                    print('-'*10,'tradingCodes','-'*10)
+                    print(trading_codes)
                     if trading_codes:
                         for tradingCodes_data in trading_codes:
+                            code = tradingCodes_data.get('code')
+                            if not code:
+                                raise Exception('خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی')
+
+                            firstPart = ''
+                            secondPart = ''
+                            thirdPart = ''
+                            type = ''
+
+                            firstPart = tradingCodes_data.get('firstPart', '') or ''
+                            secondPart = tradingCodes_data.get('secondPart', '') or ''
+                            thirdPart = tradingCodes_data.get('thirdPart', '') or ''
+                            type = tradingCodes_data.get('type', '') or ''
+
+
+                                
                             tradingCodes.objects.create(
                                 user = new_user,
-                            code = tradingCodes_data.get('code', ''),
-                            firstPart = tradingCodes_data.get('firstPart', ''),
-                            secondPart = tradingCodes_data.get('secondPart', ''),
-                            thirdPart = tradingCodes_data.get('thirdPart', ''),
-                                type = tradingCodes_data.get('type', ''),
+                                code = code,
+                                firstPart = firstPart,
+                                secondPart = secondPart,
+                                thirdPart = thirdPart,
+                                type = type,
                             )
                 except :
                     raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - کد های بورسی')
@@ -338,41 +385,76 @@ class LoginViewset(APIView):
                             tradingKnowledgeLevel=tradingKnowledgeLevel,
                             transactionLevel=transactionLevel,
                         )
-                except :
-                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
+                except:
+                    print('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
 
                 try :   
                     address = data.get('addresses',[])
                     for addresses_data in address:
-                        city_data = addresses_data.get('city', {}) or {}
-                        country_data = addresses_data.get('country', {}) or {}
-                        province_data = addresses_data.get('province', {}) or {}
-                        section_data = addresses_data.get('section', {}) or {}
-                    
-                    addresses.objects.create(
-                        user = new_user,
-                        alley = addresses_data.get('alley', ''),
-                        city = city_data.get('name', ''),
-                        cityPrefix = addresses_data.get('cityPrefix', ''),
-                        country = country_data.get('name', ''),
-                        countryPrefix = addresses_data.get('countryPrefix', ''),
-                        email = addresses_data.get('email', ''),
-                        emergencyTel = addresses_data.get('emergencyTel', ''),
-                        emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', ''),
-                        emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', ''),
-                        fax = addresses_data.get('fax', ''),
-                        faxPrefix = addresses_data.get('faxPrefix', ''),
-                        mobile = addresses_data.get('mobile', ''),
-                        plaque = addresses_data.get('plaque', ''),
-                        postalCode = addresses_data.get('postalCode', ''),
-                        province = province_data.get('name', ''),
-                        remnantAddress = addresses_data.get('remnantAddress', ''),
-                        section = section_data.get('name', ''),
-                        tel = addresses_data.get('tel', ''),
-                            website = addresses_data.get('website', ''),
-                        )
+                        alley = ''
+                        city = ''
+                        cityPrefix = ''
+                        country = ''
+                        countryPrefix = ''
+                        email = ''
+                        emergencyTel = ''
+                        emergencyTelCityPrefix = ''
+                        emergencyTelCountryPrefix = ''
+                        fax = ''
+                        faxPrefix = ''
+                        mobile = ''
+                        plaque = ''
+                        postalCode = ''
+                        province = ''
+                        remnantAddress = ''
+                        section = ''
+                        tel = ''
+                        website = ''
+                        alley = addresses_data.get('alley', '') or ''
+                        if addresses_data.get('city') and isinstance(addresses_data['city'], dict):
+                            city = addresses_data['city'].get('name', '')
+                        cityPrefix = addresses_data.get('cityPrefix', '') or ''
+                        if addresses_data.get('country') and isinstance(addresses_data['country'], dict):
+                            country = addresses_data['country'].get('name', '')
+                        countryPrefix = addresses_data.get('countryPrefix', '') or ''
+                        email = addresses_data.get('email', '') or ''
+                        emergencyTel = addresses_data.get('emergencyTel', '') or ''
+                        emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', '') or ''
+                        emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', '') or ''
+                        fax = addresses_data.get('fax', '') or ''
+                        faxPrefix = addresses_data.get('faxPrefix', '') or ''
+                        mobile = addresses_data.get('mobile', '') or ''
+                        plaque = addresses_data.get('plaque', '') or ''
+                        postalCode = addresses_data.get('postalCode', '') or ''
+                        province = addresses_data.get('province', {}).get('name', '') or ''
+                        remnantAddress = addresses_data.get('remnantAddress', '') or ''
+                        section = addresses_data.get('section', {}).get('name', '') or ''
+                        tel = addresses_data.get('tel', '') or ''
+                        website = addresses_data.get('website', '') or ''
+                        addresses.objects.create(
+                            user = new_user,
+                            alley = alley,
+                            city = city,
+                            cityPrefix = cityPrefix,
+                            country = country,
+                            countryPrefix = countryPrefix,
+                            email = email,
+                            emergencyTel = emergencyTel,
+                            emergencyTelCityPrefix = emergencyTelCityPrefix,
+                            emergencyTelCountryPrefix = emergencyTelCountryPrefix,
+                            fax = fax,
+                            faxPrefix = faxPrefix,
+                            mobile = mobile,
+                            plaque = plaque,
+                            postalCode = postalCode,
+                            province = province,
+                            remnantAddress = remnantAddress,
+                            section = section,
+                            tel = tel,
+                            website = website,
+                            )
                 except :
-                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
+                    print('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
 
                 try :
                     if len(data.get('legalPersonStakeholders', [])) > 0:
@@ -410,7 +492,7 @@ class LoginViewset(APIView):
                             registerNumber=legal_person_data.get('registerNumber', '')
                         )
                 except :
-                    raise Exception ('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
+                    print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
 
 
                 try :   
@@ -430,7 +512,8 @@ class LoginViewset(APIView):
                     print('خطا در ثبت اطلاعات اصلی کاربر - سهامداران')
                         
         except Exception as e:
-            print('ss',e)
+            print('-'*10,'error','-'*10)
+            print(e)
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
 
         token = fun.encryptionUser(new_user)
@@ -511,7 +594,7 @@ class OtpAdminViewset(APIView) :
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         admin = Admin.objects.filter(uniqueIdentifier = uniqueIdentifier).first()
-
+        print(admin)
         if admin :
             otp = Otp.objects.filter(mobile=admin.mobile).first()
             code = random.randint(10000,99999)
@@ -546,14 +629,12 @@ class LoginAdminViewset(APIView) :
         code = request.data.get('code')
         if not uniqueIdentifier or not code:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
             admin = Admin.objects.get(uniqueIdentifier=uniqueIdentifier)
             if admin.is_locked():
                 return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        except admin.DoesNotExist:
+        except:
             return Response({'message': ' کد ملی  موجود نیست لطفا ثبت نام کنید'}, status=status.HTTP_404_NOT_FOUND)
-        
         try:
             mobile = admin.mobile
             otp_obj = Otp.objects.filter(mobile=mobile , code = code ).order_by('-date').first()
@@ -565,7 +646,6 @@ class LoginAdminViewset(APIView) :
 
                 admin.save()  
                 return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
-
             if otp_obj.expire and timezone.now() > otp_obj.expire:
                 return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -749,7 +829,7 @@ class UpdateInformationViewset(APIView):
         
         if data is None:
             return Response({'message': 'بیشتر تلاش کن'}, status=status.HTTP_400_BAD_REQUEST)
-        
+        print(data)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         
         if new_user:
@@ -761,21 +841,219 @@ class UpdateInformationViewset(APIView):
             new_user.referal = data.get('uniqueIdentifier', new_user.referal)
             new_user.save()
 
-            if data.get('accounts'):
-                    for accounts_data in data['accounts']:
-                        accounts.objects.create(
-                            user=new_user,
-                            accountNumber=accounts_data.get('accountNumber', ''),
-                            bank=accounts_data.get('bank', {}).get('name', ''),
-                            branchCity=accounts_data.get('branchCity', {}).get('name', ''),
-                            branchCode=accounts_data.get('branchCode', ''), 
-                            branchName=accounts_data.get('branchName', ''),
-                            isDefault=accounts_data.get('isDefault', False),
-                            modifiedDate=accounts_data.get('modifiedDate', ''),
-                            type=accounts_data.get('type', ''),
-                            sheba=accounts_data.get('sheba', '')
-                        )
-            if len(data.get('legalPersonStakeholders', [])) > 0:
+            accounts_data = data.get('accounts',[])
+            if accounts_data:
+                for account_data in accounts_data:
+                    accountNumber = account_data.get('accountNumber') or ''
+                    bank = ''
+                    branchCity = ''
+                    branchCode = ''
+                    branchName = ''
+                    isDefault = 'False'
+                    modifiedDate = ''
+                    type = ''
+                    sheba = ''
+                    accountNumber = account_data.get('accountNumber') or ''
+                    if account_data.get('bank') and isinstance(account_data['bank'], dict):
+                        bank = account_data['bank'].get('name', '')
+                        
+                    if account_data.get('branchCity') and isinstance(account_data['branchCity'], dict):
+                        branchCity = account_data['branchCity'].get('name', '')
+                        
+                    branchCode = account_data.get('branchCode') or ''
+                    branchName = account_data.get('branchName') or ''
+                    isDefault = account_data.get('isDefault', False)
+                    modifiedDate = account_data.get('modifiedDate', '')
+                    type = account_data.get('type') or ''
+                    sheba = account_data.get('sheba', '')
+                    accounts.objects.create(
+                        user=new_user,
+                        accountNumber=accountNumber,
+                        bank=bank,
+                        branchCity=branchCity,
+                        branchCode=branchCode, 
+                        branchName=branchName,
+                        isDefault=isDefault,
+                        modifiedDate=modifiedDate,
+                        type=type,
+                        sheba=sheba
+                    )
+            try:
+                address = data.get('addresses',[])
+                for addresses_data in address:
+                    alley = ''
+                    city = ''
+                    cityPrefix = ''
+                    country = ''
+                    countryPrefix = ''
+                    email = ''
+                    emergencyTel = ''
+                    emergencyTelCityPrefix = ''
+                    emergencyTelCountryPrefix = ''
+                    fax = ''
+                    faxPrefix = ''
+                    mobile = ''
+                    plaque = ''
+                    postalCode = ''
+                    province = ''
+                    remnantAddress = ''
+                    section = ''
+                    tel = ''
+                    website = ''
+                    alley = addresses_data.get('alley', '') or ''
+                    if addresses_data.get('city') and isinstance(addresses_data['city'], dict):
+                        city = addresses_data['city'].get('name', '')
+                    cityPrefix = addresses_data.get('cityPrefix', '') or ''
+                    if addresses_data.get('country') and isinstance(addresses_data['country'], dict):
+                        country = addresses_data['country'].get('name', '')
+                    countryPrefix = addresses_data.get('countryPrefix', '') or ''
+                    email = addresses_data.get('email', '') or ''
+                    emergencyTel = addresses_data.get('emergencyTel', '') or ''
+                    emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', '') or ''
+                    emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', '') or ''
+                    fax = addresses_data.get('fax', '') or ''
+                    faxPrefix = addresses_data.get('faxPrefix', '') or ''
+                    mobile = addresses_data.get('mobile', '') or ''
+                    plaque = addresses_data.get('plaque', '') or ''
+                    postalCode = addresses_data.get('postalCode', '') or ''
+                    province = addresses_data.get('province', {}).get('name', '') or ''
+                    remnantAddress = addresses_data.get('remnantAddress', '') or ''
+                    section = addresses_data.get('section', {}).get('name', '') or ''
+                    tel = addresses_data.get('tel', '') or ''
+                    website = addresses_data.get('website', '') or ''
+                        
+                    addresses.objects.create(
+                            user = new_user,
+                            alley = alley,
+                            city = city,
+                            cityPrefix = cityPrefix,
+                            country = country,
+                            countryPrefix = countryPrefix,
+                            email = email,
+                            emergencyTel = emergencyTel,
+                            emergencyTelCityPrefix = emergencyTelCityPrefix,
+                            emergencyTelCountryPrefix = emergencyTelCountryPrefix,
+                            fax = fax,
+                            faxPrefix = faxPrefix,
+                            mobile = mobile,
+                            plaque = plaque,
+                            postalCode = postalCode,
+                            province = province,
+                            remnantAddress = remnantAddress,
+                            section = section,
+                            tel = tel,
+                            website = website,
+                            )
+            except :
+                print('خطا در ثبت اطلاعات آدرس ها')
+
+            try :
+                jobInfo_data = data.get('jobInfo')
+                if isinstance(jobInfo_data, dict):
+                    jobInfo.objects.create(
+                        user=new_user,
+                        companyAddress=jobInfo_data.get('companyAddress', ''),
+                        companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
+                        companyEmail=jobInfo_data.get('companyEmail', ''),
+                        companyFax=jobInfo_data.get('companyFax', ''),
+                        companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
+                        companyName=jobInfo_data.get('companyName', ''),
+                        companyPhone=jobInfo_data.get('companyPhone', ''),
+                        companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
+                        companyWebSite=jobInfo_data.get('companyWebSite', ''),
+                        employmentDate=jobInfo_data.get('employmentDate', ''),
+                        job=jobInfo_data.get('job', {}).get('title', ''),
+                        jobDescription=jobInfo_data.get('jobDescription', ''),
+                        position=jobInfo_data.get('position', ''),
+                    )
+            except :
+                print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شغلی')
+
+            try :
+                privatePerson_data = data.get('privatePerson')
+                if isinstance(privatePerson_data, dict):
+                    birthDate = ''
+                    fatherName = ''
+                    firstName = ''
+                    gender = ''
+                    lastName = ''
+                    placeOfBirth = ''
+                    placeOfIssue = ''
+                    seriSh = ''
+                    serial = ''
+                    shNumber = ''
+                    signatureFile = None
+
+
+                    birthDate = privatePerson_data.get('birthDate', '') or ''
+                    fatherName = privatePerson_data.get('fatherName', '') or ''
+                    firstName = privatePerson_data.get('firstName', '') or ''
+                    gender = privatePerson_data.get('gender', '') or ''
+                    lastName = privatePerson_data.get('lastName', '') or ''
+                    placeOfBirth = privatePerson_data.get('placeOfBirth', '') or ''
+                    placeOfIssue = privatePerson_data.get('placeOfIssue', '') or ''
+                    seriSh = privatePerson_data.get('seriSh', '') or ''
+                    serial = privatePerson_data.get('serial', '') or ''
+                    shNumber = privatePerson_data.get('shNumber', '') or ''
+                    signatureFile = privatePerson_data.get('signatureFile', None)
+
+                    privatePerson.objects.create(
+                        user=new_user,
+                        birthDate=birthDate,
+                        fatherName=fatherName,
+                        firstName=firstName,
+                        gender=gender,
+                        lastName=lastName,
+                        placeOfBirth=placeOfBirth,
+                        placeOfIssue=placeOfIssue,
+                        seriSh=seriSh,
+                        serial=serial,
+                        shNumber=shNumber,
+                        signatureFile=signatureFile
+                    )
+            except :
+                raise Exception('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شخص حقیقی')
+
+            try : 
+                financialInfo_data = data.get('financialInfo')
+                if isinstance(financialInfo_data, dict):
+                    assetsValue = financialInfo_data.get('assetsValue', '')
+                    cExchangeTransaction = financialInfo_data.get('cExchangeTransaction', '')
+                    companyPurpose = financialInfo_data.get('companyPurpose', '')
+                    try:
+                        financialBrokers = ', '.join([broker.get('broker', {}).get('title', '') for broker in financialInfo_data.get('financialBrokers', [])])
+                    except:
+                        financialBrokers = ''
+                    inComingAverage = financialInfo_data.get('inComingAverage', '')
+                    outExchangeTransaction = financialInfo_data.get('outExchangeTransaction', '')
+                    rate = financialInfo_data.get('rate', '')
+                    rateDate = financialInfo_data.get('rateDate', '')
+                    referenceRateCompany = financialInfo_data.get('referenceRateCompany', '')
+                    sExchangeTransaction = financialInfo_data.get('sExchangeTransaction', '')
+                    tradingKnowledgeLevel = financialInfo_data.get('tradingKnowledgeLevel', None)
+                    transactionLevel = financialInfo_data.get('transactionLevel', None)
+
+                    financialInfo.objects.create(
+                        user=new_user,
+                        assetsValue=assetsValue,
+                        cExchangeTransaction=cExchangeTransaction,
+                        companyPurpose=companyPurpose,
+                        financialBrokers=financialBrokers,
+                        inComingAverage=inComingAverage,
+                        outExchangeTransaction=outExchangeTransaction,
+                        rate=rate,
+                        rateDate=rateDate,
+                        referenceRateCompany=referenceRateCompany,
+                        sExchangeTransaction=sExchangeTransaction,
+                        tradingKnowledgeLevel=tradingKnowledgeLevel,
+                        transactionLevel=transactionLevel,
+                    )
+            except :
+                print('خطا در ثبت اطلاعات اصلی کاربر - پرسش های مالی')
+
+
+            try:
+                if len(data.get('legalPersonStakeholders', [])) > 0:
                     for stakeholder_data in data['legalPersonStakeholders']:
                         legalPersonStakeholders.objects.create(
                             user=new_user,
@@ -788,149 +1066,43 @@ class UpdateInformationViewset(APIView):
                             firstName=stakeholder_data.get('firstName', ''),
                             endAt=stakeholder_data.get('endAt', '')
                         )
+            except:
+                print('خطا در ثبت اطلاعات اصلی کاربر - هیئت مدیره')
 
-            legal_person_data = data.get('legalPerson', {})
-            if legal_person_data:
-                LegalPerson.objects.create(
-                    user=new_user,
-                    citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
-                    companyName=legal_person_data.get('companyName', ''),
-                    economicCode=legal_person_data.get('economicCode', ''),
-                    evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
-                    evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
-                    evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
-                    legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
-                    registerDate=legal_person_data.get('registerDate', ''),
-                    legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
-                    registerPlace=legal_person_data.get('registerPlace', ''),
-                    registerNumber=legal_person_data.get('registerNumber', '')
-                    )
-
-            if data.get('legalPersonShareholders'):
-                for legalPersonShareholders_data in data['legalPersonShareholders']:
-                    legalPersonShareholders.objects.create(
-                        user = new_user,
-                        uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
-                        postalCode = legalPersonShareholders_data.get('postalCode', ''),
-                        positionType = legalPersonShareholders_data.get('positionType', ''),
-                        percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
-                        firstName = legalPersonShareholders_data.get('firstName', ''),
-                        lastName = legalPersonShareholders_data.get('lastName', ''),
-                        address = legalPersonShareholders_data.get('address', '')
-                    )
-
-            address = data.get('addresses',[])
-            for addresses_data in address:
-                    city_data = addresses_data.get('city', {}) or {}
-                    country_data = addresses_data.get('country', {}) or {}
-                    province_data = addresses_data.get('province', {}) or {}
-                    section_data = addresses_data.get('section', {}) or {}
-                    
-                    addresses.objects.create(
-                        user = new_user,
-                        alley = addresses_data.get('alley', ''),
-                        city = city_data.get('name', ''),
-                        cityPrefix = addresses_data.get('cityPrefix', ''),
-                        country = country_data.get('name', ''),
-                        countryPrefix = addresses_data.get('countryPrefix', ''),
-                        email = addresses_data.get('email', ''),
-                        emergencyTel = addresses_data.get('emergencyTel', ''),
-                        emergencyTelCityPrefix = addresses_data.get('emergencyTelCityPrefix', ''),
-                        emergencyTelCountryPrefix = addresses_data.get('emergencyTelCountryPrefix', ''),
-                        fax = addresses_data.get('fax', ''),
-                        faxPrefix = addresses_data.get('faxPrefix', ''),
-                        mobile = addresses_data.get('mobile', ''),
-                        plaque = addresses_data.get('plaque', ''),
-                        postalCode = addresses_data.get('postalCode', ''),
-                        province = province_data.get('name', ''),
-                        remnantAddress = addresses_data.get('remnantAddress', ''),
-                        section = section_data.get('name', ''),
-                        tel = addresses_data.get('tel', ''),
-                        website = addresses_data.get('website', ''),
-                    )
-
-            jobInfo_data = data.get('jobInfo')
-            if isinstance(jobInfo_data, dict):
-                jobInfo.objects.create(
-                    user=new_user,
-                    companyAddress=jobInfo_data.get('companyAddress', ''),
-                    companyCityPrefix=jobInfo_data.get('companyCityPrefix', ''),
-                    companyEmail=jobInfo_data.get('companyEmail', ''),
-                    companyFax=jobInfo_data.get('companyFax', ''),
-                    companyFaxPrefix=jobInfo_data.get('companyFaxPrefix', ''),
-                    companyName=jobInfo_data.get('companyName', ''),
-                    companyPhone=jobInfo_data.get('companyPhone', ''),
-                    companyPostalCode=jobInfo_data.get('companyPostalCode', ''),
-                    companyWebSite=jobInfo_data.get('companyWebSite', ''),
-                    employmentDate=jobInfo_data.get('employmentDate', ''),
-                    job=jobInfo_data.get('job', {}).get('title', ''),
-                    jobDescription=jobInfo_data.get('jobDescription', ''),
-                    position=jobInfo_data.get('position', ''),
-                )
-            
-            privatePerson_data = data.get('privatePerson')
-            if isinstance(privatePerson_data, dict):
-                birthDate = privatePerson_data.get('birthDate', '')
-                fatherName = privatePerson_data.get('fatherName', '')
-                firstName = privatePerson_data.get('firstName', '')
-                gender = privatePerson_data.get('gender', '')
-                lastName = privatePerson_data.get('lastName', '')
-                placeOfBirth = privatePerson_data.get('placeOfBirth', '')
-                placeOfIssue = privatePerson_data.get('placeOfIssue', '')
-                seriSh = privatePerson_data.get('seriSh', '')
-                serial = privatePerson_data.get('serial', '')
-                shNumber = privatePerson_data.get('shNumber', '')
-                signatureFile = privatePerson_data.get('signatureFile', None)
-
-                privatePerson.objects.create(
-                    user=new_user,
-                    birthDate=birthDate,
-                    fatherName=fatherName,
-                    firstName=firstName,
-                    gender=gender,
-                    lastName=lastName,
-                    placeOfBirth=placeOfBirth,
-                    placeOfIssue=placeOfIssue,
-                    seriSh=seriSh,
-                    serial=serial,
-                    shNumber=shNumber,
-                    signatureFile=signatureFile
-                )
-
-            financialInfo_data = data.get('financialInfo')
-            if isinstance(financialInfo_data, dict):
-                assetsValue = financialInfo_data.get('assetsValue', '')
-                cExchangeTransaction = financialInfo_data.get('cExchangeTransaction', '')
-                companyPurpose = financialInfo_data.get('companyPurpose', '')
-                try:
-                    financialBrokers = ', '.join([broker.get('broker', {}).get('title', '') for broker in financialInfo_data.get('financialBrokers', [])])
-                except:
-                    financialBrokers = ''
-                inComingAverage = financialInfo_data.get('inComingAverage', '')
-                outExchangeTransaction = financialInfo_data.get('outExchangeTransaction', '')
-                rate = financialInfo_data.get('rate', '')
-                rateDate = financialInfo_data.get('rateDate', '')
-                referenceRateCompany = financialInfo_data.get('referenceRateCompany', '')
-                sExchangeTransaction = financialInfo_data.get('sExchangeTransaction', '')
-                tradingKnowledgeLevel = financialInfo_data.get('tradingKnowledgeLevel', None)
-                transactionLevel = financialInfo_data.get('transactionLevel', None)
-
-                financialInfo.objects.create(
-                    user=new_user,
-                    assetsValue=assetsValue,
-                    cExchangeTransaction=cExchangeTransaction,
-                    companyPurpose=companyPurpose,
-                    financialBrokers=financialBrokers,
-                    inComingAverage=inComingAverage,
-                    outExchangeTransaction=outExchangeTransaction,
-                    rate=rate,
-                    rateDate=rateDate,
-                    referenceRateCompany=referenceRateCompany,
-                    sExchangeTransaction=sExchangeTransaction,
-                    tradingKnowledgeLevel=tradingKnowledgeLevel,
-                    transactionLevel=transactionLevel,
-                )
-
+            try :
+                legal_person_data = data.get('legalPerson', {})
+                if legal_person_data:
+                    LegalPerson.objects.create(
+                        user=new_user,
+                        citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
+                        companyName=legal_person_data.get('companyName', ''),
+                        economicCode=legal_person_data.get('economicCode', ''),
+                        evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
+                        evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
+                        evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
+                        legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
+                        registerDate=legal_person_data.get('registerDate', ''),
+                        legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
+                        registerPlace=legal_person_data.get('registerPlace', ''),
+                        registerNumber=legal_person_data.get('registerNumber', '')
+                        )
+            except :
+                print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
+            try :
+                if data.get('legalPersonShareholders'):
+                    for legalPersonShareholders_data in data['legalPersonShareholders']:
+                        legalPersonShareholders.objects.create(
+                            user = new_user,
+                            uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
+                            postalCode = legalPersonShareholders_data.get('postalCode', ''),
+                            positionType = legalPersonShareholders_data.get('positionType', ''),
+                            percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
+                            firstName = legalPersonShareholders_data.get('firstName', ''),
+                            lastName = legalPersonShareholders_data.get('lastName', ''),
+                            address = legalPersonShareholders_data.get('address', '')
+                        )
+            except :
+                print('خطا در ثبت اطلاعات اصلی کاربر - سهامداران')
 
         return Response({'success': True}, status=status.HTTP_200_OK)
     
