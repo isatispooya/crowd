@@ -23,7 +23,7 @@ urlpatterns = [
     path('warranty/admin/<str:key>/', WarrantyAdminViewset.as_view(), name='warranty-admin'), #  ضمانت نامه
     path('transmission/user/<str:key>/', TransmissionViewset.as_view(), name='transmission-user'), # درگاه پرداخت
     path('bank/reciept/payment/admin/<int:id>/', BankReceiptViewset.as_view(), name='bank-reciept-payment-admin'), # فیش بانکی های ادمین
-    path('participant/menu/user/', ParticipantMenuViewset.as_view(), name='participant-menu-user'), # درگاه بانکی کاربر
+    path('participant/menu/user/', ParticipantMenuViewset.as_view(), name='participant-menu-user'), # گواهی مشارکت 
     path('payment/inquiry/admin/<str:trace_code>/', PaymentInquiryViewSet.as_view(), name='payment-inquiry-admin'), #چک پرداخت های درگاه بانکی
 
 ]

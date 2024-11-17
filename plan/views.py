@@ -1519,15 +1519,22 @@ class ParticipantMenuViewset(APIView):
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
-        payment = PaymentGateway.objects.filter(user=user, send_farabours =True)
+        payment = PaymentGateway.objects.filter(user=user, send_farabours =True , status = '3').distinct()
         serializer = serializers.PaymentGatewaySerializer(payment,many = True)
         plans = []
         for i in serializer.data :
             plan = i['plan']
             plan = Plan.objects.filter(id=plan).first()
-            if plan:
-                if plan not in plans:
-                    plans.append(plan) 
+            if not plan :
+                return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            information = InformationPlan.objects.filter(plan =plan , status_second ='5').first()
+            if not information :
+                return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            if plan not in plans:
+                plans.append(plan) 
+
         plan_serializer = serializers.PlanSerializer(plans, many=True)
         return Response (plan_serializer.data,status=status.HTTP_200_OK)
     
