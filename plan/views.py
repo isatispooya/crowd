@@ -1134,6 +1134,31 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             payment_sended.save()
         return Response(True, status=status.HTTP_200_OK)
 
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='get', block=True))
+    def get(self, request, trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        
+        payment = PaymentGateway.objects.filter(plan=plan , status = '3' , send_farabours = False)
+        if not payment :
+            return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
+        if payment_serializer.data:
+            payment_serializer = [
+                {field: item[field] for field in ['user', 'amount', 'value', 'plan', 'status', 'document','send_farabours' ,'trace_code_payment_farabourse' , 'provided_finance_price_farabourse' ,'message_farabourse' ,'error_no_farabourse' ,'track_id'] if field in item}
+                for item in payment_serializer.data
+                ]
+        return Response (payment_serializer , status=status.HTTP_200_OK)
+
 
 # done
 # save payment exel
