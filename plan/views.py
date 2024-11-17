@@ -1062,32 +1062,6 @@ class EndOfFundraisingViewset(APIView) :
             return Response({'date_payments' : serializer.data, 'date_start' : date_payement}, status=status.HTTP_200_OK)
         
 
-# done
-class SendPaymentToFarabours(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
-    def post (self,request,trace_code) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first() 
-        data = request.data
-        financing_provider = ProjectFinancingProvider(
-            projectID=data.get('projectID'),
-            nationalID=data.get('nationalID'),
-            isLegal=data.get('isLegal'),
-            firstName=data.get('firstName'),
-            lastNameOrCompanyName=data.get('lastNameOrCompanyName'),
-            providedFinancePrice=data.get('providedFinancePrice'),
-            bourseCode=data.get('bourseCode'),
-            paymentDate=data.get('paymentDate'),
-            shebaBankAccountNumber=data.get('shebaBankAccountNumber'),
-            mobileNumber=data.get('mobileNumber'),
-            bankTrackingNumber=data.get('bankTrackingNumber'),
-        )
-        return Response (status=status.HTTP_200_OK)
 
 
 
