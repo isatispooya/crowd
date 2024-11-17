@@ -840,44 +840,46 @@ class UpdateInformationViewset(APIView):
             new_user.type = data.get('type', new_user.type)
             new_user.referal = data.get('uniqueIdentifier', new_user.referal)
             new_user.save()
-
-            accounts_data = data.get('accounts',[])
-            if accounts_data:
-                for account_data in accounts_data:
-                    accountNumber = account_data.get('accountNumber') or ''
-                    bank = ''
-                    branchCity = ''
-                    branchCode = ''
-                    branchName = ''
-                    isDefault = 'False'
-                    modifiedDate = ''
-                    type = ''
-                    sheba = ''
-                    accountNumber = account_data.get('accountNumber') or ''
-                    if account_data.get('bank') and isinstance(account_data['bank'], dict):
-                        bank = account_data['bank'].get('name', '')
-                        
-                    if account_data.get('branchCity') and isinstance(account_data['branchCity'], dict):
-                        branchCity = account_data['branchCity'].get('name', '')
-                        
-                    branchCode = account_data.get('branchCode') or ''
-                    branchName = account_data.get('branchName') or ''
-                    isDefault = account_data.get('isDefault', False)
-                    modifiedDate = account_data.get('modifiedDate', '')
-                    type = account_data.get('type') or ''
-                    sheba = account_data.get('sheba', '')
-                    accounts.objects.create(
-                        user=new_user,
-                        accountNumber=accountNumber,
-                        bank=bank,
-                        branchCity=branchCity,
-                        branchCode=branchCode, 
-                        branchName=branchName,
-                        isDefault=isDefault,
-                        modifiedDate=modifiedDate,
-                        type=type,
-                        sheba=sheba
-                    )
+            try:
+                accounts_data = data.get('accounts',[])
+                if accounts_data:
+                    for account_data in accounts_data:
+                        accountNumber = account_data.get('accountNumber') or ''
+                        bank = ''
+                        branchCity = ''
+                        branchCode = ''
+                        branchName = ''
+                        isDefault = 'False'
+                        modifiedDate = ''
+                        type = ''
+                        sheba = ''
+                        accountNumber = account_data.get('accountNumber') or ''
+                        if account_data.get('bank') and isinstance(account_data['bank'], dict):
+                            bank = account_data['bank'].get('name', '')
+                            
+                        if account_data.get('branchCity') and isinstance(account_data['branchCity'], dict):
+                            branchCity = account_data['branchCity'].get('name', '')
+                            
+                        branchCode = account_data.get('branchCode') or ''
+                        branchName = account_data.get('branchName') or ''
+                        isDefault = account_data.get('isDefault', False)
+                        modifiedDate = account_data.get('modifiedDate', '')
+                        type = account_data.get('type') or ''
+                        sheba = account_data.get('sheba', '')
+                        accounts.objects.create(
+                            user=new_user,
+                            accountNumber=accountNumber,
+                            bank=bank,
+                            branchCity=branchCity,
+                            branchCode=branchCode, 
+                            branchName=branchName,
+                            isDefault=isDefault,
+                            modifiedDate=modifiedDate,
+                            type=type,
+                            sheba=sheba
+                        )
+            except :
+                raise Exception('خطا در ثبت اطلاعات اصلی کاربر - حساب ها')
             try:
                 address = data.get('addresses',[])
                 for addresses_data in address:
