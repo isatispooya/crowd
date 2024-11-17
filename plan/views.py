@@ -719,6 +719,7 @@ class PaymentDocument(APIView):
             amount = amount,
             value = value,
             payment_id = payment_id,
+            track_id = payment_id,
             description = description,
             name_status = name_status,
             picture = picture,
@@ -1389,7 +1390,6 @@ class TransmissionViewset(APIView) :
         invoice_data = {
             'invoice' : pep.generator_invoice_number(),
             'invoiceDate': pep.generator_date(),
-            'description': 'تست'
             
         }  
         created = pep.create_purchase(
