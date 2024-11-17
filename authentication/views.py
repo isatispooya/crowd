@@ -46,7 +46,7 @@ class OtpViewset(APIView) :
         captcha = GuardPyCaptcha()
 
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
-        if not settings.DEBUG : 
+        if True:#not settings.DEBUG : 
             if not captcha :
                 return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
             if request.data['captcha'] == '' :
@@ -104,8 +104,7 @@ class OtpViewset(APIView) :
                 
 
         
-# login or sign up user
-# done
+
 class LoginViewset(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self, request) :

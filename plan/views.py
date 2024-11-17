@@ -1124,24 +1124,20 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 mobileNumber = mobile,
                 bankTrackingNumber = bank_tracking_number,
             )
-            payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id']).first()
-            try:
-                api = api_farabours.register_financing(project_finance)
-                if api['ErrorNo'] == '1029':
-                    payment_sended.send_farabours = True
-                else:
-                    payment_sended.send_farabours = False
-            except Exception as e:
+            payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id'])
+            payment_sended = payment_sended.first()
+            response, status_code = api_farabours.register_financing(project_finance)
+            if status_code < 300:
+                payment_sended.send_farabours = True
+                payment_sended.trace_code_payment_farabourse = response['TraceCode']
+                payment_sended.provided_finance_price_farabourse = response['ProvidedFinancePrice']
+                payment_sended.message_farabourse = response['Message']
+            else:
+                payment_sended.message_farabourse = response['ErrorMessage']
+                payment_sended.error_no_farabourse = response['ErrorNo']
                 payment_sended.send_farabours = False
-            count += 1
-            print(count,'--------------------------------')
-            print('<',payment_sended.send_farabours,'>')
-            print(project_finance)
-            print(api)
+            print(response)
             payment_sended.save()
-
-
-
         return Response(True, status=status.HTTP_200_OK)
 
 

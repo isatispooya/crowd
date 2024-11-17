@@ -180,7 +180,13 @@ class PaymentGateway(models.Model) :
     status =  models.CharField (max_length=10 , choices= status_option , default='1' )
     document =  models.BooleanField (default=True)
     picture = models.FileField(null=True, blank = True  , upload_to='static/',validators=[validate_file_type])
+    #### Farabourse #####
     send_farabours = models.BooleanField (default=False)
+    trace_code_payment_farabourse = models.TextField (null=True, blank=True,default='')
+    provided_finance_price_farabourse = models.IntegerField (null=True, blank=True,default=0)
+    message_farabourse = models.TextField (null=True, blank=True,default='')
+    error_no_farabourse = models.IntegerField (null=True, blank=True,default=0)
+    ######################
     url_id = models.TextField ( null= True , blank=True)
     mobile = models.TextField( null= True , blank=True)
     invoice = models.TextField( null= True , blank=True)
@@ -191,6 +197,7 @@ class PaymentGateway(models.Model) :
     track_id = models.TextField (null= True , blank = True, default='') # شماره پیگیری
     code_status_payment = models.TextField (null= True , blank = True, default='') # کد وضعیت پرداخت پاسارگاد
     card_number = models.TextField (null= True , blank = True, default='') # شماره کارت
+
 
     def __str__(self) :
             return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.track_id)
