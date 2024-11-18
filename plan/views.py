@@ -2576,13 +2576,14 @@ class TransmissionViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     @transaction.atomic
     def get (self,request,*args, **kwargs):
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        user = user.first()
+        # Authorization = request.headers.get('Authorization')
+        # if not Authorization:
+        #     return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        # user = fun.decryptionUser(Authorization)
+        # if not user:
+        #     return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        # user = user.first()
+        
         pep = PasargadPaymentGateway()
         invoice = kwargs.get('key')
         payment = PaymentGateway.objects.filter(invoice = invoice).first()
