@@ -27,7 +27,7 @@ urlpatterns = [
     path('certificate/admin/<str:key>', CertificateAdminViewset.as_view(), name='certificate-admin'), #  گواهی مشارکت  ادمین
     path('payment/inquiry/admin/<str:trace_code>/', PaymentInquiryViewSet.as_view(), name='payment-inquiry-admin'), #چک پرداخت های درگاه بانکی
     path('send/participation/notification/admin/<str:trace_code>/', SendParticipationNotificationViewset.as_view(), name='send-participation-notification-admin'), # اعلام تکمیل طرح از طرف ادمین
-    path('check/verification/payment/admin/<str:trace_code>/', CheckVerificationPaymentAdminViewset.as_view(), name='check-verification-payment-admin'), # بررسی پرداخت چک های سود سرمایه پذیر از طرف ادمین    
-    path('check/verification/receipt/admin/<str:trace_code>/', CheckVerificationReceiptAdminViewset.as_view(), name='check-verification-receipt-admin'), # بررسی دریافت چک های سود سرمایه گذار از طرف ادمین    
+    path('check/verification/payment/admin/', CheckVerificationPaymentAdminViewset.as_view(), name='check-verification-payment-admin'), # بررسی پرداخت چک های سود سرمایه پذیر از طرف ادمین    
+    path('check/verification/receipt/admin/', CheckVerificationReceiptAdminViewset.as_view(), name='check-verification-receipt-admin'), # بررسی دریافت چک های سود سرمایه گذار از طرف ادمین    
 ]
 

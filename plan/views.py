@@ -2775,8 +2775,8 @@ class SendParticipationNotificationViewset (APIView):
 
         
 class CheckVerificationPaymentAdminViewset (APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
-    def get (self,request,trace_code):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self,request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2784,23 +2784,28 @@ class CheckVerificationPaymentAdminViewset (APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code=trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-        end_of_fundraising = EndOfFundraising.objects.filter(plan=plan).first()
+
+        end_of_fundraising = EndOfFundraising.objects.all()
+
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising).data
-        serializer ={
-            'amount_operator': serializer['amount_operator'],
-            'date_operator': serializer['date_operator'],
-            'date_capitalization_operator': serializer['date_capitalization_operator'],
-            'profit_payment_comment' : serializer['profit_payment_comment'],
-            'profit_payment_completed': serializer['profit_payment_completed'],
-        }
-        return Response(serializer, status=status.HTTP_200_OK)
+        serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising, many=True).data
+        listPayment = []
+        for i in serializer :
+            plan = Plan.objects.filter(id=i['plan']).first()
+            serializer ={
+                'plan': plan.persian_name,
+                'amount_operator': i['amount_operator'],
+                'date_operator': i['date_operator'],
+                'date_capitalization_operator': i['date_capitalization_operator'],
+                'profit_payment_comment' : i['profit_payment_comment'],
+                'profit_payment_completed': i['profit_payment_completed'],
+            }
+            listPayment.append(serializer)
+        return Response(listPayment, status=status.HTTP_200_OK)
         
-    def patch (self,request,trace_code):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    def patch (self,request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2808,10 +2813,9 @@ class CheckVerificationPaymentAdminViewset (APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code=trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-        end_of_fundraising = EndOfFundraising.objects.filter(plan=plan).first()
+        id = request.data.get('id')
+
+        end_of_fundraising = EndOfFundraising.objects.filter(id=id).first()
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
@@ -2824,7 +2828,7 @@ class CheckVerificationPaymentAdminViewset (APIView):
 
 class CheckVerificationReceiptAdminViewset (APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
-    def get (self,request,trace_code):
+    def get (self,request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2832,24 +2836,26 @@ class CheckVerificationReceiptAdminViewset (APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code=trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-        end_of_fundraising = EndOfFundraising.objects.filter(plan=plan).first()
+        end_of_fundraising = EndOfFundraising.objects.all()
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising).data
-        serializer ={
-            'amount_operator': serializer['amount_operator'],
-            'date_operator': serializer['date_operator'],
-            'date_capitalization_operator': serializer['date_capitalization_operator'],
-            'profit_receipt_comment' : serializer['profit_receipt_comment'],
-            'profit_receipt_completed': serializer['profit_receipt_completed'],
-        }
-        return Response(serializer, status=status.HTTP_200_OK)
+        serializer = serializers.EndOfFundraisingSerializer(end_of_fundraising, many=True).data
+        listPayment = []
+        for i in serializer :
+            plan = Plan.objects.filter(id=i['plan']).first()
+            serializer ={
+                'plan': plan.persian_name,
+                'amount_operator': i['amount_operator'],
+                'date_operator': i['date_operator'],
+                'date_capitalization_operator': i['date_capitalization_operator'],
+                'profit_receipt_comment' : i['profit_receipt_comment'],
+                'profit_receipt_completed': i['profit_receipt_completed'],
+            }
+            listPayment.append(serializer)
+        return Response(listPayment, status=status.HTTP_200_OK)
     
-
-    def patch (self,request,trace_code):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    def patch (self,request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2857,10 +2863,8 @@ class CheckVerificationReceiptAdminViewset (APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code=trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
-        end_of_fundraising = EndOfFundraising.objects.filter(plan=plan).first()
+        id = request.data.get('id')
+        end_of_fundraising = EndOfFundraising.objects.filter(id=id).first()
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data

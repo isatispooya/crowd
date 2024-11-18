@@ -231,18 +231,18 @@ class InformationPlan (models.Model):
          
 
 class EndOfFundraising (models.Model) :
-    amount_operator = models.IntegerField(null=True, blank=True)
-    amount_systemic = models.IntegerField(null=True, blank=True)
+    amount_operator = models.IntegerField(null=True, blank=True) #مبلغ ادمین
+    amount_systemic = models.IntegerField(null=True, blank=True) #مبلغ سیستمی
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     type = models.CharField(max_length=100  , null=True, blank=True)
-    date_operator = models.DateField(null=True, blank=True)
-    date_systemic = models.DateField(null=True, blank=True)
-    date_capitalization_operator = models.DateField(null=True, blank=True)
-    date_capitalization_systemic = models.DateField(null=True, blank=True)
-    profit_payment_comment = models.TextField(null=True, blank=True,default='')
-    profit_receipt_comment = models.TextField(null=True, blank=True,default='')
-    profit_payment_completed = models.BooleanField(default=False)
-    profit_receipt_completed = models.BooleanField(default=False)
+    date_operator = models.DateField(null=True, blank=True) #تاریخ ادمین
+    date_systemic = models.DateField(null=True, blank=True) #تاریخ سیستمی
+    date_capitalization_operator = models.DateField(null=True, blank=True) #تاریخ ادمین برای سود
+    date_capitalization_systemic = models.DateField(null=True, blank=True) #تاریخ سیستمی برای سود
+    profit_payment_comment = models.TextField(null=True, blank=True,default='') #توضیحات پرداخت سود
+    profit_receipt_comment = models.TextField(null=True, blank=True,default='') #توضیحات دریافت سود
+    profit_payment_completed = models.BooleanField(default=False) #تایید پرداخت سود
+    profit_receipt_completed = models.BooleanField(default=False) #تایید دریافت سود
     def __str__(self) :
          return self.plan.persian_name + '-' + self.type
        
