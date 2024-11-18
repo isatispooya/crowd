@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, BankReceiptViewset ,PaymentUserReport ,PaymentInquiryViewSet,PlanViewset,PaymentUser, CertificateAdminViewset, Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset 
+from.views import PlansViewset, BankReceiptViewset ,PaymentUserReport ,SendParticipationNotificationViewset,PaymentInquiryViewSet,PlanViewset,PaymentUser, CertificateAdminViewset, Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset 
 
 
 urlpatterns = [
@@ -26,5 +26,6 @@ urlpatterns = [
     path('participant/menu/user/', ParticipantMenuViewset.as_view(), name='participant-menu-user'), # گواهی مشارکت 
     path('certificate/admin/<str:key>', CertificateAdminViewset.as_view(), name='certificate-admin'), #  گواهی مشارکت  ادمین
     path('payment/inquiry/admin/<str:trace_code>/', PaymentInquiryViewSet.as_view(), name='payment-inquiry-admin'), #چک پرداخت های درگاه بانکی
+    path('send/participation/notification/admin/<str:trace_code>/', SendParticipationNotificationViewset.as_view(), name='send-participation-notification-admin'), # اعلام تکمیل طرح از طرف ادمین
 ]
 
