@@ -211,7 +211,9 @@ class DashBoardUserViewset(APIView) :
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
-        plan_all = Plan.objects.all().count()
+        plan_all = Plan.objects.all()
+        information_plan = InformationPlan.objects.filter(plan__in = plan_all , status_show = True)
+        plan_all = information_plan.count()
         current_date = timezone.now().date()
         active_plan = Plan.objects.filter( suggested_underwriting_start_date__lte=current_date,suggested_underwriting_end_date__gte=current_date).count()
         payments = PaymentGateway.objects.filter(user=user.uniqueIdentifier , status='3').values('plan').distinct()
