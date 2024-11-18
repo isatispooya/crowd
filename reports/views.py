@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from plan.models import Plan , PaymentGateway ,InformationPlan ,EndOfFundraising
+from plan.models import Plan , PaymentGateway ,InformationPlan ,EndOfFundraising , ProjectOwnerCompan
 from authentication.models import User , accounts , privatePerson
 from investor.models import Cart
 from .models import ProgressReport , AuditReport
@@ -291,6 +291,12 @@ class ProfitabilityReportViewSet(APIView) :
         if not plan.exists():
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         plan =plan.first()
+        # ---------------------------------------------------------------------------------------------------------------------
+        project_owner = ProjectOwnerCompan.objects.filter(plan=plan).first()
+        if not project_owner:
+            return Response({'error': 'project owner not found'}, status=status.HTTP_404_NOT_FOUND)
+        project_owner = project_owner.national_id
+        # ---------------------------------------------------------------------------------------------------------------------
         end_plan = EndOfFundraising.objects.filter(plan=plan,type=2)
         if not end_plan.exists():
             return Response({'error': 'plan not end'}, status=status.HTTP_406_NOT_ACCEPTABLE)
