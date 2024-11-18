@@ -2482,7 +2482,7 @@ class TransmissionViewset(APIView) :
         plan_unit_price = plan.unit_price #قیمت هر سهم به ریال 
         information_plan = InformationPlan.objects.filter(plan=plan).first()
 
-        value = request.data.get('amount')  # مبلغ درخواستی کاربر برای خرید 
+        value = request.data.get('amount',0)  # مبلغ درخواستی کاربر برای خرید 
         value = int(value)
         
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
@@ -2794,6 +2794,7 @@ class CheckVerificationPaymentAdminViewset (APIView):
         for i in serializer :
             plan = Plan.objects.filter(id=i['plan']).first()
             serializer ={
+                'id': i['id'],
                 'plan': plan.persian_name,
                 'amount_operator': i['amount_operator'],
                 'date_operator': i['date_operator'],
@@ -2844,6 +2845,7 @@ class CheckVerificationReceiptAdminViewset (APIView):
         for i in serializer :
             plan = Plan.objects.filter(id=i['plan']).first()
             serializer ={
+                'id': i['id'],
                 'plan': plan.persian_name,
                 'amount_operator': i['amount_operator'],
                 'date_operator': i['date_operator'],
