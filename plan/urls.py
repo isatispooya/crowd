@@ -26,6 +26,5 @@ urlpatterns = [
     path('participant/menu/user/', ParticipantMenuViewset.as_view(), name='participant-menu-user'), # گواهی مشارکت 
     path('certificate/admin/<str:key>', CertificateAdminViewset.as_view(), name='certificate-admin'), #  گواهی مشارکت  ادمین
     path('payment/inquiry/admin/<str:trace_code>/', PaymentInquiryViewSet.as_view(), name='payment-inquiry-admin'), #چک پرداخت های درگاه بانکی
-
 ]
 

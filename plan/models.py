@@ -239,7 +239,10 @@ class EndOfFundraising (models.Model) :
     date_systemic = models.DateField(null=True, blank=True)
     date_capitalization_operator = models.DateField(null=True, blank=True)
     date_capitalization_systemic = models.DateField(null=True, blank=True)
-
+    profit_payment_comment = models.TextField(null=True, blank=True,default='')
+    profit_receipt_comment = models.TextField(null=True, blank=True,default='')
+    profit_payment_completed = models.BooleanField(default=False)
+    profit_receipt_completed = models.BooleanField(default=False)
     def __str__(self) :
          return self.plan.persian_name + '-' + self.type
        
