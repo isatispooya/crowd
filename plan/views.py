@@ -2259,9 +2259,25 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
         if payment_serializer.data:
             payment_serializer = [
-                {field: item[field] for field in ['user', 'amount', 'value', 'plan', 'status', 'document','send_farabours' ,'trace_code_payment_farabourse' , 'provided_finance_price_farabourse' ,'message_farabourse' ,'error_no_farabourse' ,'track_id'] if field in item}
-                for item in payment_serializer.data
-                ]
+            {
+                'plan': item['plan'],
+                'status': item['status'],
+                'document': item['document'],
+                'send_farabours': item['send_farabours'],
+                'trace_code_payment_farabourse': item['trace_code_payment_farabourse'],
+                'provided_finance_price_farabourse': item['provided_finance_price_farabourse'],
+                'message_farabourse': item['message_farabourse'],
+                'error_no_farabourse': item['error_no_farabourse'],
+                'track_id': item['track_id'],
+                'amount': item['amount'],
+                'value': item['value'],
+                'create_date': item['create_date'],
+                'user': item['user'],
+                'user_name': get_name(item['user'])
+            } for item in payment_serializer.data
+        ] 
+            
+            
         return Response (payment_serializer , status=status.HTTP_200_OK)
 
 
