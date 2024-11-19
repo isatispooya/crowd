@@ -1704,7 +1704,6 @@ class SendpicturePlanViewset(APIView) :
 
 
 # done
-# محدودیت پرداخت به دلیل امنیت غیر فعال شد
 class PaymentDocument(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post(self,request,trace_code):
@@ -2464,7 +2463,6 @@ class WarrantyAdminViewset(APIView) :
 
 # done
 # درگاه بانکی
-# محدودیت پرداخت به دلیل امنیت غیر فعال شد
 class TransmissionViewset(APIView) : 
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post(self,request ,*args, **kwargs):
@@ -2897,7 +2895,7 @@ class ComplaintViewset (APIView):
             user=user,
             title=data.get('title'), 
             description=data.get('description') , 
-            send_farabourse = data.get('send_farabourse'), 
+            send_farabourse = data.get('send_farabourse',False), 
             message = data.get('message')
             )
         serializer = serializers.ComplaintSerializer(complaint).data
