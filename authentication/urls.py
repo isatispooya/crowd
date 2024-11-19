@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,UserOneViewset,LogoutViewset,AddBoursCodeUserViewset,LoginAdminViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset
+from.views import CaptchaViewset,OtpViewset,LoginViewset,OtpAdminViewset,UserOneViewset,LogoutViewset,AddBoursCodeUserViewset,LoginAdminViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset, RefreshTokenAdminViewset
 
 urlpatterns = [
     path('captcha/', CaptchaViewset.as_view(), name='captcha'),
@@ -14,4 +14,5 @@ urlpatterns = [
     path('update/profile/', UpdateInformationViewset.as_view(), name='update-profile'),
     path('add/bours/code/user/', AddBoursCodeUserViewset.as_view(), name='add-bours-code-user'),
     path('log/out/', LogoutViewset.as_view(), name='log-out'),
+    path('refresh/token/admin/', RefreshTokenAdminViewset.as_view(), name='refresh-token-admin'), #رفرش توکن ادمین
 ]
