@@ -253,5 +253,9 @@ class Warranty (models.Model):
     kind_of_warranty = models.TextField( blank = True , null = True)
     date = models.DateTimeField (blank = True , null = True)
     exporter = models.TextField ( blank = True , null = True)
+    comment = models.TextField ( blank = True , null = True)
+    completed = models.BooleanField (default=False)
     def __str__(self):
         return self.plan.persian_name 
+    
+

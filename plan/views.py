@@ -2380,6 +2380,8 @@ class WarrantyAdminViewset(APIView) :
             plan = plan,
             exporter = request.data.get('exporter'),
             date = date,
+            completed = request.data.get('completed'),
+            comment = request.data.get('comment'),
             kind_of_warranty = request.data.get('kind_of_warranty'),
         )
         warranties = Warranty.objects.filter(plan=plan)
