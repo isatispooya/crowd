@@ -24,7 +24,7 @@ from django.utils.decorators import method_decorator
 from django.db.models import Sum
 import time
 from utils.user_notifier import UserNotifier
-
+from reports.models import AuditReport , ProgressReport
 def get_name (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     
@@ -2033,13 +2033,25 @@ class InformationPlanViewset(APIView) :
         status_second = request.data.get('status_second')
         status_show = request.data.get('status_show')
         payment_date = request.data.get('payment_date')
+
         if status_second not in ['1' , '2','3' , '4' , '5'] :
             status_second = '1'
         if payment_date :
             payment_date = int(payment_date)/1000
             payment_date = datetime.datetime.fromtimestamp(payment_date)
+            for i in range(2):
+                date = payment_date + relativedelta(months=i*6)
+                audit_report = AuditReport.objects.update_or_create(date = date , defaults={'period' : i , 'plan':plan})
+                audit_report.save()
+            for i in range(4):
+                date = payment_date + relativedelta(months=i*3)
+                progress_report = ProgressReport.objects.update_or_create(date = date , defaults={'period' : i , 'plan':plan})
+                progress_report.save()
+
         information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show , 'payment_date' :payment_date } )
         serializer = serializers.InformationPlanSerializer(information)
+        
+       
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
