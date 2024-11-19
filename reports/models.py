@@ -29,6 +29,9 @@ class AuditReport(models.Model): # گزارش حسابرسی
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     title = models.CharField(max_length=150 , blank=True , null=True) 
     file = models.FileField(upload_to = 'static/', null=True , blank=True,validators=[validate_file_type])
+    comment = models.TextField(null=True , blank=True, default='')
+    completed = models.BooleanField(default=False)
+    date = models.DateTimeField(null=True , blank=True)
     def __str__(self) :
         return self.title
     
@@ -38,6 +41,10 @@ class ProgressReport(models.Model): # گزارش پیشرفت
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     title = models.CharField(max_length=150 , blank=True , null=True) 
     file = models.FileField(upload_to = 'static/', null=True , blank=True,validators=[validate_file_type])
+    comment = models.TextField(null=True , blank=True, default='')
+    completed = models.BooleanField(default=False)
+    date = models.DateTimeField(null=True , blank=True)
     def __str__(self) :
         return self.title
     
+

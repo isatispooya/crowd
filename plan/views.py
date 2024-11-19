@@ -1147,7 +1147,10 @@ def get_lname (uniqueIdentifier) :
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     economi_code = tradingCodes.objects.filter(user=user).first()
-    economi_code=economi_code.code.strip()
+    try:
+        economi_code=economi_code.code.replace(' ','')
+    except:
+        economi_code = ''
     return economi_code
 
 
@@ -2206,7 +2209,9 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             provided_finance_price = i['value']
             payment_date = i['create_date']
             bank_tracking_number = i['track_id']
-
+            print('-'*15)
+            print(user_obj)
+            print(bourse_code)
             project_finance = ProjectFinancingProvider(
                 projectID = trace_code,
                 nationalID = uniqueIdentifier ,
@@ -2222,17 +2227,19 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             )
             payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id'])
             payment_sended = payment_sended.first()
+
             response, status_code = api_farabours.register_financing(project_finance)
+            print(response)
+            print('-'*15)
             if status_code < 300:
                 payment_sended.send_farabours = True
-                payment_sended.trace_code_payment_farabourse = response['TraceCode']
-                payment_sended.provided_finance_price_farabourse = response['ProvidedFinancePrice']
-                payment_sended.message_farabourse = response['Message']
+                payment_sended.trace_code_payment_farabourse = response.TraceCode
+                payment_sended.provided_finance_price_farabourse = response.ProvidedFinancePrice
+                payment_sended.message_farabourse = response.Message
             else:
-                payment_sended.message_farabourse = response['ErrorMessage']
-                payment_sended.error_no_farabourse = response['ErrorNo']
+                payment_sended.message_farabourse = response.ErrorMessage
+                payment_sended.error_no_farabourse = response.ErrorNo
                 payment_sended.send_farabours = False
-            print(response)
             payment_sended.save()
         return Response(True, status=status.HTTP_200_OK)
 
