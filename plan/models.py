@@ -252,5 +252,19 @@ class Warranty (models.Model):
     kind_of_warranty = models.TextField( blank = True , null = True)
     date = models.DateTimeField (blank = True , null = True)
     exporter = models.TextField ( blank = True , null = True)
+    comment = models.TextField ( blank = True , null = True)
+    completed = models.BooleanField (default=False)
+    def __str__(self):
+        return self.plan.persian_name 
+    
+
+class Complaint (models.Model):
+    plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    create_at = models.DateTimeField(default=timezone.now)
+    title = models.TextField(blank=True, null=True)
+    send_farabourse = models.BooleanField(default=False)
+    message = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     def __str__(self):
         return self.plan.persian_name 

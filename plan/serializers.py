@@ -96,3 +96,9 @@ class PaymentGatewaySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PaymentGateway
         fields = '__all__'
+
+class ComplaintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Complaint
+        fields = '__all__'
+

@@ -291,17 +291,15 @@ class ProfitabilityReportViewSet(APIView) :
         if not plan.exists():
             return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
         plan =plan.first()
-        # ---------------------------------------------------------------------------------------------------------------------
         project_owner = ProjectOwnerCompan.objects.filter(plan=plan).first()
         if not project_owner:
             return Response({'error': 'project owner not found'}, status=status.HTTP_404_NOT_FOUND)
-        project_owner = project_owner.national_id
-        # ---------------------------------------------------------------------------------------------------------------------
+        project_owner_national_id = project_owner.national_id
         end_plan = EndOfFundraising.objects.filter(plan=plan,type=2)
         if not end_plan.exists():
             return Response({'error': 'plan not end'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         end_plan = serializers.EndOfFundraisingSerializer(end_plan,many=True)
-        user_peyment = PaymentGateway.objects.filter(plan=plan,status='3')
+        user_peyment = PaymentGateway.objects.filter(plan=plan, status='3').exclude(user=project_owner_national_id)
 
         if not user_peyment :
             return Response({'error': 'payment not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)

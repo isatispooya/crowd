@@ -1,4 +1,4 @@
-from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ListOfProjectBoardMembers,ProjectOwnerCompan , PaymentGateway ,PicturePlan ,Warranty, InformationPlan , EndOfFundraising ,ListOfProjectBigShareHolders
+from .models import Plan , DocumentationFiles ,Appendices ,Comment  , Plans ,ListOfProjectBoardMembers,ProjectOwnerCompan , PaymentGateway ,PicturePlan ,Warranty, InformationPlan , EndOfFundraising ,ListOfProjectBigShareHolders,Complaint
 from rest_framework.response import Response
 from rest_framework import status 
 from rest_framework.views import APIView
@@ -1707,7 +1707,6 @@ class SendpicturePlanViewset(APIView) :
 
 
 # done
-# محدودیت پرداخت به دلیل امنیت غیر فعال شد
 class PaymentDocument(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post(self,request,trace_code):
@@ -2173,8 +2172,6 @@ class EndOfFundraisingViewset(APIView) :
 
 
 
-
-
 # done
 class SendParticipationCertificateToFaraboursViewset(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
@@ -2387,6 +2384,8 @@ class WarrantyAdminViewset(APIView) :
             plan = plan,
             exporter = request.data.get('exporter'),
             date = date,
+            completed = request.data.get('completed'),
+            comment = request.data.get('comment'),
             kind_of_warranty = request.data.get('kind_of_warranty'),
         )
         warranties = Warranty.objects.filter(plan=plan)
@@ -2471,7 +2470,6 @@ class WarrantyAdminViewset(APIView) :
 
 # done
 # درگاه بانکی
-# محدودیت پرداخت به دلیل امنیت غیر فعال شد
 class TransmissionViewset(APIView) : 
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post(self,request ,*args, **kwargs):
@@ -2885,3 +2883,47 @@ class CheckVerificationReceiptAdminViewset (APIView):
     
         
         
+class ComplaintViewset (APIView):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    def post (self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
+        complaint = Complaint.objects.create(
+            plan=plan, 
+            user=user,
+            title=data.get('title'), 
+            description=data.get('description') , 
+            send_farabourse = data.get('send_farabourse',False), 
+            message = data.get('message')
+            )
+        serializer = serializers.ComplaintSerializer(complaint).data
+
+        return Response(serializer, status=status.HTTP_200_OK)
+        
+
+    def get (self,request,trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        user = fun.decryptionUser(Authorization)
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = user.first()
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan :
+            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
+        complaint = Complaint.objects.filter(user=user, plan=plan)
+        serializer = serializers.ComplaintSerializer(complaint, many=True).data
+
+        return Response(serializer, status=status.HTTP_200_OK)
+
+
