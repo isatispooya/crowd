@@ -657,6 +657,18 @@ class LoginAdminViewset(APIView) :
         token = fun.encryptionadmin(admin)
         return Response({'access': token}, status=status.HTTP_200_OK)
 
+class RefreshTokenAdminViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    def post(self, request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        token = fun.encryptionadmin(admin)
+        return Response({'access': token}, status=status.HTTP_200_OK)
 
 
 # done

@@ -200,9 +200,8 @@ class PaymentGateway(models.Model) :
 
 
     def __str__(self) :
-            return str (self.user) + ' ' + str (self.plan.persian_name) + ' ' + str (self.track_id)
-        
-
+            track_id = 'none' if not self.track_id else str(self.track_id)
+            return str(self.user) + ' ' + str(self.plan.persian_name) + ' ' + track_id + ' s['+ str(self.status) + '] F[' + str(self.send_farabours) + '] T[' + str(self.document) + ']'+ ' v[' + str(self.value) + ']'
 
 
 class Plans (models.Model):
