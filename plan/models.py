@@ -259,3 +259,13 @@ class Warranty (models.Model):
         return self.plan.persian_name 
     
 
+class Complaint (models.Model):
+    plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
+    user = models.ForeignKey(User, on_delete = models.CASCADE)
+    create_at = models.DateTimeField(default=timezone.now)
+    title = models.TextField(blank=True, null=True)
+    send_farabourse = models.BooleanField(default=False)
+    message = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    def __str__(self):
+        return self.plan.persian_name 
