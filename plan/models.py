@@ -1,5 +1,5 @@
 from django.db import models
-from authentication.models import User
+from authentication.models import User , Admin
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 import magic
@@ -197,6 +197,7 @@ class PaymentGateway(models.Model) :
     track_id = models.TextField (null= True , blank = True, default='') # شماره پیگیری
     code_status_payment = models.TextField (null= True , blank = True, default='') # کد وضعیت پرداخت پاسارگاد
     card_number = models.TextField (null= True , blank = True, default='') # شماره کارت
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE, null=True, blank=True)
 
 
     def __str__(self) :
