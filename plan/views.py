@@ -1151,6 +1151,7 @@ def get_lname (uniqueIdentifier) :
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     economi_code = tradingCodes.objects.filter(user=user).first()
+    print(economi_code)
     try:
         economi_code=economi_code.code.replace(' ','')
     except:
@@ -2039,9 +2040,9 @@ class InformationPlanViewset(APIView) :
             payment_date = datetime.datetime.fromtimestamp(payment_date)
         information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show , 'payment_date' :payment_date } )
         serializer = serializers.InformationPlanSerializer(information)
-        
-
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get(self,request,trace_code) : 
         plan = Plan.objects.filter(trace_code=trace_code).first()
@@ -2840,8 +2841,8 @@ class CheckVerificationPaymentAdminViewset (APIView):
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
-        end_of_fundraising.profit_payment_comment = data.get('profit_payment_comment')
-        end_of_fundraising.profit_payment_completed = data.get('profit_payment_completed')
+        end_of_fundraising.profit_payment_comment = data.get('profit_payment_comment','')
+        end_of_fundraising.profit_payment_completed = data.get('profit_payment_completed',False)
         end_of_fundraising.save()
         return Response(True, status=status.HTTP_200_OK)
 
@@ -2890,8 +2891,8 @@ class CheckVerificationReceiptAdminViewset (APIView):
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
-        end_of_fundraising.profit_receipt_comment = data.get('profit_receipt_comment')
-        end_of_fundraising.profit_receipt_completed = data.get('profit_receipt_completed')
+        end_of_fundraising.profit_receipt_comment = data.get('profit_receipt_comment','')
+        end_of_fundraising.profit_receipt_completed = data.get('profit_receipt_completed',False)
         end_of_fundraising.save()
         return Response(True, status=status.HTTP_200_OK)
     

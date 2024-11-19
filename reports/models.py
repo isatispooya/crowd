@@ -32,6 +32,7 @@ class AuditReport(models.Model): # گزارش حسابرسی
     comment = models.TextField(null=True , blank=True, default='')
     completed = models.BooleanField(default=False)
     date = models.DateTimeField(null=True , blank=True)
+    period = models.IntegerField(null=True , blank=True)
     def __str__(self) :
         return self.title
     
@@ -44,6 +45,7 @@ class ProgressReport(models.Model): # گزارش پیشرفت
     comment = models.TextField(null=True , blank=True, default='')
     completed = models.BooleanField(default=False)
     date = models.DateTimeField(null=True , blank=True)
+    period = models.IntegerField(null=True , blank=True)
     def __str__(self) :
         return self.title
     

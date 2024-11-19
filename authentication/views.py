@@ -61,6 +61,7 @@ class OtpViewset(APIView) :
             otp = Otp.objects.filter(mobile=user.mobile).first()
             code = random.randint(10000,99999)
 
+
             if not otp:
                 otp = Otp(mobile=user.mobile, code=code , expire = timezone.now () + timedelta(minutes=2))
             elif otp.expire > timezone.now() :
@@ -83,7 +84,8 @@ class OtpViewset(APIView) :
                 message = Message(code, user.mobile, None)
                 message.otpSMS()
             
-
+            print('-'*10,'Top code','-'*10)
+            print(user.mobile,'>',code)
             return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
         
         if not user:
@@ -594,7 +596,6 @@ class OtpAdminViewset(APIView) :
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         admin = Admin.objects.filter(uniqueIdentifier = uniqueIdentifier).first()
-        print(admin)
         if admin :
             otp = Otp.objects.filter(mobile=admin.mobile).first()
             code = random.randint(10000,99999)

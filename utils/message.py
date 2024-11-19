@@ -13,9 +13,7 @@ class Message():
     def otpSMS(self):
         txt = f'به ایساتیس کراد خوش آمدید \n کد تایید :{self.otp}\nisatiscrowd.ir'
         resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={settings.SMS_NUMBER}&to={self.mobile}&username={settings.SMS_USERNAME}&password={settings.SMS_PASSWORD}&message={txt}').json()
-        print(txt)
     def otpEmail(self):
-        print(self.email)
 
         subject = 'کد تایید ایساتیس کراد'
         html_message = f'''
