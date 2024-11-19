@@ -49,7 +49,7 @@ class User(models.Model):
 
     def __str__(self):
         uniqueIdentifier = self.uniqueIdentifier if self.uniqueIdentifier else "uniqueIdentifier"
-        return f'{uniqueIdentifier}'
+        return f'{uniqueIdentifier} {self.mobile}'
     
 
 class accounts (models.Model) :
