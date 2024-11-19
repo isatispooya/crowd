@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from authentication import fun
 from . import serializers
 from investor.models import Cart
-from authentication.models import privatePerson , User , accounts , LegalPerson , tradingCodes
+from authentication.models import privatePerson , User , accounts , LegalPerson , tradingCodes ,Admin
 import datetime
 from persiantools.jdatetime import JalaliDate
 from dateutil.relativedelta import relativedelta
@@ -109,7 +109,11 @@ def number_of_finance_provider(trace_code) :
         payment = 0
     return payment 
 
-
+def get_full_name_admin(uniqueIdentifier) :
+    admin = Admin.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    if admin :
+        return admin.firstName + ' ' + admin.lastName
+    return 'N/A'
 
 
 
@@ -1730,6 +1734,8 @@ class PaymentDocument(APIView):
             return Response({'error': 'amount not found'}, status=status.HTTP_404_NOT_FOUND)
         
         amount = int(request.data.get('amount')) # سهم درخواستی کاربر 
+        if amount is None:
+            amount = 0
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_unit_price = plan.unit_price 
         value = plan_unit_price * amount
@@ -1825,6 +1831,7 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan)
         response = serializers.PaymentGatewaySerializer(payments,many=True)
         df = pd.DataFrame(response.data)
+        df = df.fillna('')
         if len(df)==0:
             return Response([], status=status.HTTP_200_OK)
         df['fulname'] = [get_name(x) for x in df['user']]
@@ -1851,9 +1858,14 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan,id = payment_id).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
+        send_farabours = payments.send_farabours
+        if send_farabours == True :
+            return Response({'error': 'payments already sent you can not change it'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
+            payments.admin = admin
+            payments.save()
         payment_all = PaymentGateway.objects.filter(plan=plan)
         value = 0
         for i in payment_all : 
@@ -1862,6 +1874,7 @@ class PaymentDocument(APIView):
         information = InformationPlan.objects.filter(plan=plan).first()
         information.amount_collected_now = value
         information.save()
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -2489,7 +2502,8 @@ class TransmissionViewset(APIView) :
 
         value = request.data.get('amount',0)  # مبلغ درخواستی کاربر برای خرید 
         value = int(value)
-        
+        if value is None:
+            value = 0    
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
         plan_total_price = plan.total_units # کل سهم قابل عرضه برای طرح 
         purchaseable_amount = int((plan_total_price*plan_unit_price) - amount_collected_now) # مبلغ قابل خرید همه کاربران 
