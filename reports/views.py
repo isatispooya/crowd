@@ -109,21 +109,6 @@ class AuditReportViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='DELETE', block=True))
-    def delete (self,request,trace_code) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first()
-        audit_report = AuditReport.objects.filter(id=int(trace_code))
-        if not audit_report.exists() :
-            return Response({'error': 'audit report not found'}, status=status.HTTP_404_NOT_FOUND)
-        audit_report.delete()
-        return Response({'message':'succes'} , status=status.HTTP_200_OK)
-
 
 # گزارش مشارکت کننده ها
 # done
@@ -301,8 +286,15 @@ class ProfitabilityReportViewSet(APIView) :
         if not information.exists():
             return Response({'error': 'information not fund'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         information_serializer = serializers.InformationPlanSerializer(information.first())
-
-        rate_of_return = ((information_serializer.data['rate_of_return'])/100) /365
+        days_of_year = 365
+        payment_date = information_serializer.data['payment_date']
+        payment_date = datetime.datetime.strptime(payment_date, '%Y-%m-%dT%H:%M:%S%z')
+        payment_date = JalaliDate.to_jalali(payment_date)
+        payment_date = payment_date.year + 1
+        if payment_date % 4 == 0 and (payment_date % 100 != 0 or payment_date % 400 == 0):
+            days_of_year = 366
+        
+        rate_of_return = ((information_serializer.data['rate_of_return'])/100) /days_of_year
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
         account_numbers = []
         user_names = []
