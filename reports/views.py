@@ -29,7 +29,7 @@ from django.utils.decorators import method_decorator
 # done
 class ProgressReportViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
-    def post (self,request,trace_code) :
+    def patch (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -40,8 +40,11 @@ class ProgressReportViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        progres_report = ProgressReport.objects.filter(plan=plan).first()
+        if not progres_report:
+            return Response({'error': 'Progress report not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
-        serializer = ProgressReportSerializer(data=data)
+        serializer = ProgressReportSerializer(progres_report,data=data,partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
@@ -63,27 +66,13 @@ class ProgressReportViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='DELETE', block=True))
-    def delete (self,request,trace_code) :
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first()
-        progres_report = ProgressReport.objects.filter(id=int(trace_code))
-        if not progres_report.exists() :
-            return Response({'error': 'progres report not found'}, status=status.HTTP_404_NOT_FOUND)
-        progres_report.delete()
-        return Response({'message':'succes'} , status=status.HTTP_200_OK)
 
 
 # گزارش حسابررسی
 # done
 class AuditReportViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
-    def post (self,request,trace_code) :
+    def patch (self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -94,12 +83,15 @@ class AuditReportViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        audit_report = AuditReport.objects.filter(plan=plan).first()
+        if not audit_report:
+            return Response({'error': 'Audit report not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
-        serializer =AuditReportSerializer(data=data)
+        serializer =AuditReportSerializer(audit_report,data=data,partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         if 'file' in request.FILES:
-            serializer.uploaded_file = request.FILES
+            serializer.uploaded_file = request.FILES['file']
         serializer.save(plan=plan)
         return Response (serializer.data, status=status.HTTP_200_OK)
     
