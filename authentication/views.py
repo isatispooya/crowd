@@ -580,20 +580,20 @@ class InformationViewset (APIView) :
 class OtpAdminViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request) :
-        # captcha = GuardPyCaptcha()
-        # encrypted_response = request.data['encrypted_response']
-        # captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
-        # if not captcha_obj :
-        #     return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        # captcha_obj.delete()
-        # if isinstance(encrypted_response, str):
-        #     encrypted_response = encrypted_response.encode('utf-8')
-        # captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        # if not settings.DEBUG : 
-        #     if not captcha :
-        #         return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        #     if request.data['captcha'] == '' :
-        #         return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
+        captcha = GuardPyCaptcha()
+        encrypted_response = request.data['encrypted_response']
+        captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
+        if not captcha_obj :
+            return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        captcha_obj.delete()
+        if isinstance(encrypted_response, str):
+            encrypted_response = encrypted_response.encode('utf-8')
+        captcha = captcha.check_response(encrypted_response , request.data['captcha'])
+        if not settings.DEBUG : 
+            if not captcha :
+                return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+            if request.data['captcha'] == '' :
+                return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
 
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
