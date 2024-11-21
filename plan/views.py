@@ -1596,22 +1596,7 @@ class WarrantyAdminViewset(APIView) :
 
         return Response (serializer.data ,  status= status.HTTP_200_OK)
     
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
-    def get (self, request  ,*args, **kwargs) :
-        trace_code = kwargs.get('key')
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first()
-        plan = Plan.objects.filter(trace_code = trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
-        warranties = Warranty.objects.filter(plan=plan)
-        serializer = serializers.WarrantySerializer (warranties , many = True)
-        return Response (serializer.data ,  status= status.HTTP_200_OK)
+
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch (self,request , *args, **kwargs):
@@ -1675,6 +1660,25 @@ class WarrantyAdminViewset(APIView) :
         warranties.delete()
         return Response(True , status=status.HTTP_200_OK)
 
+
+class WarrantyListAdminViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self, request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        plan = Plan.objects.all()
+        if not plan.exists():
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        warranties = Warranty.objects.filter(plan__in=plan)
+        if not warranties.exists():
+            return Response({'error': 'No warranties found for the provided plans'},status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.WarrantySerializer (warranties , many = True)
+        return Response (serializer.data ,  status= status.HTTP_200_OK)
 # done
 # درگاه بانکی
 class TransmissionViewset(APIView) : 
