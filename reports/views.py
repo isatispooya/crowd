@@ -29,7 +29,7 @@ from django.utils.decorators import method_decorator
 # done
 class ProgressReportViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
-    def patch (self,request,trace_code) :
+    def patch (self,request,trace_code,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -40,7 +40,7 @@ class ProgressReportViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        progres_report = ProgressReport.objects.filter(plan=plan).first()
+        progres_report = ProgressReport.objects.filter(plan=plan,id=id).first()
         if not progres_report:
             return Response({'error': 'Progress report not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
