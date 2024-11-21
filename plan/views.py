@@ -1576,6 +1576,8 @@ class WarrantyAdminViewset(APIView) :
             try:
                 timestamp = int(date) / 1000
                 date = datetime.datetime.fromtimestamp(timestamp)
+                date_jalali = JalaliDate.to_jalali(date)
+                date_jalali = date_jalali.strftime('%Y-%m-%d')
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid date format'}, status=400)
         else:
@@ -1585,13 +1587,12 @@ class WarrantyAdminViewset(APIView) :
         warranty = Warranty.objects.create(
             plan = plan,
             exporter = request.data.get('exporter'),
-            date = date,
+            date = date_jalali,
             completed = request.data.get('completed'),
             comment = request.data.get('comment'),
             kind_of_warranty = request.data.get('kind_of_warranty'),
         )
-        warranties = Warranty.objects.filter(plan=plan)
-        serializer = serializers.WarrantySerializer (warranties , many = True)
+        serializer = serializers.WarrantySerializer (warranty)
 
         return Response (serializer.data ,  status= status.HTTP_200_OK)
     
@@ -1638,6 +1639,10 @@ class WarrantyAdminViewset(APIView) :
             try:
                 timestamp = int(data['date']) / 1000
                 data['date'] = datetime.datetime.fromtimestamp(timestamp)
+                date_jalali = JalaliDate.to_jalali(data['date'])
+                date_jalali = date_jalali.strftime('%Y-%m-%d')
+                data['date'] = date_jalali
+
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid date format'}, status=400)
 
