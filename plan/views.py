@@ -25,6 +25,8 @@ from django.db.models import Sum
 import time
 from utils.user_notifier import UserNotifier
 from reports.models import AuditReport , ProgressReport
+from datetime import datetime  # اطمینان حاصل کنید که این خط در بالای فایل وجود دارد
+
 def get_name (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     
@@ -1082,7 +1084,6 @@ class EndOfFundraisingViewset(APIView) :
 
 
 
-
 class PaymentUser(APIView):
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get(self,request,trace_code):
@@ -1503,7 +1504,7 @@ class ShareholdersListExelViewset(APIView) :
 
 
 
-            # df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
+            # df['تعداد'] = df['مبلغ سفارش']/df['قی��ت اسمی هر واحد']
             if not df.empty:
                 for index, row in df.iterrows(): 
                     trace_code_values = row['شناسه طرح']
@@ -1576,6 +1577,8 @@ class WarrantyAdminViewset(APIView) :
             try:
                 timestamp = int(date) / 1000
                 date = datetime.datetime.fromtimestamp(timestamp)
+                date_jalali = JalaliDate.to_jalali(date)
+                date_jalali = date_jalali.strftime('%Y-%m-%d')
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid date format'}, status=400)
         else:
@@ -1585,32 +1588,16 @@ class WarrantyAdminViewset(APIView) :
         warranty = Warranty.objects.create(
             plan = plan,
             exporter = request.data.get('exporter'),
-            date = date,
+            date = date_jalali,
             completed = request.data.get('completed'),
             comment = request.data.get('comment'),
             kind_of_warranty = request.data.get('kind_of_warranty'),
         )
-        warranties = Warranty.objects.filter(plan=plan)
-        serializer = serializers.WarrantySerializer (warranties , many = True)
+        serializer = serializers.WarrantySerializer (warranty)
 
         return Response (serializer.data ,  status= status.HTTP_200_OK)
     
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
-    def get (self, request  ,*args, **kwargs) :
-        trace_code = kwargs.get('key')
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first()
-        plan = Plan.objects.filter(trace_code = trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
-        warranties = Warranty.objects.filter(plan=plan)
-        serializer = serializers.WarrantySerializer (warranties , many = True)
-        return Response (serializer.data ,  status= status.HTTP_200_OK)
+
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch (self,request , *args, **kwargs):
@@ -1638,6 +1625,10 @@ class WarrantyAdminViewset(APIView) :
             try:
                 timestamp = int(data['date']) / 1000
                 data['date'] = datetime.datetime.fromtimestamp(timestamp)
+                date_jalali = JalaliDate.to_jalali(data['date'])
+                date_jalali = date_jalali.strftime('%Y-%m-%d')
+                data['date'] = date_jalali
+
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid date format'}, status=400)
 
@@ -1670,6 +1661,35 @@ class WarrantyAdminViewset(APIView) :
         warranties.delete()
         return Response(True , status=status.HTTP_200_OK)
 
+
+class WarrantyListAdminViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self, request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        plans = {plan.id: plan for plan in Plan.objects.all()}  # ایجاد دیکشنری از اشیاء Plan با شناسه به عنوان کلید
+        if not plans:
+            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
+        warranties = Warranty.objects.filter(plan__in=plans)
+        if not warranties.exists():
+            return Response({'error': 'No warranties found for the provided plans'},status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.WarrantySerializer (warranties , many = True)
+        for i in serializer.data:
+            date_str = i['date'] 
+            date_obj = datetime.strptime(date_str,  '%Y-%m-%dT%H:%M:%S%z')  
+            i['date'] = date_obj.strftime('%Y-%m-%d')
+            plan_id = i['plan']  # شناسه Plan
+            if plan_id in plans:  # بررسی اینکه آیا شناسه در دیکشنری وجود دارد
+                i['plan'] = plans[plan_id].persian_name  # دسترسی به نام فارسی
+            else:
+                i['plan'] = None
+
+        return Response (serializer.data ,  status= status.HTTP_200_OK)
 # done
 # درگاه بانکی
 class TransmissionViewset(APIView) : 

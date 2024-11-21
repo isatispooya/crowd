@@ -96,7 +96,6 @@ class AuditReportViewset(APIView) :
         return Response (serializer.data, status=status.HTTP_200_OK)
     
 
-
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request,trace_code) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
@@ -107,8 +106,8 @@ class AuditReportViewset(APIView) :
             return Response([], status=status.HTTP_200_OK)
         serializer =AuditReportSerializer(audit_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
-
-
+    
+    
 
 # گزارش مشارکت کننده ها
 # done
@@ -332,3 +331,5 @@ class ProfitabilityReportViewSet(APIView) :
         df = df.to_dict('records')
         return Response(df, status=status.HTTP_200_OK)
     
+
+
