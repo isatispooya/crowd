@@ -10,7 +10,8 @@ from . import fun
 import json
 import random
 import os
-from utils.message import Message
+from utils.message import Message 
+from utils.user_notifier import UserNotifier
 from plan.views import check_legal_person
 from django.utils import timezone
 from datetime import timedelta
@@ -19,6 +20,7 @@ from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.conf import settings
 from django.db import transaction
+
 
 
 class CaptchaViewset(APIView) :
@@ -70,23 +72,24 @@ class OtpViewset(APIView) :
                 otp.code = code 
                 otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
-            try : 
+            notifier = UserNotifier(mobile=user.mobile, email=None)
+            try:
                 address = addresses.objects.filter(user=user).first()
-                address_email = address.email
-                message = Message(code,user.mobile,address_email)
-                message.otpSMS()
-                try:
-                    message.otpEmail()
-                except Exception as e:
-                    print(f"Failed to send OTP via email: {e}")
+                if address:
+                    notifier.email = address.email
 
-            except:
-                message = Message(code, user.mobile, None)
-                message.otpSMS()
-            
-            print('-'*10,'Top code','-'*10)
-            print(user.mobile,'>',code)
-            return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
+                notifier.send_otp_sms(code)
+
+                if notifier.email:
+                    try:
+                        notifier.send_otp_email(code)  
+                    except Exception as e:
+                        print(f"Failed to send OTP via email: {e}")
+            except Exception as e:
+                print(f"Error sending notifications: {e}")
+                notifier.send_otp_sms(code)
+
+           
         
         if not user:
             url = "http://31.40.4.92:8870/otp"
@@ -577,20 +580,20 @@ class InformationViewset (APIView) :
 class OtpAdminViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
     def post (self,request) :
-        captcha = GuardPyCaptcha()
-        encrypted_response = request.data['encrypted_response']
-        captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
-        if not captcha_obj :
-            return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-        captcha_obj.delete()
-        if isinstance(encrypted_response, str):
-            encrypted_response = encrypted_response.encode('utf-8')
-        captcha = captcha.check_response(encrypted_response , request.data['captcha'])
-        if not settings.DEBUG : 
-            if not captcha :
-                return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
-            if request.data['captcha'] == '' :
-                return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
+        # captcha = GuardPyCaptcha()
+        # encrypted_response = request.data['encrypted_response']
+        # captcha_obj = Captcha.objects.filter(encrypted_response=encrypted_response,enabled=True).first()
+        # if not captcha_obj :
+        #     return Response ({'message' : 'کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        # captcha_obj.delete()
+        # if isinstance(encrypted_response, str):
+        #     encrypted_response = encrypted_response.encode('utf-8')
+        # captcha = captcha.check_response(encrypted_response , request.data['captcha'])
+        # if not settings.DEBUG : 
+        #     if not captcha :
+        #         return Response ({'message' : 'کد کپچا صحیح نیست'} , status=status.HTTP_400_BAD_REQUEST)
+        #     if request.data['captcha'] == '' :
+        #         return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
 
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
@@ -608,15 +611,17 @@ class OtpAdminViewset(APIView) :
                 otp.code = code 
                 otp.expire = timezone.now () + timedelta(minutes=2)
             otp.save()
-            message = Message(code,admin.mobile,admin.email)
-            message.otpSMS()
+            notifier = UserNotifier(mobile=admin.mobile, email=admin.email)
+            notifier.send_otp_sms(code)  
+
             try:
-                message.otpEmail()
+                notifier.send_otp_email(code) 
             except Exception as e:
                 print(f'Error sending otp email: {e}')
-            return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
-    
-        return Response({'message' : 'کد تایید ارسال شد' },status=status.HTTP_200_OK)
+            
+            return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
+
+        return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
 
 
 
