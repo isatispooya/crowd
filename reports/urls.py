@@ -3,7 +3,8 @@ from.views import ParticipationReportViewset,AuditReportViewset,ProgressReportVi
 
 
 urlpatterns = [
-    path('progres/report/admin/<str:trace_code>/', ProgressReportViewset.as_view(), name='progres-report-admin'),
+    path('progres/report/admin/<str:trace_code>/', ProgressReportViewset.as_view(), name='progres-report-admin-all'),
+    path('progres/report/admin/<str:trace_code>/<int:id>/', ProgressReportViewset.as_view(), name='progres-report-admin'),
     path('audit/report/admin/<str:trace_code>/', AuditReportViewset.as_view(), name='audit-report-admin'),
     path('participation/report/<str:trace_code>/', ParticipationReportViewset.as_view(), name='get-participation-report-user'),
     path('dashboard/admin/', DashBoardAdminViewset.as_view(), name='dashboard-admin'),
