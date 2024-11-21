@@ -1214,14 +1214,16 @@ class InformationPlanViewset(APIView) :
             status_second = '1'
         if payment_date :
             payment_date = int(payment_date)/1000
-            payment_date = datetime.fromtimestamp(payment_date)
+            payment_date = datetime.datetime.fromtimestamp(payment_date)
             for i in range(2):
                 date = payment_date + relativedelta(months=i*6)
-                audit_report = AuditReport.objects.update_or_create(date = date , defaults={'period' : i , 'plan':plan})
+                title = f'گزارش حسابرسی {i+1}'
+                audit_report, created = AuditReport.objects.update_or_create(date = date , defaults={'title' : title , 'period' : i , 'plan':plan})
                 audit_report.save()
             for i in range(4):
+                title = f'گزارش پیشرفت {i+1}'
                 date = payment_date + relativedelta(months=i*3)
-                progress_report = ProgressReport.objects.update_or_create(date = date , defaults={'period' : i , 'plan':plan})
+                progress_report,created = ProgressReport.objects.update_or_create(date = date , defaults={'title' : title , 'period' : i , 'plan':plan})
                 progress_report.save()
 
         information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show , 'payment_date' :payment_date } )
@@ -1503,7 +1505,7 @@ class ShareholdersListExelViewset(APIView) :
 
 
 
-            # df['تعداد'] = df['مبلغ سفارش']/df['قی��ت اسمی هر واحد']
+            # df['تعداد'] = df['مبلغ سفارش']/df['قیمت اسمی هر واحد']
             if not df.empty:
                 for index, row in df.iterrows(): 
                     trace_code_values = row['شناسه طرح']

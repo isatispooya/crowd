@@ -352,7 +352,6 @@ class SendSmsFinishPlanViewset(APIView) :
             return Response({'error': 'payment not found'}, status=status.HTTP_404_NOT_FOUND)
         unique_users = set()
         for i in payment_gateway:
-            value = i.value
             user = i.user
             if user in unique_users:
                 continue
@@ -364,8 +363,46 @@ class SendSmsFinishPlanViewset(APIView) :
             mobile = user.mobile
             address = addresses.objects.filter(user=user).first()
             email = address.email
-            # user_notifier = UserNotifier(mobile,email)
-            # user_notifier.send_finance_completion_sms()
-            # user_notifier.send_finance_completion_email(value)
+            user_notifier = UserNotifier(mobile,email)
+            user_notifier.send_finance_completion_sms()
+            user_notifier.send_finance_completion_email()
         return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
 
+
+
+
+class SendSmsStartPlanViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    def post(self,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        user = User.objects.all()
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        for i in user:
+            mobile = i.mobile
+            address = addresses.objects.filter(user=i)
+            for j in address:
+                if not j:
+                    return Response({'error': 'address not found'}, status=status.HTTP_404_NOT_FOUND)
+                email = j.email
+            data = request.data
+            if data ['email'] is True :
+                if data ['subject'] is None or data ['message'] is None:
+                    return Response({'error': 'subject or message not found'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                user_notifier = UserNotifier(mobile,email)
+                user_notifier.send_sms(data['message'])
+                user_notifier.send_email(data['subject'],data['message'])
+            else:
+                if data ['message'] is None:
+                    return Response({'error': 'message not found'}, status=status.HTTP_400_BAD_REQUEST)
+                user_notifier = UserNotifier(mobile,email)
+                user_notifier.send_sms(data['message'])
+        return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
+        

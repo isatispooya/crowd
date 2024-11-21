@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import ParticipationReportViewset,AuditReportViewset,ProgressReportViewset , DashBoardAdminViewset , DashBoardUserViewset , ProfitabilityReportViewSet , SendSmsFinishPlanViewset
+from.views import ParticipationReportViewset,AuditReportViewset,ProgressReportViewset , DashBoardAdminViewset , DashBoardUserViewset , ProfitabilityReportViewSet , SendSmsFinishPlanViewset ,SendSmsStartPlanViewset
 
 
 urlpatterns = [
@@ -11,4 +11,5 @@ urlpatterns = [
     path('dashboard/user/', DashBoardUserViewset.as_view(), name='dashboard-user'),
     path('report/admin/profitability/<str:trace_code>/', ProfitabilityReportViewSet.as_view(), name='profitability-report-admin'),
     path('send/sms/finish/plan/<str:trace_code>/', SendSmsFinishPlanViewset.as_view(), name='send-sms-finish-plan'),
+    path('send/sms/start/plan/', SendSmsStartPlanViewset.as_view(), name='send-sms-start-plan'),
 ]

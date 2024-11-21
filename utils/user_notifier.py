@@ -147,7 +147,7 @@ class UserNotifier:
         message = 'طرح تأمین مالی تکمیل شده است. مشارکت شما با موفقیت در فرابورس ثبت شد.'
         self.send_sms(message)
 
-    def send_finance_completion_email(self, value):
+    def send_finance_completion_email(self):
         if not self.email:  # بررسی وجود ایمیل
             print("ایمیل کاربر وجود ندارد. ارسال ایمیل انجام نشد.")
             return  # یا می‌توانید یک پیام خطا به کاربر ارسال کنید
@@ -225,7 +225,7 @@ class UserNotifier:
 
                     <div class="header">تکمیل طرح تأمین مالی</div>
                     <div class="content">
-                    کاربر گرامی، طرح تأمین مالی تکمیل شده است و مشارکت شما به مبلغ {value} ریال با موفقیت در فرابورس ثبت شد.
+                    کاربر گرامی، طرح تأمین مالی تکمیل شده است و مشارکت شما با موفقیت در فرابورس ثبت شد.
                     </div>
                     <div class="footer">
                         از مشارکت شما سپاسگزاریم.
