@@ -25,7 +25,6 @@ from django.db.models import Sum
 import time
 from utils.user_notifier import UserNotifier
 from reports.models import AuditReport , ProgressReport
-from datetime import datetime  # اطمینان حاصل کنید که این خط در بالای فایل وجود دارد
 
 def get_name (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
@@ -1215,7 +1214,7 @@ class InformationPlanViewset(APIView) :
             status_second = '1'
         if payment_date :
             payment_date = int(payment_date)/1000
-            payment_date = datetime.datetime.fromtimestamp(payment_date)
+            payment_date = datetime.fromtimestamp(payment_date)
             for i in range(2):
                 date = payment_date + relativedelta(months=i*6)
                 audit_report = AuditReport.objects.update_or_create(date = date , defaults={'period' : i , 'plan':plan})
