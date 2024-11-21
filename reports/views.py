@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from plan.models import Plan , PaymentGateway ,InformationPlan ,EndOfFundraising , ProjectOwnerCompan
-from authentication.models import User , accounts , privatePerson
+from authentication.models import User , accounts , privatePerson ,addresses
 from investor.models import Cart
 from .models import ProgressReport , AuditReport
 from rest_framework.response import Response
@@ -23,7 +23,7 @@ from django.core.files.base import ContentFile
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
-
+from utils.user_notifier import UserNotifier
 
 # گزارش پیشرفت پروژه
 # done
@@ -332,4 +332,35 @@ class ProfitabilityReportViewSet(APIView) :
         return Response(df, status=status.HTTP_200_OK)
     
 
+
+class SendSmsFinishPlanViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    def post(self,request,trace_code) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        plans = Plan.objects.filter(trace_code=trace_code)
+        if not plans.exists():
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        plans = plans.first()
+        payment_gateway = PaymentGateway.objects.filter(plan=plans,status='3' , send_farabours = True)
+        if not payment_gateway.exists():
+            return Response({'error': 'payment not found'}, status=status.HTTP_404_NOT_FOUND)
+        payment_gateway = payment_gateway.first()
+        value = payment_gateway.value
+        user = payment_gateway.user
+        user = User.objects.filter(uniqueIdentifier=user).first()
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        mobile = user.mobile
+        address = addresses.objects.filter(user=user).first()
+        email = address.email
+        user_notifier = UserNotifier(mobile,email)
+        user_notifier.send_finance_completion_sms()
+        user_notifier.send_finance_completion_email(value)
+        return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
 
