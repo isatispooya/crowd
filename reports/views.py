@@ -62,6 +62,9 @@ class ProgressReportViewset(APIView) :
         progres_report = ProgressReport.objects.filter(plan=plan)
         if not progres_report.exists() :
             return Response([], status=status.HTTP_200_OK)
+        for i in progres_report:
+            i.date = JalaliDate.to_jalali(i.date)
+            i.date = i.date.strftime('%Y-%m-%d')
         serializer = ProgressReportSerializer(progres_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
@@ -105,6 +108,9 @@ class AuditReportViewset(APIView) :
         audit_report = AuditReport.objects.filter(plan=plan)
         if not audit_report.exists() :
             return Response([], status=status.HTTP_200_OK)
+        for i in audit_report:
+            i.date = JalaliDate.to_jalali(i.date)
+            i.date = i.date.strftime('%Y-%m-%d')
         serializer =AuditReportSerializer(audit_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
