@@ -350,17 +350,22 @@ class SendSmsFinishPlanViewset(APIView) :
         payment_gateway = PaymentGateway.objects.filter(plan=plans,status='3' , send_farabours = True)
         if not payment_gateway.exists():
             return Response({'error': 'payment not found'}, status=status.HTTP_404_NOT_FOUND)
-        payment_gateway = payment_gateway.first()
-        value = payment_gateway.value
-        user = payment_gateway.user
-        user = User.objects.filter(uniqueIdentifier=user).first()
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
-        mobile = user.mobile
-        address = addresses.objects.filter(user=user).first()
-        email = address.email
-        user_notifier = UserNotifier(mobile,email)
-        user_notifier.send_finance_completion_sms()
-        user_notifier.send_finance_completion_email(value)
+        unique_users = set()
+        for i in payment_gateway:
+            value = i.value
+            user = i.user
+            if user in unique_users:
+                continue
+            unique_users.add(user)
+            user = User.objects.filter(uniqueIdentifier=user).first()
+            if not user:
+                return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            mobile = user.mobile
+            address = addresses.objects.filter(user=user).first()
+            email = address.email
+            # user_notifier = UserNotifier(mobile,email)
+            # user_notifier.send_finance_completion_sms()
+            # user_notifier.send_finance_completion_email(value)
         return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
 
