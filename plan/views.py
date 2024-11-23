@@ -1460,7 +1460,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         if not plan :
             return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         
-        payment = PaymentGateway.objects.filter(plan=plan , status = '3' , send_farabours = False)
+        payment = PaymentGateway.objects.filter(plan=plan , status = '3' )
         if not payment :
             return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
 

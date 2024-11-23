@@ -72,7 +72,7 @@ class ProgressReportViewset(APIView) :
 # done
 class AuditReportViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
-    def patch (self,request,trace_code) :
+    def patch (self,request,trace_code,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -83,7 +83,7 @@ class AuditReportViewset(APIView) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
             return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
-        audit_report = AuditReport.objects.filter(plan=plan).first()
+        audit_report = AuditReport.objects.filter(plan=plan,id=id).first()
         if not audit_report:
             return Response({'error': 'Audit report not found'}, status=status.HTTP_404_NOT_FOUND)
         data = request.data.copy()
@@ -433,7 +433,6 @@ class ProgressReportByIDViewset(APIView) :
         return Response (serializer.data, status=status.HTTP_200_OK)
     
 
-class ProgressReportAllAdminViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
@@ -479,9 +478,6 @@ class AuditReportByIDViewset(APIView) :
         serializer.save()
         return Response (serializer.data, status=status.HTTP_200_OK)
     
-
-
-class AuditReportAllAdminViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
@@ -504,3 +500,4 @@ class AuditReportAllAdminViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
     
     
+
