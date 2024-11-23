@@ -1682,7 +1682,13 @@ class WarrantyListAdminViewset(APIView):
         serializer = serializers.WarrantySerializer (warranties , many = True)
         for i in serializer.data:
             date_str = i['date'] 
-            date_obj = datetime.datetime.strptime(date_str,  '%Y-%m-%dT%H:%M:%S%z')  
+            if '+' in date_str or '-' in date_str:  # بررسی وجود offset زمانی
+                date_str = date_str[:date_str.rfind(':')] + date_str[date_str.rfind(':') + 1:]
+            try:
+                date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%f%z')  # شامل میلی‌ثانیه
+            except ValueError:
+                date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S%z')  # بدون میلی‌ثانیه
+            
             i['date'] = date_obj.strftime('%Y-%m-%d')
             plan_id = i['plan']  # شناسه Plan
             if plan_id in plans:  # بررسی اینکه آیا شناسه در دیکشنری وجود دارد
