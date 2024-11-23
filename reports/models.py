@@ -34,7 +34,7 @@ class AuditReport(models.Model): # گزارش حسابرسی
     date = models.DateTimeField(null=True , blank=True)
     period = models.IntegerField(null=True , blank=True)
     def __str__(self) :
-        return self.title
+        return self.title + ' ' + str(self.date)
     
 
     
@@ -47,6 +47,6 @@ class ProgressReport(models.Model): # گزارش پیشرفت
     date = models.DateTimeField(null=True , blank=True)
     period = models.IntegerField(null=True , blank=True)
     def __str__(self) :
-        return self.title
+        return self.title + ' ' + str(self.date)
     
 

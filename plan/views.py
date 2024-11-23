@@ -1218,12 +1218,24 @@ class InformationPlanViewset(APIView) :
             for i in range(2):
                 date = payment_date + relativedelta(months=i*6)
                 title = f'گزارش حسابرسی {i+1}'
-                audit_report, created = AuditReport.objects.update_or_create(date = date , defaults={'title' : title , 'period' : i , 'plan':plan})
+                audit_report = AuditReport.objects.filter(date=date, plan=plan).first()
+                if audit_report:
+                    audit_report.title = title
+                    audit_report.period = i 
+                    audit_report.date = date
+                else:
+                    audit_report = AuditReport.objects.create(date=date, title=title, period=i, plan=plan)
+                
                 audit_report.save()
             for i in range(4):
                 title = f'گزارش پیشرفت {i+1}'
-                date = payment_date + relativedelta(months=i*3)
-                progress_report,created = ProgressReport.objects.update_or_create(date = date , defaults={'title' : title , 'period' : i , 'plan':plan})
+                progress_report = ProgressReport.objects.filter(date=date, plan=plan).first()   
+                if progress_report:
+                    progress_report.title = title
+                    progress_report.period = i
+                    progress_report.date = date
+                else:
+                    progress_report = ProgressReport.objects.create(date=date, title=title, period=i, plan=plan)
                 progress_report.save()
 
         information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show , 'payment_date' :payment_date } )
@@ -1413,9 +1425,6 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             provided_finance_price = i['value']
             payment_date = i['create_date']
             bank_tracking_number = i['track_id']
-            print('-'*15)
-            print(user_obj)
-            print(bourse_code)
             project_finance = ProjectFinancingProvider(
                 projectID = trace_code,
                 nationalID = uniqueIdentifier ,
@@ -1433,8 +1442,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             payment_sended = payment_sended.first()
 
             response, status_code = api_farabours.register_financing(project_finance)
-            print(response)
-            print('-'*15)
+
             if status_code < 300:
                 payment_sended.send_farabours = True
                 payment_sended.trace_code_payment_farabourse = response.TraceCode
