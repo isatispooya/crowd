@@ -1682,7 +1682,7 @@ class WarrantyListAdminViewset(APIView):
         serializer = serializers.WarrantySerializer (warranties , many = True)
         for i in serializer.data:
             date_str = i['date'] 
-            date_obj = datetime.strptime(date_str,  '%Y-%m-%dT%H:%M:%S%z')  
+            date_obj = datetime.datetime.strptime(date_str,  '%Y-%m-%dT%H:%M:%S%z')  
             i['date'] = date_obj.strftime('%Y-%m-%d')
             plan_id = i['plan']  # شناسه Plan
             if plan_id in plans:  # بررسی اینکه آیا شناسه در دیکشنری وجود دارد
