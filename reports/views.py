@@ -406,3 +406,101 @@ class SendSmsStartPlanViewset(APIView) :
                 user_notifier.send_sms(data['message'])
         return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
         
+
+
+
+
+class ProgressReportByIDViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    def patch (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        progres_report = ProgressReport.objects.filter(id=id).first()
+        if not progres_report:
+            return Response({'error': 'Progress report not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        serializer = ProgressReportSerializer(progres_report,data=data,partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            serializer.uploaded_file = request.FILES['file']
+        serializer.save()
+        return Response (serializer.data, status=status.HTTP_200_OK)
+    
+
+class ProgressReportAllAdminViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        progres_report = ProgressReport.objects.all()
+        if not progres_report.exists() :
+            return Response([], status=status.HTTP_200_OK)
+        serializer = ProgressReportSerializer(progres_report, many= True)
+        for i in serializer.data :
+            date = i['date']
+            date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z')
+            date = JalaliDate.to_jalali(date)
+            i['date'] = str(date)            
+        return Response(serializer.data , status=status.HTTP_200_OK)
+
+
+
+
+class AuditReportByIDViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    def patch (self,request,id) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        audit_report = AuditReport.objects.filter(id=id).first()
+        if not audit_report:
+            return Response({'error': 'Audit report not found'}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        serializer =AuditReportSerializer(audit_report,data=data,partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if 'file' in request.FILES:
+            serializer.uploaded_file = request.FILES['file']
+        serializer.save()
+        return Response (serializer.data, status=status.HTTP_200_OK)
+    
+
+
+class AuditReportAllAdminViewset(APIView) :
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self,request) :
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        
+        audit_report = AuditReport.objects.all()
+        if not audit_report.exists() :
+            return Response([], status=status.HTTP_200_OK)
+        serializer =AuditReportSerializer(audit_report, many= True)
+        for i in serializer.data :
+            date = i['date']
+            date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z')
+            date = JalaliDate.to_jalali(date)
+            i['date'] = str(date)            
+        return Response(serializer.data , status=status.HTTP_200_OK)
+    
+    
