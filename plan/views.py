@@ -1870,7 +1870,8 @@ class ParticipantMenuViewset(APIView):
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
-        payment = PaymentGateway.objects.filter(user=user, send_farabours =True , status = '3').distinct()
+        # payment = PaymentGateway.objects.filter(user=user, send_farabours =True , status = '3').distinct()
+        payment = PaymentGateway.objects.filter(user=user, status = '3').distinct()
         serializer = serializers.PaymentGatewaySerializer(payment,many = True)
         plans = []
         for i in serializer.data :
