@@ -42,17 +42,17 @@ class Plan (models.Model) :
     english_name = models.TextField( null=True , blank=True)
     english_suggested_symbol = models.TextField( null=True , blank=True)
     english_approved_symbol = models.TextField( null=True , blank=True)
-    industry_group_id =  models.IntegerField( null=True , blank=True)
+    industry_group_id =  models.BigIntegerField( null=True , blank=True)
     industry_group_description =  models.TextField( null=True , blank=True)
     sub_industry_group_id =  models.TextField( null=True , blank=True)
     sub_industry_group_description =  models.TextField( null=True , blank=True)
     persian_subject =  models.TextField( null=True , blank=True)
     english_subject = models.TextField( null=True , blank=True)
-    unit_price = models.IntegerField( null=True , blank=True)
-    total_units =  models.IntegerField( null=True , blank=True)
-    company_unit_counts =  models.IntegerField( null=True , blank=True)
-    total_price =  models.BigIntegerField( null=True, blank=True)
-    crowd_funding_type_id  =  models.IntegerField( null=True , blank=True)
+    unit_price = models.BigIntegerField( null=True , blank=True)
+    total_units =  models.BigIntegerField( null=True , blank=True)
+    company_unit_counts =  models.BigIntegerField( null=True , blank=True)
+    total_price =  models.BigIntegerField(null=True, blank=True)
+    crowd_funding_type_id  =  models.BigIntegerField( null=True , blank=True)
     crowd_funding_type_description =  models.TextField( null=True , blank=True)
     float_crowd_funding_type_description = models.TextField( null=True , blank=True)
     minimum_required_price =  models.BigIntegerField( null=True, blank=True)
@@ -60,7 +60,7 @@ class Plan (models.Model) :
     real_person_maximum_available_price = models.BigIntegerField( null=True, blank=True)
     legal_person_minimum_availabe_price =  models.BigIntegerField( null=True, blank=True)
     legal_person_maximum_availabe_price =  models.BigIntegerField( null=True, blank=True)
-    underwriting_duration =   models.IntegerField( null=True , blank=True)
+    underwriting_duration =   models.BigIntegerField( null=True , blank=True)
     suggested_underwriting_start_date =  models.TextField( null=True , blank=True)
     suggested_underwriting_end_date = models.TextField( null=True , blank=True)
     approved_underwriting_start_date = models.TextField( null=True , blank=True)
@@ -69,7 +69,7 @@ class Plan (models.Model) :
     project_end_date =  models.TextField( null=True , blank=True)
     settlement_description =  models.TextField( null=True , blank=True)
     project_status_description =  models.TextField( null=True , blank=True)
-    project_status_id =   models.IntegerField( null=True , blank=True)
+    project_status_id =   models.BigIntegerField( null=True , blank=True)
     persian_suggested_underwiring_start_date =  models.TextField( null=True , blank=True)
     persian_suggested_underwriting_end_date =  models.TextField( null=True , blank=True)
     persian_approved_underwriting_start_date =  models.TextField( null=True , blank=True)
@@ -77,8 +77,8 @@ class Plan (models.Model) :
     persian_project_start_date =  models.TextField( null=True , blank=True)
     persian_project_end_date = models.TextField( null=True , blank=True)
     persian_creation_date =  models.TextField( null=True , blank=True)
-    number_of_finance_provider =  models.IntegerField( null=True , blank=True)
-    sum_of_funding_provided =   models.IntegerField( null=True , blank=True)
+    number_of_finance_provider =  models.BigIntegerField( null=True , blank=True)
+    sum_of_funding_provided =   models.BigIntegerField( null=True , blank=True)
     def __str__(self) :
         return self.persian_name or "بدون نام"
         
@@ -86,7 +86,7 @@ class ProjectOwnerCompan(models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     national_id = models.BigIntegerField( null=True, blank=True)
     name = models.TextField( null=True , blank=True)
-    compnay_type_id = models.IntegerField( null=True , blank=True)
+    compnay_type_id = models.BigIntegerField( null=True , blank=True)
     company_type_description = models.TextField( null=True , blank=True)
     registration_date = models.TextField( null=True , blank=True)
     registration_number = models.TextField( null=True , blank=True)
@@ -100,7 +100,7 @@ class ProjectOwnerCompan(models.Model):
 class ListOfProjectBigShareHolders(models.Model):
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     national_id = models.BigIntegerField( null=True, blank=True)
-    shareholder_type = models.IntegerField( null=True , blank=True)
+    shareholder_type = models.BigIntegerField( null=True , blank=True)
     first_name =models.TextField( null=True , blank=True)
     last_name = models.TextField( null=True , blank=True)
     share_percent = models.FloatField( null=True , blank=True)
@@ -111,7 +111,7 @@ class ListOfProjectBoardMembers(models.Model):
     national_id = models.BigIntegerField( null=True, blank=True)
     mobile_number = models.TextField( null=True , blank=True)
     email_address = models.TextField( null=True , blank=True)
-    organization_post_id = models.IntegerField( null=True , blank=True)
+    organization_post_id = models.BigIntegerField( null=True , blank=True)
     is_agent_from_company = models.BooleanField(null=True , blank=True)
     first_name =models.TextField( null=True , blank=True)
     last_name = models.TextField( null=True , blank=True)
@@ -183,9 +183,9 @@ class PaymentGateway(models.Model) :
     #### Farabourse #####
     send_farabours = models.BooleanField (default=False)
     trace_code_payment_farabourse = models.TextField (null=True, blank=True,default='')
-    provided_finance_price_farabourse = models.IntegerField (null=True, blank=True,default=0)
+    provided_finance_price_farabourse = models.BigIntegerField (null=True, blank=True,default=0)
     message_farabourse = models.TextField (null=True, blank=True,default='')
-    error_no_farabourse = models.IntegerField (null=True, blank=True,default=0)
+    error_no_farabourse = models.BigIntegerField (null=True, blank=True,default=0)
     ######################
     url_id = models.TextField ( null= True , blank=True)
     mobile = models.TextField( null= True , blank=True)
@@ -214,7 +214,7 @@ class Plans (models.Model):
 
 class InformationPlan (models.Model):
     plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
-    rate_of_return = models.IntegerField (null=True , blank= True)
+    rate_of_return = models.BigIntegerField (null=True , blank= True)
     status_second_option = [
          ('1','1'),
          ('2','2'),
@@ -231,8 +231,8 @@ class InformationPlan (models.Model):
          
 
 class EndOfFundraising (models.Model) :
-    amount_operator = models.IntegerField(null=True, blank=True) #مبلغ ادمین
-    amount_systemic = models.IntegerField(null=True, blank=True) #مبلغ سیستمی
+    amount_operator = models.BigIntegerField(null=True, blank=True) #مبلغ ادمین
+    amount_systemic = models.BigIntegerField(null=True, blank=True) #مبلغ سیستمی
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     type = models.CharField(max_length=100  , null=True, blank=True)
     date_operator = models.DateField(null=True, blank=True) #تاریخ ادمین
