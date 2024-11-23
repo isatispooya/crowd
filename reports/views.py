@@ -493,6 +493,7 @@ class AuditReportByIDViewset(APIView) :
             return Response([], status=status.HTTP_200_OK)
         serializer =AuditReportSerializer(audit_report, many= True)
         for i in serializer.data :
+            print(i)
             date = i['date']
             date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z')
             date = JalaliDate.to_jalali(date)
