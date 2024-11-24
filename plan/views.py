@@ -1611,7 +1611,6 @@ class WarrantyAdminViewset(APIView) :
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch (self,request , *args, **kwargs):
-        trace_code = kwargs.get('key')
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1619,16 +1618,12 @@ class WarrantyAdminViewset(APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code = trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
         
         warranties_id = data.get('id')
         if not warranties_id:
             return Response({'error': 'warranty ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        warranties = Warranty.objects.filter(plan=plan , id = warranties_id).first()
+        warranties = Warranty.objects.filter(id = warranties_id).first()
         if not warranties :
             return Response({'error': 'warranty not found '}, status=status.HTTP_400_BAD_REQUEST)
         if data.get('date'):
@@ -2117,7 +2112,7 @@ class CheckVerificationReceiptAdminViewset (APIView):
             listPayment.append(serializer)
         return Response(listPayment, status=status.HTTP_200_OK)
     
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    @method_decorator(ratelimit(key='ip', rate='25/m', method='PATCH', block=True))
     def patch (self,request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
