@@ -451,10 +451,12 @@ class ProgressReportByIDViewset(APIView) :
             return Response([], status=status.HTTP_200_OK)
         serializer = ProgressReportSerializer(progres_report, many= True)
         for i in serializer.data :
+            plan = i['plan']['persian_suggested_symbol']
             date = i['date']
             date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S%z')
             date = JalaliDate.to_jalali(date)
-            i['date'] = str(date)            
+            i['date'] = str(date)
+            i['plan'] = plan
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 

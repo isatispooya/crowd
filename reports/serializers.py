@@ -13,7 +13,7 @@ class AuditReportSerializer(serializers.ModelSerializer):
 
 
 class ProgressReportSerializer(serializers.ModelSerializer):
-    plan = PlanSerializer(many=True, read_only=True, source='plan_set')
+    plan = PlanSerializer(read_only=True)
     class Meta:
         model = models.ProgressReport
         fields = '__all__'
