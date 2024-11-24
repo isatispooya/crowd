@@ -324,7 +324,7 @@ class ProfitabilityReportViewSet(APIView) :
         qest = 1
         for i in pey_df.index : 
             df[f'profit{qest}'] = pey_df['profit'][i]
-            df[f'value{qest}'] = pey_df['profit'][i] * df['value']
+            df[f'value{qest}'] = int(pey_df['profit'][i] * df['value'])
             df[f'date_operator{qest}'] = pey_df['date_operator'][i]
             qest += 1
 
