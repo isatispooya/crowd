@@ -15,6 +15,6 @@ urlpatterns = [
     path('send/sms/start/plan/', SendSmsStartPlanViewset.as_view(), name='send-sms-start-plan'),
     path('progres/report/id/admin/<int:id>/', ProgressReportByIDViewset.as_view(), name='progress-report-admin-by-id'),
     path('progres/report/all/admin/', ProgressReportByIDViewset.as_view(), name='progress-report-admin-all'),
-    path('audit/report/id/admin/<int:id>/', AuditReportByIDViewset.as_view(), name='audit-report-admin-by-id'),
+    path('audit/report/id/admin/', AuditReportByIDViewset.as_view(), name='audit-report-admin-by-id'),
     path('audit/report/all/admin/', AuditReportByIDViewset.as_view(), name='audit-report-admin-all'),
 ]
