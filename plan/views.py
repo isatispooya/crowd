@@ -978,7 +978,7 @@ class EndOfFundraisingViewset(APIView) :
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first() 
+        admin = admin.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1173,10 +1173,13 @@ class CertificateAdminViewset(APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        data = request.data.get('uniqueIdentifier')
-        if not data:
-            return Response({'error': 'uniqueIdentifier is required'}, status=status.HTTP_400_BAD_REQUEST)  
-        user = User.objects.filter(uniqueIdentifier=data).first()
+        if not isinstance(request.data, dict):
+            return Response({'error': 'Invalid request data format'}, status=status.HTTP_400_BAD_REQUEST)
+        unique_identifier = request.data.get('uniqueIdentifier')
+        if not unique_identifier:
+            return Response({'error': 'uniqueIdentifier is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(uniqueIdentifier=unique_identifier).first()
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)  
         apiFarabours = CrowdfundingAPI()
@@ -1189,7 +1192,7 @@ class CertificateAdminViewset(APIView):
         with open(file_path, 'wb') as pdf_file:
             pdf_file.write(participation.content)
         return Response({'url':f'/media/reports/{file_name}'},status=status.HTTP_200_OK)
-        
+            
 
 
 class InformationPlanViewset(APIView) :
@@ -1611,7 +1614,6 @@ class WarrantyAdminViewset(APIView) :
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
     def patch (self,request , *args, **kwargs):
-        trace_code = kwargs.get('key')
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1619,25 +1621,20 @@ class WarrantyAdminViewset(APIView) :
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code = trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
         
         warranties_id = data.get('id')
         if not warranties_id:
             return Response({'error': 'warranty ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        warranties = Warranty.objects.filter(plan=plan , id = warranties_id).first()
+        warranties = Warranty.objects.filter(id = warranties_id).first()
         if not warranties :
             return Response({'error': 'warranty not found '}, status=status.HTTP_400_BAD_REQUEST)
         if data.get('date'):
             try:
                 timestamp = int(data['date']) / 1000
                 data['date'] = datetime.datetime.fromtimestamp(timestamp)
-                date_jalali = JalaliDate.to_jalali(data['date'])
-                date_jalali = date_jalali.strftime('%Y-%m-%d')
-                data['date'] = date_jalali
+                data['kind_of_warranty'] = request.data.get('kind_of_warranty')
+                data['exporter'] = request.data.get('exporter')
 
             except (ValueError, TypeError):
                 return Response({'error': 'Invalid date format'}, status=400)
@@ -1646,7 +1643,7 @@ class WarrantyAdminViewset(APIView) :
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data ,  status= status.HTTP_200_OK)
-        return Response ({'message': 'update is not succsesfuly'} ,  status=status.HTTP_400_BAD_REQUEST  )
+        return Response ({'message': 'update is not succsesfuly'} ,  status=status.HTTP_400_BAD_REQUEST)
 
     @method_decorator(ratelimit(key='ip', rate='20/m', method='DELETE', block=True))
     def delete (self, request, *args, **kwargs):
@@ -2134,7 +2131,7 @@ class CheckVerificationReceiptAdminViewset (APIView):
             listPayment.append(serializer)
         return Response(listPayment, status=status.HTTP_200_OK)
     
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    @method_decorator(ratelimit(key='ip', rate='25/m', method='PATCH', block=True))
     def patch (self,request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
