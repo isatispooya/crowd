@@ -22,7 +22,6 @@ from django.conf import settings
 from django.db import transaction
 
 
-
 class CaptchaViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get (self,request):
@@ -751,6 +750,9 @@ class UserOneViewset(APIView) :
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
         user = User.objects.filter(id=id).first()
+        if not user :
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        
         user_serializer = serializers.UserSerializer(user).data
         privateperson = privatePerson.objects.filter(user=user)
         privateperson_serializer = serializers.privatePersonSerializer(privateperson, many=True).data
@@ -767,6 +769,21 @@ class UserOneViewset(APIView) :
         user_tradingCodes = tradingCodes.objects.filter(user=user)
         serializer_tradingCodes = serializers.tradingCodesSerializer(user_tradingCodes, many=True).data
 
+        user_accounts = accounts.objects.filter(user=user)
+        serializer_accounts = serializers.accountsSerializer(user_accounts, many=True).data
+        legal_person_data = {}
+        if check_legal_person(user.uniqueIdentifier):
+            legal_person_data = {
+                'legal_person_shareholder': serializers.legalPersonShareholdersSerializer(
+                    legalPersonShareholders.objects.filter(user=user), many=True
+                ).data,
+                'legal_person': serializers.LegalPersonSerializer(
+                    LegalPerson.objects.filter(user=user), many=True
+                ).data,
+                'legal_person_stakeholders': serializers.legalPersonStakeholdersSerializer(
+                    legalPersonStakeholders.objects.filter(user=user), many=True
+                ).data,
+            }
         combined_data = {
             **user_serializer, 
             'addresses': serializer_addresses,
@@ -774,6 +791,8 @@ class UserOneViewset(APIView) :
             'financial_info': serializer_financialInfo,
             'job_info': serializer_jobInfo,
             'trading_codes': serializer_tradingCodes,
+            'accounts': serializer_accounts,
+            **legal_person_data,
         }
 
         return Response({'success': combined_data}, status=status.HTTP_200_OK)

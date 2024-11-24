@@ -1217,7 +1217,7 @@ class InformationPlanViewset(APIView) :
             payment_date = datetime.datetime.fromtimestamp(payment_date)
             for i in range(2):
                 date = payment_date + relativedelta(months=i*6)
-                title = f'گزارش حسابرسی {i+1}'
+                title = f'گزارش حسابرسی 6 ماهه {(i + 1)}'
                 audit_report = AuditReport.objects.filter(date=date, plan=plan).first()
                 if audit_report:
                     audit_report.title = title
