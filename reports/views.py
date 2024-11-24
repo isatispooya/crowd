@@ -297,21 +297,23 @@ class ProfitabilityReportViewSet(APIView) :
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
         account_numbers = []
         user_names = []
-
+        user_mobiles = []
         for i in df['user']:
             user_obj = User.objects.filter(uniqueIdentifier=i).first()
             if user_obj is not None:
-                account_number = get_account_number(user_obj)
-                user_name = get_name(user_obj)
+                account_number = get_account_number(user_obj.uniqueIdentifier)
+                user_name = get_name(user_obj.uniqueIdentifier)
+                user_mobile = user_obj.mobile
             else:
                 account_number = 'N/A' 
                 user_name = 'N/A'
-            
+                user_mobile = 'N/A'
             account_numbers.append(account_number)
             user_names.append(user_name)
+            user_mobiles.append(user_mobile)
         df ['account_number'] = account_numbers
         df ['user_name'] = user_names
-
+        df ['user_mobile'] = user_mobiles
         pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')[['type','date_operator']]
         start_project = datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None)
         pey_df['date_operator'] = pd.to_datetime(pey_df['date_operator']).dt.tz_localize(None)
@@ -325,6 +327,7 @@ class ProfitabilityReportViewSet(APIView) :
         for i in pey_df.index : 
             df[f'profit{qest}'] = pey_df['profit'][i]
             df[f'value{qest}'] = pey_df['profit'][i] * df['value']
+            df[f'value{qest}'] = df[f'value{qest}'].apply(lambda x: round(x, 0))
             df[f'date_operator{qest}'] = pey_df['date_operator'][i]
             qest += 1
 

@@ -30,6 +30,7 @@ urlpatterns = [
     path('send/participation/notification/admin/<str:trace_code>/', SendParticipationNotificationViewset.as_view(), name='send-participation-notification-admin'), # اعلام تکمیل طرح از طرف ادمین
     path('check/verification/payment/admin/', CheckVerificationPaymentAdminViewset.as_view(), name='check-verification-payment-admin'), # بررسی پرداخت چک های سود سرمایه پذیر از طرف ادمین    
     path('check/verification/receipt/admin/', CheckVerificationReceiptAdminViewset.as_view(), name='check-verification-receipt-admin'), # بررسی دریافت چک های سود سرمایه گذار از طرف ادمین    
+    path('check/verification/receipt/admin/<int:id>/', CheckVerificationReceiptAdminViewset.as_view(), name='check-verification-receipt-admin-by-id'), # بررسی دریافت چک های سود سرمایه گذار از طرف ادمین    
     path('complaint/user/<str:trace_code>/', ComplaintViewset.as_view(), name='complaint'), # شکایات کاربران
 ]
 

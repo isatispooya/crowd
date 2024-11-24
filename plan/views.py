@@ -1582,23 +1582,17 @@ class WarrantyAdminViewset(APIView) :
         if not plan :
             return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         date = request.data.get('date')
-        if date:
-            try:
-                timestamp = int(date) / 1000
-                date = datetime.datetime.fromtimestamp(timestamp)
-                date_jalali = JalaliDate.to_jalali(date)
-                date_jalali = date_jalali.strftime('%Y-%m-%d')
-            except (ValueError, TypeError):
-                return Response({'error': 'Invalid date format'}, status=400)
-        else:
-            date = None
+        if date == None :
+            return Response({'error': 'date is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-       
+        timestamp = int(date) / 1000
+        date = datetime.datetime.fromtimestamp(timestamp)
+
         warranty = Warranty.objects.create(
             plan = plan,
             exporter = request.data.get('exporter'),
-            date = date_jalali,
-            completed = request.data.get('completed'),
+            date = date,
+            completed = request.data.get('completed',False),
             comment = request.data.get('comment'),
             kind_of_warranty = request.data.get('kind_of_warranty'),
         )
@@ -1606,6 +1600,13 @@ class WarrantyAdminViewset(APIView) :
 
         return Response (serializer.data ,  status= status.HTTP_200_OK)
     
+    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    def get (self, request , *args, **kwargs):
+        trace_code = kwargs.get('key')
+        plan = Plan.objects.filter(trace_code = trace_code).first()
+        warranties = Warranty.objects.filter(plan=plan)
+        serializer = serializers.WarrantySerializer(warranties , many = True)
+        return Response (serializer.data ,  status= status.HTTP_200_OK)
 
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
@@ -2117,7 +2118,7 @@ class CheckVerificationReceiptAdminViewset (APIView):
         return Response(listPayment, status=status.HTTP_200_OK)
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
-    def patch (self,request):
+    def patch (self,request,id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2125,7 +2126,6 @@ class CheckVerificationReceiptAdminViewset (APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        id = request.data.get('id')
         end_of_fundraising = EndOfFundraising.objects.filter(id=id).first()
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
