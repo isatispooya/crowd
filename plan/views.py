@@ -2103,7 +2103,7 @@ class CheckVerificationReceiptAdminViewset (APIView):
         return Response(listPayment, status=status.HTTP_200_OK)
     
     @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
-    def patch (self,request):
+    def patch (self,request,id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2111,7 +2111,6 @@ class CheckVerificationReceiptAdminViewset (APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        id = request.data.get('id')
         end_of_fundraising = EndOfFundraising.objects.filter(id=id).first()
         if not end_of_fundraising :
             return Response({'error': 'end of fundraising not found'}, status=status.HTTP_400_BAD_REQUEST)
