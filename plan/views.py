@@ -2038,12 +2038,27 @@ class CheckVerificationPaymentAdminViewset (APIView):
         listPayment = []
         for i in serializer :
             plan = Plan.objects.filter(id=i['plan']).first()
+            date_operator = i['date_operator']
+            try:
+                date_operator = datetime.datetime.strptime(date_operator, '%Y-%m-%dT%H:%M:%S%z')
+            except ValueError:
+                date_operator = datetime.datetime.strptime(date_operator, '%Y-%m-%d')          
+            date_operator = JalaliDate.to_jalali(date_operator.year, date_operator.month, date_operator.day)
+            date_operator = date_operator.strftime('%Y-%m-%d')
+
+            date_capitalization_operator = i['date_capitalization_operator']
+            try:
+                date_capitalization_operator = datetime.datetime.strptime(date_capitalization_operator, '%Y-%m-%dT%H:%M:%S%z')
+            except ValueError:
+                date_capitalization_operator = datetime.datetime.strptime(date_capitalization_operator, '%Y-%m-%d')          
+            date_capitalization_operator = JalaliDate.to_jalali(date_capitalization_operator.year, date_capitalization_operator.month, date_capitalization_operator.day)
+            date_capitalization_operator = date_capitalization_operator.strftime('%Y-%m-%d')
             serializer ={
                 'id': i['id'],
-                'plan': plan.persian_name,
+                'plan': plan.persian_suggested_symbol,
                 'amount_operator': i['amount_operator'],
-                'date_operator': i['date_operator'],
-                'date_capitalization_operator': i['date_capitalization_operator'],
+                'date_operator': date_operator,
+                'date_capitalization_operator': date_capitalization_operator,
                 'profit_payment_comment' : i['profit_payment_comment'],
                 'profit_payment_completed': i['profit_payment_completed'],
             }
