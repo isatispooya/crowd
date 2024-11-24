@@ -301,8 +301,8 @@ class ProfitabilityReportViewSet(APIView) :
         for i in df['user']:
             user_obj = User.objects.filter(uniqueIdentifier=i).first()
             if user_obj is not None:
-                account_number = get_account_number(user_obj)
-                user_name = get_name(user_obj)
+                account_number = get_account_number(user_obj.uniqueIdentifier)
+                user_name = get_name(user_obj.uniqueIdentifier)
             else:
                 account_number = 'N/A' 
                 user_name = 'N/A'
