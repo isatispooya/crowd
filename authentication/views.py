@@ -696,10 +696,15 @@ class UserListViewset (APIView) :
             privateperson = privatePerson.objects.filter(user=i_user)
             privateperson_serializer = serializers.privatePersonSerializer(privateperson, many=True).data
             for i in range(len(privateperson_serializer)):
-                try:
-                    privateperson_serializer[i]['birthDate'] = JalaliDate(privateperson_serializer[i]['birthDate'].strftime('%Y-%m-%dT%H:%M:%S')).strftime('%Y-%m-%d')
-                except:
-                    pass
+                if privateperson_serializer[i]['birthDate']:
+                    birthDate = datetime.datetime.strptime(privateperson_serializer[i]['birthDate'].split('T')[0], '%Y-%m-%d')
+                    try:
+                        privateperson_serializer[i]['birthDate'] = JalaliDate(birthDate).strftime('%Y/%m/%d')
+                    except:
+                        pass
+                    privateperson_serializer[i]['gender'] = privateperson_serializer[i]['gender'].replace('Female', 'زن').replace('Male', 'مرد')
+
+
             
             user_addresses = addresses.objects.filter(user=i_user)
             serializer_addresses = serializers.addressesSerializer(user_addresses , many=True).data
