@@ -14,5 +14,5 @@ urlpatterns = [
     path('update/profile/', UpdateInformationViewset.as_view(), name='update-profile'),
     path('add/bours/code/user/', AddBoursCodeUserViewset.as_view(), name='add-bours-code-user'),
     path('log/out/', LogoutViewset.as_view(), name='log-out'),
-    path('refresh/token/admin/', RefreshTokenAdminViewset.as_view(), name='refresh-token-admin'), #رفرش توکن ادمین
+    path('refresh/token/admin/', RefreshTokenAdminViewset.as_view(), name='refresh-token-admin'),
 ]

@@ -10,6 +10,7 @@ from . import fun
 import json
 import random
 import os
+from persiantools.jdatetime import JalaliDate
 from utils.message import Message 
 from utils.user_notifier import UserNotifier
 from plan.views import check_legal_person
@@ -694,6 +695,16 @@ class UserListViewset (APIView) :
             i_user = user[i]  
             privateperson = privatePerson.objects.filter(user=i_user)
             privateperson_serializer = serializers.privatePersonSerializer(privateperson, many=True).data
+            for i in range(len(privateperson_serializer)):
+                if privateperson_serializer[i]['birthDate']:
+                    birthDate = datetime.datetime.strptime(privateperson_serializer[i]['birthDate'].split('T')[0], '%Y-%m-%d')
+                    try:
+                        privateperson_serializer[i]['birthDate'] = JalaliDate(birthDate).strftime('%Y/%m/%d')
+                    except:
+                        pass
+                    privateperson_serializer[i]['gender'] = privateperson_serializer[i]['gender'].replace('Female', 'زن').replace('Male', 'مرد')
+
+
             
             user_addresses = addresses.objects.filter(user=i_user)
             serializer_addresses = serializers.addressesSerializer(user_addresses , many=True).data
