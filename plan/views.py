@@ -1850,7 +1850,7 @@ class TransmissionViewset(APIView) :
                   
 
             
-        user = User.objects.filter(uniqueIdentifier = user).first()
+        user = User.objects.filter(uniqueIdentifier = user.uniqueIdentifier).first()
         full_name = get_name(user.uniqueIdentifier)
         
         pep = PasargadPaymentGateway()
@@ -1858,7 +1858,9 @@ class TransmissionViewset(APIView) :
             'invoice' : pep.generator_invoice_number(),
             'invoiceDate': pep.generator_date(),
             
-        }  
+        }
+        description_user = request.data.get('description_user','')
+        description = f"مشارکت در طرح {plan.persian_name} به مبلغ {value} ریال | {description_user}"
         created = pep.create_purchase(
             invoice  = invoice_data['invoice'],
             invoiceDate = invoice_data['invoiceDate'],
@@ -1868,7 +1870,7 @@ class TransmissionViewset(APIView) :
             service_code =  '8' ,
             payerName = full_name,
             nationalCode = user.uniqueIdentifier,
-            description = invoice_data['description'] 
+            description = description
         )
         payment = PaymentGateway.objects.create(
             plan = plan,
@@ -1876,7 +1878,7 @@ class TransmissionViewset(APIView) :
             amount = int(value / plan.unit_price),
             value = value,
             payment_id = invoice_data['invoice'],
-            description = invoice_data['description'],
+            description = description,
             code = None,
             risk_statement = True,
             status = '1',
