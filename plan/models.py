@@ -226,6 +226,12 @@ class InformationPlan (models.Model):
     status_show = models.BooleanField (default=False)
     amount_collected_now = models.BigIntegerField (null=True, blank=True)
     payment_date = models.DateTimeField (null=True, blank=True)
+    payback_period_option = [
+         ('1','1'),
+         ('2','2'),
+    ]
+    payback_period = models.CharField (max_length= 10 , null=True, blank=True , choices=payback_period_option , default='1')
+    period_length = models.IntegerField (null=True, blank=True , default=12)
     def __str__(self) :
          return str(self.plan.persian_name)
          
