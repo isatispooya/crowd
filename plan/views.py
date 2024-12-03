@@ -667,7 +667,7 @@ class PaymentDocument(APIView):
             return Response({'error': 'payment_id not found'}, status=status.HTTP_404_NOT_FOUND)
         payment_id = request.data.get('payment_id')
         
-        purchaseable_value = int(plan_total_price - amount_collected_now) # مبلغ قابل خرید همه کاربران 
+        purchaseable_value = int((plan_total_price or 0) - (amount_collected_now or 0))
         if value > purchaseable_value :
             return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1215,6 +1215,7 @@ class InformationPlanViewset(APIView) :
         status_second = request.data.get('status_second')
         status_show = request.data.get('status_show')
         payment_date = request.data.get('payment_date')
+        print(payment_date)
 
         if status_second not in ['1' , '2','3' , '4' , '5'] :
             status_second = '1'
