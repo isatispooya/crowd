@@ -1215,6 +1215,10 @@ class InformationPlanViewset(APIView) :
         status_second = request.data.get('status_second')
         status_show = request.data.get('status_show')
         payment_date = request.data.get('payment_date')
+        payback_period = request.data.get('payback_period')
+        print(payback_period)
+        period_length = request.data.get('period_length')   
+        print(period_length)
 
         if status_second not in ['1' , '2','3' , '4' , '5'] :
             status_second = '1'
@@ -1244,8 +1248,11 @@ class InformationPlanViewset(APIView) :
                     progress_report = ProgressReport.objects.create(date=date, title=title, period=i, plan=plan)
                 progress_report.save()
 
-        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show , 'payment_date' :payment_date } )
+        information , _ = InformationPlan.objects.update_or_create(plan=plan ,defaults={'rate_of_return' : rate_of_return , 'status_second': status_second, 'status_show' :status_show , 'payment_date' :payment_date , 'payback_period' : payback_period , 'period_length' : period_length } )
+        print(information)
         serializer = serializers.InformationPlanSerializer(information)
+        print(serializer.data)
+
         
        
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1282,41 +1289,65 @@ class EndOfFundraisingViewset(APIView) :
         date_payement = information.payment_date
         if isinstance(date_payement, str):
             date_payement = datetime.datetime.strptime(date_payement, '%Y-%m-%dT%H:%M:%S')
-           
-        all_end_fundraising = []
-        end_fundraising = EndOfFundraising.objects.filter(plan=plan)
-        if not end_fundraising :
-            return Response({'error': 'end of fundraising not found'}, status=status.HTTP_404_NOT_FOUND)        
-        # EndOfFundraising.objects.filter(plan=plan).delete()
-        data = request.data 
-        updated_items=[]
-        for item in data:
-            fundraising_id = item.get('id')
-            if fundraising_id is None:
-                return Response({'error': 'ID is required for each fundraising item'}, status=status.HTTP_400_BAD_REQUEST)
+        if information.payback_period == '1':
+            all_end_fundraising = []
+            end_fundraising = EndOfFundraising.objects.filter(plan=plan)
+            if not end_fundraising :
+                return Response({'error': 'end of fundraising not found'}, status=status.HTTP_404_NOT_FOUND)        
+            # EndOfFundraising.objects.filter(plan=plan).delete()
+            data = request.data 
+            updated_items=[]
+            for item in data:
+                fundraising_id = item.get('id')
+                if fundraising_id is None:
+                    return Response({'error': 'ID is required for each fundraising item'}, status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                fundraising_instance = EndOfFundraising.objects.get(id=fundraising_id, plan=plan)
-                fundraising_instance.amount_operator = item.get('amount_operator', fundraising_instance.amount_operator)
-                fundraising_instance.date_operator = item.get('date_operator', fundraising_instance.date_operator)
-                fundraising_instance.date_capitalization_operator = item.get(
-                    'date_capitalization_operator', fundraising_instance.date_capitalization_operator
-                )
-                fundraising_instance.type = item.get('type', fundraising_instance.type)
+                try:
+                    fundraising_instance = EndOfFundraising.objects.get(id=fundraising_id, plan=plan)
+                    fundraising_instance.amount_operator = item.get('amount_operator', fundraising_instance.amount_operator)
+                    fundraising_instance.date_operator = item.get('date_operator', fundraising_instance.date_operator)
+                    fundraising_instance.date_capitalization_operator = item.get(
+                        'date_capitalization_operator', fundraising_instance.date_capitalization_operator
+                    )
+                    fundraising_instance.type = item.get('type', fundraising_instance.type)
 
-                fundraising_instance.save()
+                    fundraising_instance.save()
 
-                updated_items.append(fundraising_instance)
+                    updated_items.append(fundraising_instance)
 
-            except EndOfFundraising.DoesNotExist:
-                return Response({'error': f'Fundraising with ID {fundraising_id} not found.'}, 
-                                status=status.HTTP_404_NOT_FOUND)
+                except EndOfFundraising.DoesNotExist:
+                    return Response({'error': f'Fundraising with ID {fundraising_id} not found.'}, 
+                                    status=status.HTTP_404_NOT_FOUND)
 
-        serializer = serializers.EndOfFundraisingSerializer(updated_items, many=True, partial=True)
+            serializer = serializers.EndOfFundraisingSerializer(updated_items, many=True, partial=True)
 
-        return Response({'date_payement' : serializer.data , 'date_start' : date_payement}, status=status.HTTP_200_OK)
-
-
+            return Response({'date_payement' : serializer.data , 'date_start' : date_payement}, status=status.HTTP_200_OK)
+        else:
+            end_fundraising = EndOfFundraising.objects.filter(plan=plan)
+            if not end_fundraising:
+                return Response({'error': 'end of fundraising not found'}, status=status.HTTP_404_NOT_FOUND)
+            data = request.data
+            updated_items=[]
+            for item in data:
+                fundraising_id = item.get('id')
+                if fundraising_id is None:
+                    return Response({'error': 'ID is required for each fundraising item'}, status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    fundraising_instance = EndOfFundraising.objects.get(id=fundraising_id, plan=plan)
+                    fundraising_instance.amount_operator = item.get('amount_operator', fundraising_instance.amount_operator)
+                    fundraising_instance.date_operator = item.get('date_operator', fundraising_instance.date_operator)
+                    fundraising_instance.date_capitalization_operator = item.get('date_capitalization_operator', fundraising_instance.date_capitalization_operator)
+                    fundraising_instance.type = item.get('type', fundraising_instance.type)
+                    fundraising_instance.save()
+                    updated_items.append(fundraising_instance)
+                except EndOfFundraising.DoesNotExist:
+                    return Response({'error': f'Fundraising with ID {fundraising_id} not found.'}, status=status.HTTP_404_NOT_FOUND)
+            serializer = serializers.EndOfFundraisingSerializer(updated_items, many=True, partial=True)
+            return Response({'date_payement' : serializer.data , 'date_start' : date_payement}, status=status.HTTP_200_OK)
+    
+    
+    
+    
     @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
     def get(self,request,trace_code) : 
         Authorization = request.headers.get('Authorization')
@@ -1332,6 +1363,7 @@ class EndOfFundraisingViewset(APIView) :
         information = InformationPlan.objects.filter(plan=plan).first()
         if not information:
             return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        payback_period = information.payback_period
         date_payement = information.payment_date
         if isinstance(date_payement, str):
             date_payement = datetime.datetime.strptime(date_payement, '%Y-%m-%dT%H:%M:%S')
@@ -1339,58 +1371,102 @@ class EndOfFundraisingViewset(APIView) :
         end_fundraising = EndOfFundraising.objects.filter(plan=plan)
         if end_fundraising.exists():
             serializer = serializers.EndOfFundraisingSerializer(end_fundraising , many = True).data
-
             return Response({'date_payments' : serializer ,'date_start' :  date_payement}, status=status.HTTP_200_OK)
         if not end_fundraising.exists():
-            all_end_fundraising = []
-            amount_fundraising = plan.sum_of_funding_provided
-            if amount_fundraising:
-                amount_fundraising = amount_fundraising / 4
-            else:
-                amount_fundraising = 0
+            if payback_period == '1':
+                all_end_fundraising = []
+                amount_fundraising = plan.sum_of_funding_provided
+                if amount_fundraising:
+                    amount_fundraising = amount_fundraising / 4
+                else:
+                    amount_fundraising = 0
+                
+                date = information.payment_date
+                if date is None :
+                    return Response({'error': 'payment date not found'}, status=status.HTTP_404_NOT_FOUND)
+                if isinstance(date, str):
+                    date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+                date = date + relativedelta(months=3) # از سه ماه اینده سود دهی شروع میشود
+
+                for i in range(4):
+                    format_date = date.strftime('%Y-%m-%d') # تاریخ سود 
+                    date_capitalization = (date - timedelta(days=5)).date() #  تاریخ چک سود
+
+                    end_fundraising = EndOfFundraising.objects.create(
+                        plan=plan,
+                        date_systemic=format_date,
+                        date_operator=format_date,
+                        amount_systemic=amount_fundraising,
+                        amount_operator=amount_fundraising,
+                        type=2,
+                        date_capitalization_systemic=date_capitalization,
+                        date_capitalization_operator=date_capitalization
+                    )
+                    all_end_fundraising.append(end_fundraising)
+                    date = date + relativedelta(months=3)
+                    last_calculated_date = date - relativedelta(months=3) # تاریخ چک اصل پول 
+                    
+                    date_capitalization_end = (last_calculated_date - timedelta(days=5)).date()
+                end_fundraising_total = EndOfFundraising.objects.create(
+                    plan=plan,
+                    date_systemic=date_capitalization_end.strftime('%Y-%m-%d'),
+                    date_operator=date_capitalization_end.strftime('%Y-%m-%d'),
+                    amount_systemic=plan.sum_of_funding_provided,
+                    amount_operator=plan.sum_of_funding_provided,
+                    type=1,
+                    date_capitalization_systemic=date_capitalization_end,
+                    date_capitalization_operator=date_capitalization_end
+                )
+                
+                all_end_fundraising.append(end_fundraising_total)
+                serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
+
+                return Response({'date_payments' : serializer.data, 'date_start' : date_payement}, status=status.HTTP_200_OK)
             
-            date = information.payment_date
-            if date is None :
-                return Response({'error': 'payment date not found'}, status=status.HTTP_404_NOT_FOUND)
-            if isinstance(date, str):
-                date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
-            date = date + relativedelta(months=3) # از سه ماه اینده سود دهی شروع میشود
-
-            for i in range(4):
-                format_date = date.strftime('%Y-%m-%d') # تاریخ سود 
-                date_capitalization = (date - timedelta(days=5)).date() #  تاریخ چک سود
-
+            else :
+                all_end_fundraising = []
+                period_length = information.period_length
+                amount_fundraising = plan.sum_of_funding_provided
+                if not amount_fundraising:
+                    amount_fundraising = 0
+                
+                date = information.payment_date
+                if date is None :
+                    return Response({'error': 'payment date not found'}, status=status.HTTP_404_NOT_FOUND)
+                if isinstance(date, str):
+                    date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+                date = date + relativedelta(months=period_length)
+                format_date = date.strftime('%Y-%m-%d')
+                date_capitalization = (date - timedelta(days=5)).date()
                 end_fundraising = EndOfFundraising.objects.create(
                     plan=plan,
                     date_systemic=format_date,
                     date_operator=format_date,
                     amount_systemic=amount_fundraising,
                     amount_operator=amount_fundraising,
-                    type=2,
                     date_capitalization_systemic=date_capitalization,
-                    date_capitalization_operator=date_capitalization
+                    date_capitalization_operator=date_capitalization,
+                    type=2
                 )
                 all_end_fundraising.append(end_fundraising)
-                date = date + relativedelta(months=3)
-                last_calculated_date = date - relativedelta(months=3) # تاریخ چک اصل پول 
+                end_fundraising_total =  EndOfFundraising.objects.create(
+                    plan=plan,
+                    date_systemic=format_date,
+                    date_operator=format_date,
+                    amount_systemic=amount_fundraising,
+                    amount_operator=amount_fundraising,
+                    date_capitalization_systemic=date_capitalization,
+                    date_capitalization_operator=date_capitalization,
+                    type=1
+                )
+                all_end_fundraising.append(end_fundraising_total)
+                serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
+                return Response (serializer.data , status=status.HTTP_200_OK)
                 
-                date_capitalization_end = (last_calculated_date - timedelta(days=5)).date()
-            end_fundraising_total = EndOfFundraising.objects.create(
-                plan=plan,
-                date_systemic=date_capitalization_end.strftime('%Y-%m-%d'),
-                date_operator=date_capitalization_end.strftime('%Y-%m-%d'),
-                amount_systemic=plan.sum_of_funding_provided,
-                amount_operator=plan.sum_of_funding_provided,
-                type=1,
-                date_capitalization_systemic=date_capitalization_end,
-                date_capitalization_operator=date_capitalization_end
-            )
-            
-            all_end_fundraising.append(end_fundraising_total)
-            serializer = serializers.EndOfFundraisingSerializer(all_end_fundraising, many=True)
+                
+                
 
-            return Response({'date_payments' : serializer.data, 'date_start' : date_payement}, status=status.HTTP_200_OK)
-        
+
 
 
 
