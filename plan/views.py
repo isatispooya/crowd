@@ -752,10 +752,13 @@ class PaymentDocument(APIView):
         admin = admin.first()
         payments = PaymentGateway.objects.filter(plan=plan)
         response = serializers.PaymentGatewaySerializer(payments,many=True)
+
         df = pd.DataFrame(response.data)
         if len(df)==0:
             return Response([], status=status.HTTP_200_OK)
         df['fulname'] = [get_name(x) for x in df['user']]
+        
+        df = df.fillna('')
         df = df.to_dict('records')
 
         return Response(df, status=status.HTTP_200_OK)
