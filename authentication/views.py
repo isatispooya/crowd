@@ -194,8 +194,6 @@ class LoginViewset(APIView):
 
                 try :
                     agent = data.get('agent')
-                    print('-'*10,'agent','-'*10)
-                    print(agent)
                     if isinstance(agent, dict):
                         new_agent = {
                         'user': new_user,
@@ -213,7 +211,6 @@ class LoginViewset(APIView):
 
                 try :
                     accounts_data = data.get('accounts',[])
-                    print('-'*10,'accounts','-'*10)
                     print(accounts_data)
                     if accounts_data:
                         for account_data in accounts_data:
@@ -325,7 +322,6 @@ class LoginViewset(APIView):
 
                 try :
                     trading_codes = data.get('tradingCodes', [])
-                    print('-'*10,'tradingCodes','-'*10)
                     print(trading_codes)
                     if trading_codes:
                         for tradingCodes_data in trading_codes:
@@ -517,7 +513,6 @@ class LoginViewset(APIView):
                     print('خطا در ثبت اطلاعات اصلی کاربر - سهامداران')
                         
         except Exception as e:
-            print('-'*10,'error','-'*10)
             print(e)
             return Response({'message': 'خطایی نامشخص رخ داده است'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -876,7 +871,6 @@ class UpdateInformationViewset(APIView):
         
         if data is None:
             return Response({'message': 'بیشتر تلاش کن'}, status=status.HTTP_400_BAD_REQUEST)
-        print(data)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         
         if new_user:

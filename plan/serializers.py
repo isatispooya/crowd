@@ -103,7 +103,6 @@ class PaymentGatewaySerializer(serializers.ModelSerializer):
     def get_admin_info(self, obj):
         if obj.admin:
             admin = obj.admin
-            print(admin.lastName)
             return {
             'id': admin.id,
             'first_name': admin.firstName or "",

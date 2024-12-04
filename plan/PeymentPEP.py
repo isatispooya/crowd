@@ -42,7 +42,6 @@ class PasargadPaymentGateway:
         response = requests.post(url, json=data)
         if response.status_code == 200 and response.json()['resultCode'] == 0:
             self.token = response.json()['token']
-            # print(f"Token received: {self.token}")
         else:
             raise Exception(f"Error getting token: {response.json()}")
 
@@ -129,7 +128,7 @@ class PasargadPaymentGateway:
             "urlId": url_id
         }
         response = requests.post(url, json=data, headers=headers)
-        if response.status_code == 200 and response.json()['resultCode'] == 0:
+        if response.status_code < 300 and response.json()['resultCode'] == 0:
             return response.json()['data']
         else:
             raise Exception(f"Error verifying transaction: {response.json()}")

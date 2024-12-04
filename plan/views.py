@@ -666,6 +666,9 @@ class PaymentDocument(APIView):
         if not request.data.get('payment_id'):
             return Response({'error': 'payment_id not found'}, status=status.HTTP_404_NOT_FOUND)
         payment_id = request.data.get('payment_id')
+        existing_payment = PaymentGateway.objects.filter(plan=plan,payment_id=payment_id).first()
+        if existing_payment:
+            return Response({'error': 'payment_id already exists'}, status=status.HTTP_400_BAD_REQUEST)
         
         purchaseable_value = int((plan_total_price or 0) - (amount_collected_now or 0))
         if value > purchaseable_value :
@@ -782,6 +785,7 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan,id = payment_id).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
+        print(request.data)
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
@@ -1215,11 +1219,8 @@ class InformationPlanViewset(APIView) :
         status_second = request.data.get('status_second')
         status_show = request.data.get('status_show')
         payment_date = request.data.get('payment_date')
-        print(payment_date)
         payback_period = request.data.get('payback_period')
-        print(payback_period)
         period_length = request.data.get('period_length')   
-        print(period_length)
 
         if status_second not in ['1' , '2','3' , '4' , '5'] :
             status_second = '1'
@@ -1910,30 +1911,34 @@ class TransmissionViewset(APIView) :
         pep = PasargadPaymentGateway()
         invoice = kwargs.get('key')
         payment = PaymentGateway.objects.filter(invoice = invoice).first()
+        
         if not payment :
-            return Response({'error': 'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
         try :
             pep = pep.confirm_transaction(payment.invoice , payment.url_id)
-        except :
+        except Exception as e:
+            print('error in confirm transaction')
+            print(e)
             payment.status = '0'
-            return Response({'error':'payment not found '}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
         payment.reference_number = pep['referenceNumber']
         payment.track_id = pep['trackId']
         payment.card_number = pep['maskedCardNumber']
         payment.save()
-        payment_value = PaymentGateway.objects.filter(plan=payment.plan)
-        serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
-        payment_df = pd.DataFrame(serializer.data)
-        payment_df = payment_df[payment_df['status'] != '0'] 
-        payment_df = payment_df[payment_df['status'] != '1'] 
-        payment_value = payment_df['value'].sum()
-        
-        information = InformationPlan.objects.filter(plan=payment.plan).first()
-        if not information :
-            return Response({'error': 'information plan not found '}, status=status.HTTP_400_BAD_REQUEST)
-        information.amount_collected_now = payment_value
-        information.save()
+        try :
+            payment_value = PaymentGateway.objects.filter(plan=payment.plan)
+            serializer = serializers.PaymentGatewaySerializer(payment_value , many = True)
+            payment_df = pd.DataFrame(serializer.data)
+            payment_df = payment_df[payment_df['status'] != '0'] 
+            payment_df = payment_df[payment_df['status'] != '1'] 
+            payment_value = payment_df['value'].sum()
+            plan = Plan.objects.filter(id=payment.plan).first()
+            information = InformationPlan.objects.filter(plan=plan).first()
+            information.amount_collected_now = payment_value
+            information.save()
+        except :
+            pass
         return Response(True , status=status.HTTP_200_OK)
 
 # فیش بانکی های کاربر
