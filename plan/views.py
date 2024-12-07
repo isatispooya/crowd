@@ -18,11 +18,9 @@ from django.conf import settings
 from plan.PeymentPEP import PasargadPaymentGateway 
 from django.db import transaction
 from django.db.models import Q
-from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
 from django.db.models import Sum
-import time
 from utils.user_notifier import UserNotifier
 from reports.models import AuditReport , ProgressReport
 
@@ -71,7 +69,10 @@ def get_lname (uniqueIdentifier) :
 
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    print('get trading code', uniqueIdentifier)
+    print('get trading code', user)
     economi_code = tradingCodes.objects.filter(user=user).first()
+    print('get trading code', economi_code)
     economi_code=economi_code.code.strip()
     return economi_code
 
@@ -666,7 +667,7 @@ class PaymentDocument(APIView):
         if not request.data.get('payment_id'):
             return Response({'error': 'payment_id not found'}, status=status.HTTP_404_NOT_FOUND)
         payment_id = request.data.get('payment_id')
-        existing_payment = PaymentGateway.objects.filter(plan=plan,payment_id=payment_id).first()
+        existing_payment = PaymentGateway.objects.filter(plan=plan,payment_id=payment_id,status__in=['2','3']).first()
         if existing_payment:
             return Response({'error': 'payment_id already exists'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -1803,8 +1804,16 @@ class TransmissionViewset(APIView) :
         plan_unit_price = plan.unit_price #قیمت هر سهم به ریال 
         information_plan = InformationPlan.objects.filter(plan=plan).first()
 
-        value = request.data.get('amount',0)  # مبلغ درخواستی کاربر برای خرید 
+        value = request.data.get('amount')  # مبلغ درخواستی کاربر برای خرید
+        if not value:
+            value = 0
+        try:
+            value = int(value)
+        except ValueError:
+            return Response({'error': 'مبلغ باید عدد صحیح باشد'}, status=status.HTTP_400_BAD_REQUEST)
         value = int(value)
+        all_value = PaymentGateway.objects.filter(plan=plan,user=user.uniqueIdentifier,status__in=['2','3','1']).aggregate(Sum('value'))['value__sum'] or 0
+        value = value + all_value        
         if value is None:
             value = 0    
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان

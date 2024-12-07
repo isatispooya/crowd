@@ -214,7 +214,7 @@ class Plans (models.Model):
 
 class InformationPlan (models.Model):
     plan = models.ForeignKey(Plan, on_delete = models.CASCADE)
-    rate_of_return = models.BigIntegerField (null=True , blank= True)
+    rate_of_return = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     status_second_option = [
          ('1','1'),
          ('2','2'),
