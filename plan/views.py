@@ -69,10 +69,7 @@ def get_lname (uniqueIdentifier) :
 
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-    print('get trading code', uniqueIdentifier)
-    print('get trading code', user)
     economi_code = tradingCodes.objects.filter(user=user).first()
-    print('get trading code', economi_code)
     economi_code=economi_code.code.strip()
     return economi_code
 
@@ -1813,7 +1810,7 @@ class TransmissionViewset(APIView) :
             return Response({'error': 'مبلغ باید عدد صحیح باشد'}, status=status.HTTP_400_BAD_REQUEST)
         value = int(value)
         all_value = PaymentGateway.objects.filter(plan=plan,user=user.uniqueIdentifier,status__in=['2','3','1']).aggregate(Sum('value'))['value__sum'] or 0
-        value = value + all_value        
+        all_value = value + all_value        
         if value is None:
             value = 0    
         amount_collected_now = information_plan.amount_collected_now # مبلغ جمه اوری شده تا به  الان
@@ -1831,7 +1828,7 @@ class TransmissionViewset(APIView) :
 
             if value < amount_legal_min :
                 return Response({'error': 'مبلغ  کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            if value > amount_legal_max:
+            if all_value > amount_legal_max:
                 return Response({'error': 'مبلغ بیشتراز  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
             
@@ -1851,7 +1848,7 @@ class TransmissionViewset(APIView) :
 
             if value < amount_personal_min :
                 return Response({'error': 'مبلغ   کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            if value > amount_personal_max :
+            if all_value > amount_personal_max :
                 return Response({'error': 'مبلغ بیشتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
         
             else :
