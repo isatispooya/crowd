@@ -68,10 +68,7 @@ def get_lname (uniqueIdentifier) :
 
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-    print('get trading code', uniqueIdentifier)
-    print('get trading code', user)
     economi_code = tradingCodes.objects.filter(user=user).first()
-    print('get trading code', economi_code)
     economi_code=economi_code.code.strip()
     return economi_code
 
@@ -1826,7 +1823,7 @@ class TransmissionViewset(APIView) :
 
             if value < amount_legal_min :
                 return Response({'error': 'مبلغ  کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            if value > amount_legal_max:
+            if all_value > amount_legal_max:
                 return Response({'error': 'مبلغ بیشتراز  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
             
@@ -1846,7 +1843,7 @@ class TransmissionViewset(APIView) :
 
             if value < amount_personal_min :
                 return Response({'error': 'مبلغ   کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
-            if value > amount_personal_max :
+            if all_value > amount_personal_max :
                 return Response({'error': 'مبلغ بیشتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
         
             else :

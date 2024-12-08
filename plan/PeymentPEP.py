@@ -104,6 +104,8 @@ class PasargadPaymentGateway:
             "urlId": url_id
         }
         response = requests.post(url, json=data, headers=headers)
+        print('-'*15)
+        print(response.json())
         if response.status_code == 200 and response.json()['resultCode'] == 0:
             return response.json()['data']
         else:
