@@ -24,7 +24,7 @@ from django.db import transaction
 
 
 class CaptchaViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
@@ -34,9 +34,10 @@ class CaptchaViewset(APIView) :
 
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
+
 # otp for user
 class OtpViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
         captcha_obj = Captcha.objects.filter(encrypted_response=request.data['encrypted_response'],enabled=True).first()
@@ -107,11 +108,9 @@ class OtpViewset(APIView) :
 
         return Response ({ 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
                 
-
-        
-
+     
 class LoginViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
@@ -523,7 +522,7 @@ class LoginViewset(APIView):
 
 # done
 class InformationViewset (APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -573,7 +572,7 @@ class InformationViewset (APIView) :
 #otp for admin
 # done
 class OtpAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         captcha = GuardPyCaptcha()
         encrypted_response = request.data['encrypted_response']
@@ -618,12 +617,10 @@ class OtpAdminViewset(APIView) :
         return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
 
 
-
-
 # login for admin
 # done
 class LoginAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         code = request.data.get('code')
@@ -657,8 +654,9 @@ class LoginAdminViewset(APIView) :
         token = fun.encryptionadmin(admin)
         return Response({'access': token}, status=status.HTTP_200_OK)
 
+
 class RefreshTokenAdminViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -673,7 +671,7 @@ class RefreshTokenAdminViewset(APIView):
 
 # done
 class UserListViewset (APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self, request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -746,7 +744,7 @@ class UserListViewset (APIView) :
 
 # done
 class UserOneViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -803,9 +801,10 @@ class UserOneViewset(APIView) :
 
         return Response({'success': combined_data}, status=status.HTTP_200_OK)
 
+
 # done
 class OtpUpdateViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -831,10 +830,9 @@ class OtpUpdateViewset(APIView) :
         return Response ({'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
             
 
-
 # done
 class UpdateInformationViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -1150,9 +1148,8 @@ class UpdateInformationViewset(APIView):
         return Response({'success': True}, status=status.HTTP_200_OK)
     
 
-
 class AddBoursCodeUserViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self, request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -1174,12 +1171,8 @@ class AddBoursCodeUserViewset(APIView):
             return Response({'message': 'Not a legal person'}, status=status.HTTP_200_OK)
     
 
-
-
-
-
 class LogoutViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
