@@ -289,10 +289,22 @@ class ProfitabilityReportViewSet(APIView) :
         payment_date = datetime.datetime.strptime(payment_date, '%Y-%m-%dT%H:%M:%S%z')
         payment_date = JalaliDate.to_jalali(payment_date)
         payment_date = payment_date.year + 1
+
+        pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')[['type','date_operator']]
+
         if payment_date % 4 == 0 and (payment_date % 100 != 0 or payment_date % 400 == 0):
             days_of_year = 366
         
-        rate_of_return = ((information_serializer.data['rate_of_return'])/100) /days_of_year
+        if information_serializer.data['payback_period'] == '2':
+            start_date = information_serializer.data['payment_date']
+            end_date = pey_df['date_operator'].max()
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S%z')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+            days = (end_date - start_date.replace(tzinfo=None)).days
+        else:
+            days = days_of_year
+        rate_of_return = float(information_serializer.data['rate_of_return'])
+        rate_of_return = ((rate_of_return)/100) /days
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
         account_numbers = []
         user_names = []
@@ -313,7 +325,6 @@ class ProfitabilityReportViewSet(APIView) :
         df ['account_number'] = account_numbers
         df ['user_name'] = user_names
         df ['user_mobile'] = user_mobiles
-        pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')[['type','date_operator']]
         start_project = datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None)
         pey_df['date_operator'] = pd.to_datetime(pey_df['date_operator']).dt.tz_localize(None)
         pey_df['start_project'] = start_project
