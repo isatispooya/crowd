@@ -28,7 +28,7 @@ from utils.user_notifier import UserNotifier
 # گزارش پیشرفت پروژه
 # done
 class ProgressReportViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch (self,request,trace_code,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -54,7 +54,7 @@ class ProgressReportViewset(APIView) :
     
 
 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,trace_code) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -66,12 +66,10 @@ class ProgressReportViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
-
-
 # گزارش حسابررسی
 # done
 class AuditReportViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch (self,request,trace_code,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -96,7 +94,7 @@ class AuditReportViewset(APIView) :
         return Response (serializer.data, status=status.HTTP_200_OK)
     
 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,trace_code) :
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan:
@@ -106,13 +104,12 @@ class AuditReportViewset(APIView) :
             return Response([], status=status.HTTP_200_OK)
         serializer =AuditReportSerializer(audit_report, many= True)
         return Response(serializer.data , status=status.HTTP_200_OK)
-    
-    
+       
 
 # گزارش مشارکت کننده ها
 # done
 class ParticipationReportViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self , request, trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -140,7 +137,7 @@ class ParticipationReportViewset(APIView) :
 # داشبورد ادمین 
 # done
 class DashBoardAdminViewset (APIView) : 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self , request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -174,11 +171,10 @@ class DashBoardAdminViewset (APIView) :
         return Response (statics, status=status.HTTP_200_OK)
    
 
-
 # داشبورد مشتری 
 # done
 class DashBoardUserViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) : 
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -248,10 +244,11 @@ class DashBoardUserViewset(APIView) :
 
 
         return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return  , 'profit' : date_profit}, status=status.HTTP_200_OK)
-    
+
+
 # گزارش سود دهی ادمین
 class ProfitabilityReportViewSet(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get(self,request,trace_code):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -345,9 +342,8 @@ class ProfitabilityReportViewSet(APIView) :
         return Response(df, status=status.HTTP_200_OK)
     
 
-
 class SendSmsFinishPlanViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self,request,trace_code) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -382,10 +378,8 @@ class SendSmsFinishPlanViewset(APIView) :
         return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
 
 
-
-
 class SendSmsStartPlanViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -420,11 +414,8 @@ class SendSmsStartPlanViewset(APIView) :
         return Response({'message': 'sms sent'}, status=status.HTTP_200_OK)
         
 
-
-
-
 class ProgressReportByIDViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -447,7 +438,7 @@ class ProgressReportByIDViewset(APIView) :
         return Response (serializer.data, status=status.HTTP_200_OK)
     
 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -470,10 +461,8 @@ class ProgressReportByIDViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
 
 
-
-
 class AuditReportByIDViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -495,7 +484,8 @@ class AuditReportByIDViewset(APIView) :
         serializer.save()
         return Response (serializer.data, status=status.HTTP_200_OK)
     
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:

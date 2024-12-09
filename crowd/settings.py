@@ -208,3 +208,32 @@ EMAIL_USE_SSL = False
 SMS_NUMBER = os.getenv('SMS_NUMBER')
 SMS_USERNAME = os.getenv('SMS_USERNAME')
 SMS_PASSWORD = os.getenv('SMS_PASSWORD')
+
+
+RATE_LIMIT = {
+    'GET': {
+        'rate': '50/m',
+        'method': ['GET'],
+        'key': 'ip',
+        'block': True
+    },
+    'POST': {
+        'rate': '30/m',
+        'method': ['POST'],
+        'key': 'ip',
+        'block': True
+    },
+    'PATCH': {
+        'rate': '20/m',
+        'method': ['PATCH'],
+        'key': 'ip',
+        'block': True
+    },
+    'DELETE': {
+        'rate': '10/m',
+        'method': ['DELETE'],
+        'key': 'ip',
+        'block': True
+    }
+}
+

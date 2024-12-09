@@ -24,7 +24,7 @@ from django.db import transaction
 
 
 class CaptchaViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
@@ -34,9 +34,10 @@ class CaptchaViewset(APIView) :
 
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
+
 # otp for user
 class OtpViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         encrypted_response = request.data['encrypted_response'].encode()
         captcha_obj = Captcha.objects.filter(encrypted_response=request.data['encrypted_response'],enabled=True).first()
@@ -107,11 +108,9 @@ class OtpViewset(APIView) :
 
         return Response ({ 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
                 
-
-        
-
+     
 class LoginViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
@@ -523,7 +522,7 @@ class LoginViewset(APIView):
 
 # done
 class InformationViewset (APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -573,7 +572,7 @@ class InformationViewset (APIView) :
 #otp for admin
 # done
 class OtpAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         captcha = GuardPyCaptcha()
         encrypted_response = request.data['encrypted_response']
@@ -618,12 +617,10 @@ class OtpAdminViewset(APIView) :
         return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
 
 
-
-
 # login for admin
 # done
 class LoginAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         code = request.data.get('code')
@@ -657,8 +654,9 @@ class LoginAdminViewset(APIView) :
         token = fun.encryptionadmin(admin)
         return Response({'access': token}, status=status.HTTP_200_OK)
 
+
 class RefreshTokenAdminViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -673,7 +671,7 @@ class RefreshTokenAdminViewset(APIView):
 
 # done
 class UserListViewset (APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self, request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -746,7 +744,7 @@ class UserListViewset (APIView) :
 
 # done
 class UserOneViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -803,9 +801,10 @@ class UserOneViewset(APIView) :
 
         return Response({'success': combined_data}, status=status.HTTP_200_OK)
 
+
 # done
 class OtpUpdateViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -831,10 +830,9 @@ class OtpUpdateViewset(APIView) :
         return Response ({'message' : 'کد تایید از طریق سامانه سجام ارسال شد'},status=status.HTTP_200_OK)
             
 
-
 # done
 class UpdateInformationViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -872,6 +870,7 @@ class UpdateInformationViewset(APIView):
         if data is None:
             return Response({'message': 'بیشتر تلاش کن'}, status=status.HTTP_400_BAD_REQUEST)
         new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+        print(new_user)
         
         if new_user:
             new_user.agent = data.get('agent', new_user.agent)
@@ -881,8 +880,12 @@ class UpdateInformationViewset(APIView):
             new_user.type = data.get('type', new_user.type)
             new_user.referal = data.get('uniqueIdentifier', new_user.referal)
             new_user.save()
+
+            if accounts.objects.filter(user=new_user).first():
+                accounts.objects.filter(user=new_user).delete()
             try:
                 accounts_data = data.get('accounts',[])
+                
                 if accounts_data:
                     for account_data in accounts_data:
                         accountNumber = account_data.get('accountNumber') or ''
@@ -921,6 +924,9 @@ class UpdateInformationViewset(APIView):
                         )
             except :
                 raise Exception('خطا در ثبت اطلاعات اصلی کاربر - حساب ها')
+            
+            if addresses.objects.filter(user=new_user).first():
+                addresses.objects.filter(user=new_user).delete()
             try:
                 address = data.get('addresses',[])
                 for addresses_data in address:
@@ -993,6 +999,8 @@ class UpdateInformationViewset(APIView):
             try :
                 jobInfo_data = data.get('jobInfo')
                 if isinstance(jobInfo_data, dict):
+                    if jobInfo.objects.filter(user=new_user).first():
+                        jobInfo.objects.filter(user=new_user).delete()
                     jobInfo.objects.create(
                         user=new_user,
                         companyAddress=jobInfo_data.get('companyAddress', ''),
@@ -1039,6 +1047,8 @@ class UpdateInformationViewset(APIView):
                     serial = privatePerson_data.get('serial', '') or ''
                     shNumber = privatePerson_data.get('shNumber', '') or ''
                     signatureFile = privatePerson_data.get('signatureFile', None)
+                    if privatePerson.objects.filter(user=new_user).first():
+                        privatePerson.objects.filter(user=new_user).delete()
 
                     privatePerson.objects.create(
                         user=new_user,
@@ -1075,7 +1085,8 @@ class UpdateInformationViewset(APIView):
                     sExchangeTransaction = financialInfo_data.get('sExchangeTransaction', '')
                     tradingKnowledgeLevel = financialInfo_data.get('tradingKnowledgeLevel', None)
                     transactionLevel = financialInfo_data.get('transactionLevel', None)
-
+                    if financialInfo.objects.filter(user=new_user).first():
+                        financialInfo.objects.filter(user=new_user).delete()
                     financialInfo.objects.create(
                         user=new_user,
                         assetsValue=assetsValue,
@@ -1098,61 +1109,66 @@ class UpdateInformationViewset(APIView):
             try:
                 if len(data.get('legalPersonStakeholders', [])) > 0:
                     for stakeholder_data in data['legalPersonStakeholders']:
-                        legalPersonStakeholders.objects.create(
-                            user=new_user,
+                        legalPersonStakeholders.objects.update_or_create(
+                            user=new_user,  
                             uniqueIdentifier=stakeholder_data.get('uniqueIdentifier', ''),
-                            type=stakeholder_data.get('type', ''),
-                            startAt=stakeholder_data.get('startAt', ''),
-                            positionType=stakeholder_data.get('positionType', ''),
-                            lastName=stakeholder_data.get('lastName', ''),
-                            isOwnerSignature=stakeholder_data.get('isOwnerSignature', False),
-                            firstName=stakeholder_data.get('firstName', ''),
-                            endAt=stakeholder_data.get('endAt', '')
-                        )
+                            defaults={
+                            'type':stakeholder_data.get('type', ''),
+                            'startAt':stakeholder_data.get('startAt', ''),
+                            'positionType':stakeholder_data.get('positionType', ''),
+                            'lastName':stakeholder_data.get('lastName', ''),
+                            'isOwnerSignature':stakeholder_data.get('isOwnerSignature', False),
+                            'firstName':stakeholder_data.get('firstName', ''),
+                            'endAt':stakeholder_data.get('endAt', '')
+                        }
+                    )
             except:
                 print('خطا در ثبت اطلاعات اصلی کاربر - هیئت مدیره')
 
             try :
                 legal_person_data = data.get('legalPerson', {})
                 if legal_person_data:
-                    LegalPerson.objects.create(
+                    LegalPerson.objects.update_or_create(
                         user=new_user,
-                        citizenshipCountry=legal_person_data.get('citizenshipCountry', ''),
-                        companyName=legal_person_data.get('companyName', ''),
-                        economicCode=legal_person_data.get('economicCode', ''),
-                        evidenceExpirationDate=legal_person_data.get('evidenceExpirationDate', ''),
-                        evidenceReleaseCompany=legal_person_data.get('evidenceReleaseCompany', ''),
-                        evidenceReleaseDate=legal_person_data.get('evidenceReleaseDate', ''),
-                        legalPersonTypeSubCategory=legal_person_data.get('legalPersonTypeSubCategory', ''),
-                        registerDate=legal_person_data.get('registerDate', ''),
-                        legalPersonTypeCategory=legal_person_data.get('legalPersonTypeCategory', ''),
-                        registerPlace=legal_person_data.get('registerPlace', ''),
-                        registerNumber=legal_person_data.get('registerNumber', '')
-                        )
+                        defaults={
+                        'citizenshipCountry':legal_person_data.get('citizenshipCountry', ''),
+                        'companyName':legal_person_data.get('companyName', ''),
+                        'economicCode':legal_person_data.get('economicCode', ''),
+                        'evidenceExpirationDate':legal_person_data.get('evidenceExpirationDate', ''),
+                        'evidenceReleaseCompany':legal_person_data.get('evidenceReleaseCompany', ''),
+                        'evidenceReleaseDate':legal_person_data.get('evidenceReleaseDate', ''),
+                        'legalPersonTypeSubCategory':legal_person_data.get('legalPersonTypeSubCategory', ''),
+                        'registerDate':legal_person_data.get('registerDate', ''),
+                        'legalPersonTypeCategory':legal_person_data.get('legalPersonTypeCategory', ''),
+                        'registerPlace':legal_person_data.get('registerPlace', ''),
+                        'registerNumber':legal_person_data.get('registerNumber', '')
+                        }
+                    )
             except :
                 print('خطا در ثبت اطلاعات اصلی کاربر - اطلاعات شرکت')
             try :
                 if data.get('legalPersonShareholders'):
                     for legalPersonShareholders_data in data['legalPersonShareholders']:
-                        legalPersonShareholders.objects.create(
+                        legalPersonShareholders.objects.update_or_create(
                             user = new_user,
                             uniqueIdentifier = legalPersonShareholders_data.get('uniqueIdentifier', ''),
-                            postalCode = legalPersonShareholders_data.get('postalCode', ''),
-                            positionType = legalPersonShareholders_data.get('positionType', ''),
-                            percentageVotingRight = legalPersonShareholders_data.get('percentageVotingRight', ''),
-                            firstName = legalPersonShareholders_data.get('firstName', ''),
-                            lastName = legalPersonShareholders_data.get('lastName', ''),
-                            address = legalPersonShareholders_data.get('address', '')
-                        )
+                            defaults={
+                            'postalCode':legalPersonShareholders_data.get('postalCode', ''),
+                            'positionType':legalPersonShareholders_data.get('positionType', ''),
+                            'percentageVotingRight':legalPersonShareholders_data.get('percentageVotingRight', ''),
+                            'firstName':legalPersonShareholders_data.get('firstName', ''),
+                            'lastName':legalPersonShareholders_data.get('lastName', ''),
+                            'address':legalPersonShareholders_data.get('address', '')
+                        }
+                    )
             except :
                 print('خطا در ثبت اطلاعات اصلی کاربر - سهامداران')
 
         return Response({'success': True}, status=status.HTTP_200_OK)
     
 
-
 class AddBoursCodeUserViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self, request) :
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
@@ -1174,12 +1190,8 @@ class AddBoursCodeUserViewset(APIView):
             return Response({'message': 'Not a legal person'}, status=status.HTTP_200_OK)
     
 
-
-
-
-
 class LogoutViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:

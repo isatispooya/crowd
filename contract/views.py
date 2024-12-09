@@ -26,7 +26,7 @@ from django.utils.decorators import method_decorator
 # انتخاب مدیران شرکت برای حق امضا توسط ادمین
 # done
 class SignatureViewset (APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request,unique_id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -51,7 +51,7 @@ class SignatureViewset (APIView):
 # فعال کردن وضعیت حق امضای مدیران مشتری توسط ادمین
 # done
 class SetSignatureViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request,unique_id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -72,7 +72,7 @@ class SetSignatureViewset(APIView) :
         return Response ({'success': True}, status=status.HTTP_200_OK)
     
 # لیست مدیران مشتری که حق امضای فعال دارند براساس کارت منتخب 
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get(self,request,unique_id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -98,11 +98,10 @@ class SetSignatureViewset(APIView) :
         return Response ({'managers informations' :manager_info }, status=status.HTTP_200_OK)
 
 
-
 # وارد کردن اطلاعات قرارداد عاملیت توسط ادمین
 # done
 class SetCartAdminViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request,unique_id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -130,7 +129,7 @@ class SetCartAdminViewset(APIView) :
         serializer = serializers.CartSerializer(cart)
         
         return Response ({'success': True , 'cart' : serializer.data}, status=status.HTTP_200_OK)
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,unique_id) : 
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -148,12 +147,10 @@ class SetCartAdminViewset(APIView) :
         return Response ({'error': 'not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
-
 # وارد کردن اطلاعات قرارداد عاملیت توسط مشتری
 # done
 class SetCartUserViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self,request,unique_id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -182,9 +179,8 @@ class SetCartUserViewset(APIView) :
         return Response ({'success': True , 'cart' : serializer.data}, status=status.HTTP_200_OK)
 
 
-
 class PdfViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self, request,unique_id):
         Authorization = request.headers.get('Authorization')
         if not Authorization:

@@ -10,12 +10,12 @@ from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
-
+from crowd import settings
 
 
 # done
 class WalletAdminViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request):
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -36,7 +36,7 @@ class WalletAdminViewset(APIView):
 
 # done
 class WalletAdmin2Viewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='PATCH', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['PATCH']), name='patch')
     def patch (self,request,id) :
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -55,7 +55,8 @@ class WalletAdmin2Viewset(APIView):
             serializer.save()
             return Response({'message': 'wallet updated successfully', 'wallet': serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -76,7 +77,7 @@ class WalletAdmin2Viewset(APIView):
 
 # done
 class WalletViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -94,7 +95,7 @@ class WalletViewset(APIView) :
 
 # done
 class TransactionAdminViewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get(self,request) :
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -115,7 +116,7 @@ class TransactionAdminViewset(APIView):
 
 # done
 class TransactionAdmin2Viewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get(self,request,id) :
         Authorization = request.headers.get('Authorization')     
         if not Authorization:
@@ -183,7 +184,7 @@ class TransactionAdmin2Viewset(APIView):
    
 # done
 class TransactionViewset(APIView) :
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -199,7 +200,7 @@ class TransactionViewset(APIView) :
             return Response({'transaction': serializer.data}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='POST', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post (self, request) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
@@ -232,7 +233,7 @@ class TransactionViewset(APIView) :
 
 # done
 class Transaction2Viewset(APIView):
-    @method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True))
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get (self,request,id) :
         Authorization = request.headers.get('Authorization')
         if not Authorization:
