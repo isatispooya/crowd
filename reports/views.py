@@ -331,8 +331,7 @@ class ProfitabilityReportViewSet(APIView) :
         pey_df['date_diff'] = pey_df['date_diff'] - pey_df['date_diff'].shift(1).fillna(0)
 
         pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
-        # pey_df = pey_df.sort_values('date_diff')
-        print(pey_df)
+
         qest = 1
         for i in pey_df.index : 
             df[f'profit{qest}'] = pey_df['profit'][i]
