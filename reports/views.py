@@ -322,7 +322,9 @@ class ProfitabilityReportViewSet(APIView) :
         df ['account_number'] = account_numbers
         df ['user_name'] = user_names
         df ['user_mobile'] = user_mobiles
-        start_project = datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None)
+        
+        # تبدیل start_project به Timestamp
+        start_project = pd.Timestamp(datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None).date())
         pey_df['date_operator'] = pd.to_datetime(pey_df['date_operator']).dt.tz_localize(None)
         pey_df['start_project'] = start_project
         pey_df['date_diff'] = (pey_df['date_operator'] - pey_df['start_project']).dt.days
@@ -330,6 +332,7 @@ class ProfitabilityReportViewSet(APIView) :
 
         pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
         # pey_df = pey_df.sort_values('date_diff')
+        print(pey_df)
         qest = 1
         for i in pey_df.index : 
             df[f'profit{qest}'] = pey_df['profit'][i]
