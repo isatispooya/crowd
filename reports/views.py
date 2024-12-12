@@ -292,14 +292,7 @@ class ProfitabilityReportViewSet(APIView) :
         if payment_date % 4 == 0 and (payment_date % 100 != 0 or payment_date % 400 == 0):
             days_of_year = 366
         
-        if information_serializer.data['payback_period'] == '2':
-            start_date = information_serializer.data['payment_date']
-            end_date = pey_df['date_operator'].max()
-            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S%z')
-            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-            days = (end_date - start_date.replace(tzinfo=None)).days
-        else:
-            days = days_of_year
+        days = days_of_year
         rate_of_return = float(information_serializer.data['rate_of_return'])
         rate_of_return = ((rate_of_return)/100) /days
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
@@ -330,11 +323,15 @@ class ProfitabilityReportViewSet(APIView) :
         pey_df['date_diff'] = (pey_df['date_operator'] - pey_df['start_project']).dt.days
         pey_df['date_diff'] = pey_df['date_diff'] - pey_df['date_diff'].shift(1).fillna(0)
 
-        pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
+        if information_serializer.data['payback_period'] == '2':
+            pey_df['profit'] = float(information_serializer.data['rate_of_return'])
+        else:
+            pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
 
         qest = 1
         for i in pey_df.index : 
             df[f'profit{qest}'] = pey_df['profit'][i]
+
             df[f'value{qest}'] = pey_df['profit'][i] * df['value']
             df[f'value{qest}'] = df[f'value{qest}'].apply(lambda x: round(x, 0))
             df[f'date_operator{qest}'] = pey_df['date_operator'][i]

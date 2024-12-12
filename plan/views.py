@@ -204,14 +204,13 @@ class PlansViewset(APIView):
         result = []
 
         for plan in plans:
-            #update collected
             trace_code = plan.trace_code
             plan_number_of_finance_provider = number_of_finance_provider(trace_code=trace_code)
             plan.number_of_finance_provider = plan_number_of_finance_provider
             plan.save()
             information = InformationPlan.objects.filter(plan=plan).first()
             payment_all = PaymentGateway.objects.filter(plan=plan)
-            if payment_all.exists() and plan.trace_code == 'c000fbbe-3362-4541-8d4d-59e0e3f5b301':
+            if payment_all.exists():
                 payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
                 payment_df = pd.DataFrame(payment_all.data)
                 payment_df = payment_df[['status', 'value']]
@@ -1204,6 +1203,8 @@ class InformationPlanViewset(APIView) :
         status_second = request.data.get('status_second')
         status_show = request.data.get('status_show')
         payment_date = request.data.get('payment_date')
+        if payment_date == '':
+            payment_date = None
         payback_period = request.data.get('payback_period')
         period_length = request.data.get('period_length')   
         
