@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework import status 
 import requests
-from .models import User , Otp , Captcha , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes , Reagent , legalPersonShareholders , legalPersonStakeholders , LegalPerson
+from .models import User , Otp , Captcha , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes  , legalPersonShareholders , legalPersonStakeholders , LegalPerson
 from . import serializers
 import datetime
 from . import fun
