@@ -1920,7 +1920,8 @@ class TransmissionViewset(APIView) :
         except Exception as e:
             print('error in confirm transaction')
             print(e)
-            payment.status = '0'
+            payment.status = '1'
+            payment.save()
             return Response({'error':'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
         payment.reference_number = pep['referenceNumber']

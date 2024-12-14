@@ -130,7 +130,7 @@ class PasargadPaymentGateway:
             "urlId": url_id
         }
         response = requests.post(url, json=data, headers=headers)
-        if response.status_code < 300 and response.json()['resultCode'] == 0:
+        if response.status_code < 300 or (response.json()['resultCode'] in [0,13046]):
             return response.json()['data']
         else:
             raise Exception(f"Error verifying transaction: {response.json()}")
