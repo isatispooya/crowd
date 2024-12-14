@@ -97,7 +97,6 @@ class legalPersonShareholders (models.Model):
         return f'{self.firstName} {self.lastName} {self.uniqueIdentifier}'
     
 
-
 class legalPersonStakeholders (models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     uniqueIdentifier = models.CharField( max_length=150 , null=True , blank= True)
