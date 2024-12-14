@@ -131,5 +131,7 @@ class Message():
             logo.add_header('Content-ID', '<logo>')
             logo.add_header('Content-Disposition', 'inline', filename="logo.png") 
             email.attach(logo)
-
-        email.send(fail_silently=False)
+        try :
+            email.send(fail_silently=False)
+        except Exception as e :
+            pass

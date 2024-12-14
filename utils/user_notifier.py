@@ -38,7 +38,7 @@ class UserNotifier:
         message = f'به ایساتیس کراد خوش آمدید \n کد تایید :{otp}\nisatiscrowd.ir'
         self.send_sms(message)
 
-    def send_otp_email(self, otp):
+    def send_otp_email(self, otp, fail_silently=False):
         subject = 'کد تایید ایساتیس کراد'
         html_message = f'''
         <!DOCTYPE html>
@@ -141,7 +141,10 @@ class UserNotifier:
         </body>
         </html>
         '''
-        self.send_email(subject, html_message)
+        try :
+            self.send_email(subject, html_message, fail_silently=fail_silently)
+        except Exception as e :
+            pass
 
     def send_finance_completion_sms(self):
         message = 'طرح تأمین مالی تکمیل شده است. مشارکت شما با موفقیت در فرابورس ثبت شد.'
