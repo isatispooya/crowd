@@ -127,8 +127,6 @@ class PicturePlan(models.Model):
         return str(self.plan.persian_name)
 
 
-
-    
 class DocumentationFiles(models.Model): #فایل های مستندات
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     title = models.TextField( blank=True , null=True) 
@@ -137,7 +135,6 @@ class DocumentationFiles(models.Model): #فایل های مستندات
         return str (self.title)
     
 
-    
 class Appendices(models.Model): #تضامین 
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
     title = models.TextField( blank=True , null=True) 
@@ -145,8 +142,6 @@ class Appendices(models.Model): #تضامین
     def __str__(self) :
         return str (self.title)
     
-
-
 
 class Comment(models.Model):
     comment = models.TextField ( null= True, blank = True) 
@@ -158,7 +153,6 @@ class Comment(models.Model):
     def __str__(self) :
         return str(self.user.uniqueIdentifier) + str(self.comment)
     
-
 
 class PaymentGateway(models.Model) :
     plan = models.ForeignKey(Plan , on_delete=models.CASCADE)
