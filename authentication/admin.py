@@ -702,8 +702,262 @@ class accountsAdmin(admin.ModelAdmin):
 
     export_as_excel.short_description = "دریافت خروجی اکسل"
 
-admin.site.register(models.Reagent)
-admin.site.register(models.LegalPerson)
-admin.site.register(models.legalPersonStakeholders)
-admin.site.register(models.legalPersonShareholders)
+@admin.register(models.LegalPerson)
+class LegalPersonAdmin(admin.ModelAdmin):
+    list_display = ('companyName', 'economicCode', 'registerNumber', 'get_user_identifier')
+    search_fields = ('companyName', 'economicCode', 'registerNumber', 'user__uniqueIdentifier')
+    list_filter = ('citizenshipCountry', 'legalPersonTypeCategory')
+    list_per_page = 25
+    ordering = ['companyName']
+
+    def get_user_identifier(self, obj):
+        return obj.user.uniqueIdentifier
+    get_user_identifier.short_description = 'شناسه کاربر'
+    get_user_identifier.admin_order_field = 'user__uniqueIdentifier'
+
+    fieldsets = (
+        ('اطلاعات کاربر', {
+            'fields': ('user',)
+        }),
+        ('اطلاعات شرکت', {
+            'fields': (
+                'companyName',
+                ('economicCode', 'registerNumber'),
+                ('registerPlace', 'registerDate'),
+                'citizenshipCountry',
+            )
+        }),
+        ('نوع شخص حقوقی', {
+            'fields': (
+                'legalPersonTypeCategory',
+                'legalPersonTypeSubCategory',
+            )
+        }),
+        ('اطلاعات مدارک', {
+            'fields': (
+                'evidenceReleaseCompany',
+                ('evidenceReleaseDate', 'evidenceExpirationDate'),
+            )
+        }),
+    )
+
+    actions = ['export_as_excel']
+
+    def export_as_excel(self, request, queryset):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "اطلاعات اشخاص حقوقی"
+
+        headers = [
+            'شناسه کاربر',
+            'نام شرکت',
+            'کد اقتصادی',
+            'شماره ثبت',
+            'محل ثبت',
+            'تاریخ ثبت',
+            'کشور تابعیت',
+            'نوع شخص حقوقی',
+            'زیرمجموعه نوع شخص حقوقی',
+            'شرکت صادرکننده مدرک',
+            'تاریخ صدور مدرک',
+            'تاریخ انقضای مدرک'
+        ]
+        ws.append(headers)
+
+        for obj in queryset:
+            row = [
+                str(obj.user.uniqueIdentifier),
+                obj.companyName or '',
+                obj.economicCode or '',
+                obj.registerNumber or '',
+                obj.registerPlace or '',
+                obj.registerDate or '',
+                obj.citizenshipCountry or '',
+                obj.legalPersonTypeCategory or '',
+                obj.legalPersonTypeSubCategory or '',
+                obj.evidenceReleaseCompany or '',
+                obj.evidenceReleaseDate or '',
+                obj.evidenceExpirationDate or ''
+            ]
+            ws.append(row)
+
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=legal_persons_{timezone.now().date()}.xlsx'
+        wb.save(response)
+        return response
+
+    export_as_excel.short_description = "دریافت خروجی اکسل"
+
+@admin.register(models.legalPersonStakeholders)
+class LegalPersonStakeholdersAdmin(admin.ModelAdmin):
+    list_display = ('firstName', 'lastName')
+    search_fields = ('firstName', 'lastName')
+    list_filter = ('firstName', 'lastName')  # حذف legalPerson
+    list_per_page = 25
+    ordering = ['firstName', 'lastName']
+
+
+    fieldsets = (
+        ('اطلاعات شرکت', {
+            'fields': ('legalPerson',)
+        }),
+        ('اطلاعات فردی', {
+            'fields': (
+                ('firstName', 'lastName'),
+            )
+        }),
+        ('اطلاعات تکمیلی', {
+            'fields': (
+                'startDate',
+                'endDate',
+                'signatureFile'
+            )
+        }),
+    )
+
+    actions = ['export_as_excel']
+
+    def export_as_excel(self, request, queryset):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "اطلاعات ذینفعان"
+
+        headers = [
+            'نام شرکت',
+            'نام',
+            'نام خانوادگی', 
+            'تاریخ شروع',
+            'تاریخ پایان'
+        ]
+        ws.append(headers)
+
+        for obj in queryset:
+            row = [
+                obj.legalPerson.companyName,
+                obj.firstName,
+                obj.lastName,
+                obj.startDate,
+                obj.endDate
+            ]
+            ws.append(row)
+
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=stakeholders_{timezone.now().date()}.xlsx'
+
+        wb.save(response)
+        return response
+
+    export_as_excel.short_description = "دریافت خروجی اکسل"
+
+@admin.register(models.legalPersonShareholders) 
+class legalPersonShareholdersAdmin(admin.ModelAdmin):
+    list_display = ('firstName', 'lastName', 'uniqueIdentifier', 'positionType', 'percentageVotingRight')
+    search_fields = ('firstName', 'lastName', 'uniqueIdentifier', 'positionType')
+    list_filter = ('positionType',)
+    list_per_page = 25
+    ordering = ['lastName', 'firstName']
+   
+    fieldsets = (
+        ('اطلاعات کاربر', {
+            'fields': ('user',)
+        }),
+        ('اطلاعات شخصی', {
+            'fields': (
+                ('firstName', 'lastName'),
+                'uniqueIdentifier',
+                'positionType',
+                'percentageVotingRight',
+            )
+        }),
+        ('اطلاعات تماس', {
+            'fields': (
+                'postalCode',
+                'address',
+            )
+        }),
+    )
+
+    actions = ['export_as_excel']
+
+    def export_as_excel(self, request, queryset):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "اطلاعات سهامداران"
+
+        headers = [
+            'شناسه کاربر',
+            'نام',
+            'نام خانوادگی',
+            'شناسه یکتا',
+            'نوع موقعیت',
+            'درصد حق رای',
+            'کد پستی',
+            'آدرس'
+        ]
+        ws.append(headers)
+
+        for obj in queryset:
+            row = [
+                str(obj.user.uniqueIdentifier),
+                obj.firstName or '',
+                obj.lastName or '',
+                obj.uniqueIdentifier or '',
+                obj.positionType or '',
+                obj.percentageVotingRight or '',
+                obj.postalCode or '',
+                obj.address or ''
+            ]
+            ws.append(row)
+
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename=shareholders_{timezone.now().date()}.xlsx'
+        wb.save(response)
+        return response
+
+    export_as_excel.short_description = "دریافت خروجی اکسل"
+
 admin.site.register(models.BlacklistedToken)
+admin.site.register(models.Reagent)
+
