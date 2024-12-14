@@ -286,10 +286,15 @@ class ProfitabilityReportViewSet(APIView) :
         payment_date = datetime.datetime.strptime(payment_date, '%Y-%m-%dT%H:%M:%S%z')
         payment_date = JalaliDate.to_jalali(payment_date)
         payment_date = payment_date.year + 1
+
+        pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')[['type','date_operator']]
+
         if payment_date % 4 == 0 and (payment_date % 100 != 0 or payment_date % 400 == 0):
             days_of_year = 366
         
-        rate_of_return = ((information_serializer.data['rate_of_return'])/100) /days_of_year
+        days = days_of_year
+        rate_of_return = float(information_serializer.data['rate_of_return'])
+        rate_of_return = ((rate_of_return)/100) /days
         df = pd.DataFrame(user_peyment.data)[['user','amount','value']].groupby(by=['user']).sum().reset_index()
         account_numbers = []
         user_names = []
@@ -310,18 +315,23 @@ class ProfitabilityReportViewSet(APIView) :
         df ['account_number'] = account_numbers
         df ['user_name'] = user_names
         df ['user_mobile'] = user_mobiles
-        pey_df = pd.DataFrame(end_plan.data).sort_values('date_operator')[['type','date_operator']]
-        start_project = datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None)
+        
+        # تبدیل start_project به Timestamp
+        start_project = pd.Timestamp(datetime.datetime.fromisoformat(information_serializer.data['payment_date']).replace(tzinfo=None).date())
         pey_df['date_operator'] = pd.to_datetime(pey_df['date_operator']).dt.tz_localize(None)
         pey_df['start_project'] = start_project
         pey_df['date_diff'] = (pey_df['date_operator'] - pey_df['start_project']).dt.days
         pey_df['date_diff'] = pey_df['date_diff'] - pey_df['date_diff'].shift(1).fillna(0)
 
-        pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
-        # pey_df = pey_df.sort_values('date_diff')
+        if information_serializer.data['payback_period'] == '2':
+            pey_df['profit'] = float(information_serializer.data['rate_of_return'])
+        else:
+            pey_df['profit'] = pey_df['date_diff'] * rate_of_return 
+
         qest = 1
         for i in pey_df.index : 
             df[f'profit{qest}'] = pey_df['profit'][i]
+
             df[f'value{qest}'] = pey_df['profit'][i] * df['value']
             df[f'value{qest}'] = df[f'value{qest}'].apply(lambda x: round(x, 0))
             df[f'date_operator{qest}'] = pey_df['date_operator'][i]
