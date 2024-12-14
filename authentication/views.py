@@ -83,7 +83,7 @@ class OtpViewset(APIView) :
 
                 if notifier.email:
                     try:
-                        notifier.send_otp_email(code, fail_silently=True)  
+                        notifier.send_otp_email(code, fail_silently=False)  
                     except Exception as e:
                         print(f"Failed to send OTP via email")
             except Exception as e:
@@ -603,7 +603,7 @@ class OtpAdminViewset(APIView) :
             notifier.send_otp_sms(code)  
 
             try:
-                notifier.send_otp_email(code) 
+                notifier.send_otp_email(code , fail_silently=False) 
             except Exception as e:
                 print(f'Error sending otp email: {e}')
             

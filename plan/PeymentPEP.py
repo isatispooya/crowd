@@ -108,6 +108,8 @@ class PasargadPaymentGateway:
         print(response.json())
         if response.status_code == 200 and response.json()['resultCode'] == 0:
             return response.json()['data']
+        elif response.json()['resultCode'] in [13046]:
+            return response.json()['data']
         else:
             raise Exception(f"Error confirming transaction: {response.json()}")
 

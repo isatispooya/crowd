@@ -27,8 +27,11 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
     )
     
     search_fields = (
-        'plan__title', 'user__username', 'payment_id', 
-        'code', 'description'
+        'plan__persian_name',
+        'user',
+        'payment_id',
+        'code',
+        'description'
     )
     
     list_filter = (

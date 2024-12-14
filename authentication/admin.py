@@ -9,7 +9,7 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('uniqueIdentifier', 'mobile' , 'referal')
     search_fields = ('uniqueIdentifier', 'mobile' , 'referal')
     list_filter = ('uniqueIdentifier', 'mobile' , 'referal')
-    list_per_page = 25
+    list_per_page = 10000
     ordering = ['uniqueIdentifier']
     fieldsets = (
         ('اطلاعات اصلی', {
