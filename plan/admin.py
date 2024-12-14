@@ -42,7 +42,7 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
     )
     
     list_per_page = 25
-    ordering = ['create_date']
+    ordering = ['-create_date']
     actions = ['export_as_excel', 'make_send_farabours_true', 'make_send_farabours_false']
     
     def export_as_excel(self, request, queryset):
