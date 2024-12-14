@@ -114,7 +114,7 @@ class LoginViewset(APIView):
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
-        reference = request.data.get('reference')  
+        referal = request.data.get('referal','')  
         user = None
 
         if not uniqueIdentifier or not otp:
@@ -181,15 +181,10 @@ class LoginViewset(APIView):
                     status = data.get('status'),
                     type = data.get('type'),
                     uniqueIdentifier = data.get('uniqueIdentifier'),
-                    referal = data.get('uniqueIdentifier'),
+                    referal = referal,
                 )
                 new_user.save()
-                try :
-                    if reference:
-                        reference_user = User.objects.get(uniqueIdentifier=reference)
-                        Reagent.objects.create(reference=reference_user, referrer=new_user)
-                except User.DoesNotExist:
-                    pass
+                
 
                 try :
                     agent = data.get('agent')
