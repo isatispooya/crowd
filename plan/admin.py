@@ -32,7 +32,7 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
     )
     
     list_filter = (
-        'status', 'create_date', 'send_farabours'
+        'status', 'create_date', 'send_farabours' , 'plan'
     )
     
     list_display_links = ('payment_id', 'code')
@@ -42,7 +42,7 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
     )
     
     list_per_page = 25
-    ordering = ['plan']
+    ordering = ['create_date']
     actions = ['export_as_excel', 'make_send_farabours_true', 'make_send_farabours_false']
     
     def export_as_excel(self, request, queryset):
@@ -159,7 +159,6 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
         }),
     )
  
-
 admin.site.register(models.Comment)
 admin.site.register(models.PicturePlan)
 admin.site.register(models.InformationPlan)
