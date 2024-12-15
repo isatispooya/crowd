@@ -17,6 +17,7 @@ admin.site.register(models.ListOfProjectBigShareHolders)
 admin.site.register(models.DocumentationFiles)
 admin.site.register(models.Appendices)
 @admin.register(models.PaymentGateway)
+
 class PaymentGatewayAdmin(admin.ModelAdmin):
     list_display = (
         'plan', 'user', 'amount', 'value', 'payment_id', 
@@ -54,6 +55,7 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
         ws.title = "پرداخت ها"
 
         headers = [
+            'شناسه',
             'عنوان طرح',
             'کاربر',
             'مبلغ',
@@ -87,6 +89,7 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
 
         for obj in queryset:
             row = [
+                obj.id,
                 obj.plan.persian_name if obj.plan else '',
                 obj.user if obj.user else '',
                 obj.amount,
@@ -98,8 +101,8 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
                 obj.risk_statement,
                 obj.name_status,
                 obj.status,
-                str(obj.document.name) if obj.document else '',
-                str(obj.picture.name) if obj.picture else '',
+                str(obj.document) if obj.document else '',
+                str(obj.picture) if obj.picture else '',
                 obj.send_farabours,
                 obj.trace_code_payment_farabourse,
                 obj.provided_finance_price_farabourse,

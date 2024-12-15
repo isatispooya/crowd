@@ -778,7 +778,6 @@ class PaymentDocument(APIView):
         payments = PaymentGateway.objects.filter(plan=plan,id = payment_id).first()
         if not payments :
             return Response({'error': 'payments not found'}, status=status.HTTP_404_NOT_FOUND)
-        print(request.data)
         serializer = serializers.PaymentGatewaySerializer(payments, data = request.data , partial = True)
         if serializer.is_valid () :
             serializer.save()
@@ -940,7 +939,6 @@ class InformationPlanViewset(APIView) :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
         rate_of_return = request.data.get('rate_of_return')
         status_second = request.data.get('status_second')
-        print(status_second)
         status_show = request.data.get('status_show')
         payment_date = request.data.get('payment_date')
         if status_second not in ['1' , '2','3' , '4' , '5'] :
@@ -1925,9 +1923,12 @@ class TransmissionViewset(APIView) :
             payment.save()
             return Response({'error':'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
         payment.status = '2'
-        payment.reference_number = pep['referenceNumber']
-        payment.track_id = pep['trackId']
-        payment.card_number = pep['maskedCardNumber']
+        try :
+            payment.reference_number = pep['referenceNumber']
+            payment.track_id = pep['trackId']
+            payment.card_number = pep['maskedCardNumber']
+        except :
+            pass
         payment.save()
         try :
             payment_value = PaymentGateway.objects.filter(plan=payment.plan)
@@ -1940,7 +1941,7 @@ class TransmissionViewset(APIView) :
             information = InformationPlan.objects.filter(plan=plan).first()
             information.amount_collected_now = payment_value
             information.save()
-        except :
+        except:
             pass
         return Response(True , status=status.HTTP_200_OK)
 

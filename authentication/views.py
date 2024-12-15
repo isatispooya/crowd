@@ -114,9 +114,9 @@ class LoginViewset(APIView):
     def post (self, request) :
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
-        referal = request.data.get('referal','')  
+        referal = request.data.get('referal','')
+        print(referal)
         user = None
-
         if not uniqueIdentifier or not otp:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         try:
