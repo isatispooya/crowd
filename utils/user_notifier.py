@@ -32,13 +32,13 @@ class UserNotifier:
             logo.add_header('Content-Disposition', 'inline', filename="logo.png")
             email.attach(logo)
 
-        email.send(fail_silently=False)
+        email.send()
 
     def send_otp_sms(self, otp):
         message = f'به ایساتیس کراد خوش آمدید \n کد تایید :{otp}\nisatiscrowd.ir'
         self.send_sms(message)
 
-    def send_otp_email(self, otp, fail_silently=False):
+    def send_otp_email(self, otp):
         subject = 'کد تایید ایساتیس کراد'
         html_message = f'''
         <!DOCTYPE html>
@@ -142,7 +142,7 @@ class UserNotifier:
         </html>
         '''
         try :
-            self.send_email(subject, html_message, fail_silently=fail_silently)
+            self.send_email(subject, html_message)
         except Exception as e :
             pass
 

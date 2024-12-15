@@ -209,16 +209,17 @@ class PlansViewset(APIView):
             plan.number_of_finance_provider = plan_number_of_finance_provider
             plan.save()
             information = InformationPlan.objects.filter(plan=plan).first()
-            payment_all = PaymentGateway.objects.filter(plan=plan)
-            if payment_all.exists():
-                payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
-                payment_df = pd.DataFrame(payment_all.data)
-                payment_df = payment_df[['status', 'value']]
-                payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
-                collected = payment_df['value'].sum()
-                information.amount_collected_now = collected
-                information.save()
-                information = InformationPlan.objects.filter(plan=plan).first()
+            if information.status == '1' :
+                payment_all = PaymentGateway.objects.filter(plan=plan)
+                if payment_all.exists():
+                    payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
+                    payment_df = pd.DataFrame(payment_all.data)
+                    payment_df = payment_df[['status', 'value']]
+                    payment_df = payment_df[payment_df['status'].isin(['2', '3'])]
+                    collected = payment_df['value'].sum()
+                    information.amount_collected_now = collected
+                    information.save()
+            information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
             company = ProjectOwnerCompan.objects.filter(plan=plan)  
             shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
