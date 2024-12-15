@@ -209,7 +209,7 @@ class PlansViewset(APIView):
             plan.number_of_finance_provider = plan_number_of_finance_provider
             plan.save()
             information = InformationPlan.objects.filter(plan=plan).first()
-            if information.status == '1' :
+            if information and information.status_second == '1':
                 payment_all = PaymentGateway.objects.filter(plan=plan)
                 if payment_all.exists():
                     payment_all = serializers.PaymentGatewaySerializer(payment_all, many=True)
