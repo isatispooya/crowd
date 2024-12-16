@@ -17,18 +17,16 @@ sudo systemctl stop crowd
 sudo systemctl start crowd
 ```
 
-### بررسی وضعیت سرویس
 
 ```bash
 sudo systemctl status crowd
+sudo systemctl restart crowd
 ```
-### نمایش لاگ‌های سرویس به صورت زنده
 
 ```bash
 sudo journalctl -u crowd -f
 ```
 
-### بررسی مصرف منابع سرویس
 
 ```bash
 sudo systemctl show -p ActiveState -p LoadState -p MemoryCurrent -p MemoryMax crowd

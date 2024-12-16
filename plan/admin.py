@@ -24,7 +24,12 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
         'code', 'create_date', 'name_status', 'status',
         'document', 'picture', 'send_farabours',
         'message_farabourse',
-        'provided_finance_price_farabourse'
+        'provided_finance_price_farabourse',
+        'reference_number',
+        'track_id',
+        'card_number',
+        'invoice',
+        'service_code',
     )
     
     search_fields = (
@@ -32,7 +37,9 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
         'user',
         'payment_id',
         'code',
-        'description'
+        'description',
+        'track_id',
+
     )
     
     list_filter = (

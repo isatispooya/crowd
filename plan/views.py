@@ -69,7 +69,10 @@ def get_lname (uniqueIdentifier) :
 def get_economi_code (uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
     economi_code = tradingCodes.objects.filter(user=user).first()
-    economi_code=economi_code.code.strip()
+    if economi_code:
+        economi_code = economi_code.code.strip()
+    else:
+        economi_code = ''
     return economi_code
 
 
@@ -1985,7 +1988,7 @@ class ParticipantMenuViewset(APIView):
             
             information = InformationPlan.objects.filter(plan =plan , status_second ='5').first()
             if not information :
-                return Response({'error': 'information plan not found'}, status=status.HTTP_404_NOT_FOUND)
+                continue
             
             if plan not in plans:
                 plans.append(plan) 

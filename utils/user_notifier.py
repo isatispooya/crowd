@@ -6,14 +6,16 @@ from email.mime.image import MIMEImage
 
 class UserNotifier:
     def __init__(self, mobile, email):
-        self.mobile = mobile
+        self.mobile = '0'+mobile[-10:]
         self.email = email
+    
+
 
     def send_sms(self, message):
         response = requests.get(
             url=f'http://tsms.ir/url/tsmshttp.php?from={settings.SMS_NUMBER}&to={self.mobile}&username={settings.SMS_USERNAME}&password={settings.SMS_PASSWORD}&message={message}'
         ).json()
-        print(message)
+        print(self.mobile,'>',message)
 
     def send_email(self, subject, html_message):
         recipient_list = [self.email]
