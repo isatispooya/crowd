@@ -863,7 +863,6 @@ class UpdateInformationViewset(APIView):
             new_user.mobile = data.get('mobile', new_user.mobile)
             new_user.status = data.get('status', new_user.status)
             new_user.type = data.get('type', new_user.type)
-            new_user.referal = data.get('uniqueIdentifier', new_user.referal)
             new_user.save()
 
             if accounts.objects.filter(user=new_user).first():
