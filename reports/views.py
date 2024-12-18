@@ -545,9 +545,7 @@ class MarketReportViewset(APIView) :
                 account = 'N/A'
             else:
                 marketer_name = get_name(marketer.uniqueIdentifier)
-                account = accounts.objects.filter(user=marketer).first()
-                if not account:
-                    account = 'N/A'
+                account = get_account_number(marketer.uniqueIdentifier)
             
             plan = Plan.objects.filter(id=payment['plan']).first()
             if not plan:
