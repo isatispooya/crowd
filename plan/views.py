@@ -682,6 +682,7 @@ class PaymentDocument(APIView):
             if value < amount_legal_min :
                 return Response({'error': 'مبلغ  کمتر از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
             if value > amount_legal_max:
+                print(value,amount_legal_max)
                 return Response({'error': 'مبلغ بیشتر  از  حد مجاز قرارداد شده است'}, status=status.HTTP_400_BAD_REQUEST)
             if value > purchaseable_value :
                 return Response({'error': 'مبلغ بیشتر از سهم قابل خرید است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1461,60 +1462,65 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
-        plan = Plan.objects.filter(trace_code = trace_code).first()
-        if not plan :
-            return Response({'error': 'plan not found '}, status=status.HTTP_400_BAD_REQUEST)
         
-        payment = PaymentGateway.objects.filter(plan=plan , status = '3' , send_farabours = False)
-        if not payment :
-            return Response({'error': 'payment not found'}, status=status.HTTP_400_BAD_REQUEST)
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_400_BAD_REQUEST)
 
-        payment_serializer = serializers.PaymentGatewaySerializer(payment , many = True)
-        payment_serializer = payment_serializer.data
-        api_farabours = CrowdfundingAPI()
-        count = 0
-        for i in payment_serializer :
-            uniqueIdentifier = i['user']
-            user_obj = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+        payment_ids = request.data.get('data')
+        payments = PaymentGateway.objects.filter(plan=plan, id__in=payment_ids)
+        if not payments:
+            return Response({'error': 'چنین پرداختی یافت نشد'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        for payment in payments:
+            if payment.send_farabours:
+                return Response({'error': 'پرداخت قبلا ارسال شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            if payment.status != '3':
+                return Response({'error': 'پرداخت تایید نهایی نیست'}, status=status.HTTP_400_BAD_REQUEST)
+            # payment.send_farabours = True
+            # payment.save()
 
-            if user_obj is not None:
-                user_fname = get_fname(uniqueIdentifier)
-                user_lname = get_lname(uniqueIdentifier)
-                account_number = get_account_number (uniqueIdentifier)
-                mobile = get_mobile_number (uniqueIdentifier)
-                bourse_code = get_economi_code (uniqueIdentifier)
-                is_legal = check_legal_person (uniqueIdentifier)
-            provided_finance_price = i['value']
-            payment_date = i['create_date']
-            bank_tracking_number = i['track_id']
+            user_obj = User.objects.filter(uniqueIdentifier=payment.user).first()
+            if not user_obj:
+                return Response({'error': 'کاربر پرداخت کننده یافت نشد'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user_fname = get_fname(payment.user)
+            user_lname = get_lname(payment.user)
+            account_number = get_account_number(payment.user)
+            mobile = get_mobile_number(payment.user)
+            bourse_code = get_economi_code(payment.user)
+            is_legal = check_legal_person(payment.user)
+
             project_finance = ProjectFinancingProvider(
-                projectID = trace_code,
-                nationalID = uniqueIdentifier ,
-                isLegal = is_legal,
-                firstName = user_fname ,
-                lastNameOrCompanyName = user_lname,
-                providedFinancePrice = provided_finance_price,
-                bourseCode = bourse_code,
-                paymentDate = payment_date,
-                shebaBankAccountNumber = account_number,
-                mobileNumber = mobile,
-                bankTrackingNumber = bank_tracking_number,
+                projectID=trace_code,
+                nationalID=payment.user,
+                isLegal=is_legal,
+                firstName=user_fname,
+                lastNameOrCompanyName=user_lname,
+                providedFinancePrice=payment.value,
+                bourseCode=bourse_code,
+                paymentDate=payment.create_date,
+                shebaBankAccountNumber=account_number,
+                mobileNumber=mobile,
+                bankTrackingNumber=payment.track_id,
             )
-            payment_sended = PaymentGateway.objects.filter(plan=plan , status = '3' ,track_id = i['track_id'])
-            payment_sended = payment_sended.first()
 
-            response, status_code = api_farabours.register_financing(project_finance)
+            # payment.send_farabours = True
+            # payment.save()
 
-            if status_code < 300:
-                payment_sended.send_farabours = True
-                payment_sended.trace_code_payment_farabourse = response.TraceCode
-                payment_sended.provided_finance_price_farabourse = response.ProvidedFinancePrice
-                payment_sended.message_farabourse = response.Message
+            response, status_code = None,None #api_farabours.register_financing(project_finance)
+
+            if status_code and status_code < 300:
+                payment.trace_code_payment_farabourse = response.TraceCode
+                payment.provided_finance_price_farabourse = response.ProvidedFinancePrice
+                payment.message_farabourse = response.Message
+                # payment.send_farabours = True
             else:
-                payment_sended.message_farabourse = response.ErrorMessage
-                payment_sended.error_no_farabourse = response.ErrorNo
-                payment_sended.send_farabours = False
-            payment_sended.save()
+                payment.message_farabourse = getattr(response, 'ErrorMessage', 'Unknown error')
+                payment.error_no_farabourse = getattr(response, 'ErrorNo', None)
+                # payment.send_farabours = True
+            payment.save()
+
         return Response(True, status=status.HTTP_200_OK)
 
     @method_decorator(ratelimit(key='ip', rate='20/m', method='get', block=True))
@@ -1538,6 +1544,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
         if payment_serializer.data:
             payment_serializer = [
             {
+                'id': item['id'],
                 'plan': item['plan'],
                 'status': item['status'],
                 'document': item['document'],

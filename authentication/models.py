@@ -39,6 +39,7 @@ class User(models.Model):
     referal = models.CharField(max_length=20,  null=True, blank=True , unique=False)
     attempts = models.IntegerField(default=0)
     lock_until = models.DateTimeField(null=True, blank=True)
+    create_at = models.DateTimeField(default=timezone.now)
     def lock(self):
         self.lock_until = timezone.now() + timedelta(minutes=5)     
         self.save()

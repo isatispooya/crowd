@@ -6,7 +6,7 @@ from django.utils import timezone
 
 @admin.register(models.User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('uniqueIdentifier', 'mobile' , 'referal')
+    list_display = ('uniqueIdentifier', 'mobile' , 'referal','create_at')
     search_fields = ('uniqueIdentifier', 'mobile' , 'referal')
     list_filter = ('uniqueIdentifier', 'mobile' , 'referal')
     list_per_page = 100
@@ -304,17 +304,28 @@ class privatePersonAdmin(admin.ModelAdmin):
 
 @admin.register(models.tradingCodes)
 class tradingCodesAdmin(admin.ModelAdmin):
-    list_display = ('user__uniqueIdentifier', 'code')
+    list_display = ('get_user_identifier', 'code')
     search_fields = ('user__uniqueIdentifier', 'code')
-    list_filter = ('user__uniqueIdentifier', 'code')
+    list_filter = ('code', 'type')
     list_per_page = 25
     ordering = ['user']
+    
+    def get_user_identifier(self, obj):
+        return obj.user.uniqueIdentifier if obj.user else None
+    get_user_identifier.short_description = 'شناسه کاربر'
+    get_user_identifier.admin_order_field = 'user__uniqueIdentifier'
+
     fieldsets = (
         ('اطلاعات اصلی', {
             'fields': ('user', 'code')
         }),
         ('اطلاعات جزئی', {
-            'fields': ('firstPart', 'secondPart', 'thirdPart', 'type')
+            'fields': (
+                'firstPart',
+                'secondPart',
+                'thirdPart',
+                'type'
+            )
         }),
     )
     actions = ['export_as_excel']
@@ -368,11 +379,37 @@ class tradingCodesAdmin(admin.ModelAdmin):
 
 @admin.register(models.jobInfo)
 class jobInfoAdmin(admin.ModelAdmin):
-    list_display = ('user__uniqueIdentifier', 'companyName', 'job', 'position')
+    list_display = ('get_user_identifier', 'companyName', 'job', 'position')
     search_fields = ('user__uniqueIdentifier', 'companyName', 'job', 'position')
-    list_filter = ('user__uniqueIdentifier', 'companyName', 'job', 'position')
+    list_filter = ('companyName', 'job', 'position')
     list_per_page = 25
     ordering = ['user']
+    
+    def get_user_identifier(self, obj):
+        return obj.user.uniqueIdentifier if obj.user else None
+    get_user_identifier.short_description = 'شناسه کاربر'
+    get_user_identifier.admin_order_field = 'user__uniqueIdentifier'
+
+    fieldsets = (
+        ('اطلاعات اصلی', {
+            'fields': ('user', 'companyName', 'job', 'position')
+        }),
+        ('اطلاعات جزئی', {
+            'fields': (
+                'companyAddress', 
+                'companyCityPrefix',
+                'companyEmail', 
+                'companyFax',
+                'companyFaxPrefix',
+                'companyPhone',
+                'companyPostalCode',
+                'companyWebSite',
+                'employmentDate',
+                'jobDescription'
+            )
+        }),
+    )
+
     actions = ['export_as_excel']
     def export_as_excel(self, request, queryset):
         wb = Workbook()
@@ -434,35 +471,20 @@ class jobInfoAdmin(admin.ModelAdmin):
         return response
 
     export_as_excel.short_description = "خروجی اکسل از موارد انتخاب شده"
-    fieldsets = (
-        ('اطلاعات اصلی', {
-            'fields': ('user', 'companyName', 'job', 'position')
-        }),
-        ('اطلاعات جزئی', {
-            'fields': (
-                'companyAddress', 
-                'companyCityPrefix',
-                'companyEmail', 
-                'companyFax',
-                'companyFaxPrefix',
-                'companyPhone',
-                'companyPostalCode',
-                'companyWebSite',
-                'employmentDate',
-                'jobDescription'
-            )
-        }),
-    )
 
 @admin.register(models.financialInfo)
 class financialInfoAdmin(admin.ModelAdmin):
-    list_display = ('user__uniqueIdentifier', 'companyPurpose', 'financialBrokers', 'referenceRateCompany', 'sExchangeTransaction', 'tradingKnowledgeLevel', 'transactionLevel')
+    list_display = ('get_user_identifier', 'companyPurpose', 'financialBrokers', 'referenceRateCompany', 'sExchangeTransaction', 'tradingKnowledgeLevel', 'transactionLevel')
     search_fields = ('user__uniqueIdentifier', 'companyPurpose', 'financialBrokers', 'referenceRateCompany', 'sExchangeTransaction', 'tradingKnowledgeLevel', 'transactionLevel')
-    list_filter = ('user__uniqueIdentifier', 'companyPurpose', 'financialBrokers', 'referenceRateCompany', 'sExchangeTransaction', 'tradingKnowledgeLevel', 'transactionLevel')
+    list_filter = ('companyPurpose', 'financialBrokers', 'referenceRateCompany', 'sExchangeTransaction', 'tradingKnowledgeLevel', 'transactionLevel')
     list_per_page = 25
     ordering = ['user']
-    actions = ['export_as_excel']
     
+    def get_user_identifier(self, obj):
+        return obj.user.uniqueIdentifier if obj.user else None
+    get_user_identifier.short_description = 'شناسه کاربر'
+    get_user_identifier.admin_order_field = 'user__uniqueIdentifier'
+
     fieldsets = (
         ('اطلاعات اصلی', {
             'fields': ('user', 'companyPurpose', 'financialBrokers', 'referenceRateCompany', 'sExchangeTransaction', 'tradingKnowledgeLevel', 'transactionLevel')
@@ -551,7 +573,7 @@ class addressesAdmin(admin.ModelAdmin):
     def export_as_excel(self, request, queryset):
         wb = Workbook()
         ws = wb.active
-        ws.title = "اطلاعات آدرس‌ها"
+        ws.title = "اطلاعات سدرس‌ها"
 
         # تعریف ستون‌ها با عرض مناسب
         columns = [
