@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from plan.models import Plan , PaymentGateway ,InformationPlan ,EndOfFundraising , ProjectOwnerCompan
-from authentication.models import User , accounts , privatePerson ,addresses
+from authentication.models import User ,addresses , privatePerson
 from investor.models import Cart
 from .models import ProgressReport , AuditReport
 from rest_framework.response import Response
@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from authentication import fun
 from .serializers import  ProgressReportSerializer ,AuditReportSerializer
+from plan.serializers import PaymentGatewaySerializer
 from plan import serializers
 from plan.CrowdfundingAPIService import CrowdfundingAPI 
 from django.utils import timezone
@@ -15,16 +16,13 @@ from django.db.models import Sum
 import pandas as pd
 import datetime
 from persiantools.jdatetime import JalaliDate
-from authentication.serializers import accountsSerializer , privatePersonSerializer
 from plan.views import get_name , get_account_number
 import os
 from django.conf import settings
-from django.core.files.base import ContentFile
-from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit   
 from django.utils.decorators import method_decorator
 from utils.user_notifier import UserNotifier
-
+from authentication.models import accounts
 # گزارش پیشرفت پروژه
 # done
 class ProgressReportViewset(APIView) :
@@ -509,4 +507,69 @@ class AuditReportByIDViewset(APIView) :
         return Response(serializer.data , status=status.HTTP_200_OK)
     
     
+
+class MarketReportViewset(APIView) :
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
+    def get(self, request):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        
+        market_report = PaymentGateway.objects.filter(status='3')
+        if not market_report.exists():
+            return Response([], status=status.HTTP_200_OK)
+            
+        serializer = PaymentGatewaySerializer(market_report, many=True)
+        df = []
+        
+        for payment in serializer.data:
+            user = User.objects.filter(uniqueIdentifier=payment['user']).first()
+            if not user:
+                continue
+            user_privatePerson = privatePerson.objects.filter(user=user).first()
+            if user_privatePerson:
+                user_name = user_privatePerson.firstName + ' ' + user_privatePerson.lastName
+            else:
+                user_name = 'N/A'
+                
+
+            # Check if user has valid referal
+            if not user.referal or user.referal == '' or user.referal == 'None' or user.referal == payment['user']:
+                continue
+
+            marketer = User.objects.filter(uniqueIdentifier=user.referal).first()
+            if not marketer:
+                marketer_name = 'N/A'
+                account = 'N/A'
+            else:
+                marketer_privatePerson = privatePerson.objects.filter(user=marketer).first()
+                if not marketer_privatePerson:
+                    marketer_name = 'N/A'
+                else:
+                    marketer_name = marketer_privatePerson.firstName + ' ' + marketer_privatePerson.lastName
+                account = accounts.objects.filter(user=marketer).first()
+                if not account:
+                    account = 'N/A'
+            
+            plan = Plan.objects.filter(id=payment['plan']).first()
+            if not plan:
+                plan = 'N/A'
+
+
+            dic = {
+                'user': user_name,
+                'uniqueIdentifier': user.uniqueIdentifier,
+                'plan': plan.persian_suggested_symbol,
+                'value': payment['value'],
+                'referal_code': user.referal,
+                'marketer': marketer_name,
+                'account': account,
+            }
+            df.append(dic)
+
+        return Response(df, status=status.HTTP_200_OK)
 
