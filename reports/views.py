@@ -530,10 +530,8 @@ class MarketReportViewset(APIView) :
             user = User.objects.filter(uniqueIdentifier=payment['user']).first()
             if not user:
                 continue
-            user_privatePerson = privatePerson.objects.filter(user=user).first()
-            if user_privatePerson:
-                user_name = user_privatePerson.firstName + ' ' + user_privatePerson.lastName
-            else:
+            user_name = get_name(user.uniqueIdentifier)
+            if not user_name:
                 user_name = 'N/A'
                 
 
@@ -546,11 +544,7 @@ class MarketReportViewset(APIView) :
                 marketer_name = 'N/A'
                 account = 'N/A'
             else:
-                marketer_privatePerson = privatePerson.objects.filter(user=marketer).first()
-                if not marketer_privatePerson:
-                    marketer_name = 'N/A'
-                else:
-                    marketer_name = marketer_privatePerson.firstName + ' ' + marketer_privatePerson.lastName
+                marketer_name = get_name(marketer.uniqueIdentifier)
                 account = accounts.objects.filter(user=marketer).first()
                 if not account:
                     account = 'N/A'
