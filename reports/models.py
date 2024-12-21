@@ -3,21 +3,12 @@ from plan.models import Plan
 from django.core.exceptions import ValidationError
 
 def validate_file_type(file):
-    valid_mime_types = [
-        'image/jpeg', 'image/png', 'application/pdf',
-        'application/zip', 'application/x-rar-compressed', 
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', # docx
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',       # xlsx
-        'text/csv', 'application/vnd.ms-excel'                                     # csv, xls
-    ]
-    
     valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx', 'csv', 'xls']
     
-    file_mime_type = file.content_type
+    # بررسی پسوند فایل
     file_extension = file.name.split('.')[-1].lower()
-
-    if file_mime_type not in valid_mime_types or file_extension not in valid_extensions:
-        raise ValidationError("Unsupported file type.")
+    if file_extension not in valid_extensions:
+        raise ValidationError("پسوند فایل پشتیبانی نمی‌شود.")
 
 
 
