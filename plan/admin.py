@@ -162,7 +162,7 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('اطلاعات پرداخت', {
-            'fields': ('plan', 'user', 'amount', 'value', 'payment_id', 'description', 'code', 'create_date', 'risk_statement', 'name_status', 'status')
+            'fields': ('plan', 'user', 'amount', 'value', 'payment_id', 'description', 'code', 'create_date', 'risk_statement', 'name_status', 'status','track_id')
         }),
         ('اطلاعات فیش پرداخت', {
             'fields': ('document', 'picture')

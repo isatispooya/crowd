@@ -1477,8 +1477,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 return Response({'error': 'پرداخت قبلا ارسال شده است'}, status=status.HTTP_400_BAD_REQUEST)
             if payment.status != '3':
                 return Response({'error': 'پرداخت تایید نهایی نیست'}, status=status.HTTP_400_BAD_REQUEST)
-            # payment.send_farabours = True
-            # payment.save()
+
 
             user_obj = User.objects.filter(uniqueIdentifier=payment.user).first()
             if not user_obj:
@@ -1490,6 +1489,7 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
             mobile = get_mobile_number(payment.user)
             bourse_code = get_economi_code(payment.user)
             is_legal = check_legal_person(payment.user)
+            payment_date = payment.create_date.strftime('%Y-%m-%d %H:%M:%S') if payment.create_date else None
 
             project_finance = ProjectFinancingProvider(
                 projectID=trace_code,
@@ -1499,26 +1499,26 @@ class SendParticipationCertificateToFaraboursViewset(APIView):
                 lastNameOrCompanyName=user_lname,
                 providedFinancePrice=payment.value,
                 bourseCode=bourse_code,
-                paymentDate=payment.create_date,
+                paymentDate=payment_date,
                 shebaBankAccountNumber=account_number,
                 mobileNumber=mobile,
                 bankTrackingNumber=payment.track_id,
             )
 
-            # payment.send_farabours = True
-            # payment.save()
-
-            response, status_code = None,None #api_farabours.register_financing(project_finance)
+            payment.send_farabours = True
+            payment.save()
+            apiFarabours = CrowdfundingAPI()
+            response, status_code = apiFarabours.register_financing(project_finance)
 
             if status_code and status_code < 300:
                 payment.trace_code_payment_farabourse = response.TraceCode
                 payment.provided_finance_price_farabourse = response.ProvidedFinancePrice
                 payment.message_farabourse = response.Message
-                # payment.send_farabours = True
+                payment.error_no_farabourse = getattr(response, 'ErrorNo', None)
             else:
                 payment.message_farabourse = getattr(response, 'ErrorMessage', 'Unknown error')
                 payment.error_no_farabourse = getattr(response, 'ErrorNo', None)
-                # payment.send_farabours = True
+                payment.send_farabours = False
             payment.save()
 
         return Response(True, status=status.HTTP_200_OK)
