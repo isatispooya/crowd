@@ -244,8 +244,10 @@ class DashBoardUserViewset(APIView) :
         if total_rate_of_return is None:
             total_rate_of_return = 0
 
+        referral_count = User.objects.filter(referal=user.uniqueIdentifier).exclude(uniqueIdentifier=user.uniqueIdentifier).count()
 
-        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return  , 'profit' : date_profit}, status=status.HTTP_200_OK)
+                
+        return Response ({'all plan' :plan_all , 'active plan' : active_plan , 'participant plan' :payments_count , 'total value' : total_value , 'all rate of return' :  total_rate_of_return  , 'profit' : date_profit , 'referral count' : referral_count }, status=status.HTTP_200_OK)
 
 
 # گزارش سود دهی ادمین
