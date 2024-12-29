@@ -78,7 +78,7 @@ def get_economi_code (uniqueIdentifier) :
 
 def get_account_number(uniqueIdentifier) :
     user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-    user_account = accounts.objects.filter(user=user).first()
+    user_account = accounts.objects.filter(user=user).order_by('-isDefault', 'modifiedDate').first()
     sheba = user_account.sheba if user_account else ''
     return sheba 
 
@@ -283,67 +283,71 @@ class PlansViewset(APIView):
         admin = admin.first()
         crowd_founding_api = CrowdfundingAPI()
         plan_list = crowd_founding_api.get_company_projects()
-        
         BASE_URL = os.getenv('BASE_URL')
         API_KEY = os.getenv('API_KEY')
-
-
         for i in plan_list : 
             if not Plans.objects.filter(plan_id = i).exists () :
                 plan = Plans.objects.create(plan_id=i)
-        for i in plan_list:    
+        plan_list_update_need = plan_list[-4:]
+        for i in plan_list_update_need:    
             plan_detail = crowd_founding_api.get_project_info(i)
-
-        
-            plan, created = Plan.objects.update_or_create(
-                trace_code=i,
-                defaults={
-                    'creation_date': plan_detail.get('Creation Date', None),
-                    'persian_name': plan_detail.get('Persian Name', None),
-                    'persian_suggested_symbol': plan_detail.get('Persian Suggested Symbol', None),
-                    'persoan_approved_symbol': plan_detail.get('Persoan Approved Symbol', None),
-                    'english_name': plan_detail.get('English Name', None),
-                    'english_suggested_symbol': plan_detail.get('English Suggested Symbol', None),
-                    'english_approved_symbol': plan_detail.get('English Approved Symbol', None),
-                    'industry_group_id': plan_detail.get('Industry Group ID', None),
-                    'industry_group_description': plan_detail.get('Industry Group Description', None),
-                    'sub_industry_group_id': plan_detail.get('Sub Industry Group ID', None),
-                    'sub_industry_group_description': plan_detail.get('Sub Industry Group Description', None),
-                    'persian_subject': plan_detail.get('Persian Subject', None),
-                    'english_subject': plan_detail.get('English Subject', None),
-                    'unit_price': plan_detail.get('Unit Price', None),
-                    'total_units': plan_detail.get('Total Units', None),
-                    'company_unit_counts': plan_detail.get('Company Unit Counts', None),
-                    'total_price': plan_detail.get('Total Price', None),
-                    'crowd_funding_type_id': plan_detail.get('Crowd Funding Type ID', None),
-                    'crowd_funding_type_description': plan_detail.get('Crowd Funding Type Description', None),
-                    'float_crowd_funding_type_description': plan_detail.get('Float Crowd Funding Type Description', None),
-                    'minimum_required_price': plan_detail.get('Minimum Required Price', None),
-                    'real_person_minimum_availabe_price': plan_detail.get('Real Person Minimum Availabe Price', None),
-                    'real_person_maximum_available_price': plan_detail.get('Real Person Maximum Available Price', None),
-                    'legal_person_minimum_availabe_price': plan_detail.get('Legal Person Minimum Availabe Price', None),
-                    'legal_person_maximum_availabe_price': plan_detail.get('Legal Person Maximum Available Price', None),
-                    'underwriting_duration': plan_detail.get('Underwriting Duration', None),
-                    'suggested_underwriting_start_date': plan_detail.get('Suggested Underwriting Start Date', None),
-                    'suggested_underwriting_end_date': plan_detail.get('Suggested Underwriting End Date', None),
-                    'approved_underwriting_start_date': plan_detail.get('Approved Underwriting Start Date', None),
-                    'approved_underwriting_end_date': plan_detail.get('Approved Underwriting End Date', None),
-                    'project_start_date': plan_detail.get('Project Start Date', None),
-                    'project_end_date': plan_detail.get('Project End Date', None),
-                    'settlement_description': plan_detail.get('Settlement Description', None),
-                    'project_status_description': plan_detail.get('Project Status Description', None),
-                    'project_status_id': plan_detail.get('Project Status ID', None),
-                    'persian_suggested_underwiring_start_date': plan_detail.get('Persian Suggested Underwiring Start Date', None),
-                    'persian_suggested_underwriting_end_date': plan_detail.get('Persian Suggested Underwriting End Date', None),
-                    'persian_approved_underwriting_start_date': plan_detail.get('Persian Approved Underwriting Start Date', None),
-                    'persian_approved_underwriting_end_date': plan_detail.get('Persian Approved Underwriting End Date', None),
-                    'persian_project_start_date': plan_detail.get('Persian Project Start Date', None),
-                    'persian_project_end_date': plan_detail.get('Persian Project End Date', None),
-                    'persian_creation_date': plan_detail.get('Persian Creation Date', None),
-                    # 'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
-                    'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
-                }
-            )
+            try_count = 0
+            while try_count < 3:
+                try:
+                    plan, created = Plan.objects.update_or_create(
+                        trace_code=i,
+                        defaults={
+                            'creation_date': plan_detail.get('Creation Date', None),
+                        'persian_name': plan_detail.get('Persian Name', None),
+                        'persian_suggested_symbol': plan_detail.get('Persian Suggested Symbol', None),
+                        'persoan_approved_symbol': plan_detail.get('Persoan Approved Symbol', None),
+                        'english_name': plan_detail.get('English Name', None),
+                        'english_suggested_symbol': plan_detail.get('English Suggested Symbol', None),
+                        'english_approved_symbol': plan_detail.get('English Approved Symbol', None),
+                        'industry_group_id': plan_detail.get('Industry Group ID', None),
+                        'industry_group_description': plan_detail.get('Industry Group Description', None),
+                        'sub_industry_group_id': plan_detail.get('Sub Industry Group ID', None),
+                        'sub_industry_group_description': plan_detail.get('Sub Industry Group Description', None),
+                        'persian_subject': plan_detail.get('Persian Subject', None),
+                        'english_subject': plan_detail.get('English Subject', None),
+                        'unit_price': plan_detail.get('Unit Price', None),
+                        'total_units': plan_detail.get('Total Units', None),
+                        'company_unit_counts': plan_detail.get('Company Unit Counts', None),
+                        'total_price': plan_detail.get('Total Price', None),
+                        'crowd_funding_type_id': plan_detail.get('Crowd Funding Type ID', None),
+                        'crowd_funding_type_description': plan_detail.get('Crowd Funding Type Description', None),
+                        'float_crowd_funding_type_description': plan_detail.get('Float Crowd Funding Type Description', None),
+                        'minimum_required_price': plan_detail.get('Minimum Required Price', None),
+                        'real_person_minimum_availabe_price': plan_detail.get('Real Person Minimum Availabe Price', None),
+                        'real_person_maximum_available_price': plan_detail.get('Real Person Maximum Available Price', None),
+                        'legal_person_minimum_availabe_price': plan_detail.get('Legal Person Minimum Availabe Price', None),
+                        'legal_person_maximum_availabe_price': plan_detail.get('Legal Person Maximum Available Price', None),
+                        'underwriting_duration': plan_detail.get('Underwriting Duration', None),
+                        'suggested_underwriting_start_date': plan_detail.get('Suggested Underwriting Start Date', None),
+                        'suggested_underwriting_end_date': plan_detail.get('Suggested Underwriting End Date', None),
+                        'approved_underwriting_start_date': plan_detail.get('Approved Underwriting Start Date', None),
+                        'approved_underwriting_end_date': plan_detail.get('Approved Underwriting End Date', None),
+                        'project_start_date': plan_detail.get('Project Start Date', None),
+                        'project_end_date': plan_detail.get('Project End Date', None),
+                        'settlement_description': plan_detail.get('Settlement Description', None),
+                        'project_status_description': plan_detail.get('Project Status Description', None),
+                        'project_status_id': plan_detail.get('Project Status ID', None),
+                        'persian_suggested_underwiring_start_date': plan_detail.get('Persian Suggested Underwiring Start Date', None),
+                        'persian_suggested_underwriting_end_date': plan_detail.get('Persian Suggested Underwriting End Date', None),
+                        'persian_approved_underwriting_start_date': plan_detail.get('Persian Approved Underwriting Start Date', None),
+                        'persian_approved_underwriting_end_date': plan_detail.get('Persian Approved Underwriting End Date', None),
+                        'persian_project_start_date': plan_detail.get('Persian Project Start Date', None),
+                        'persian_project_end_date': plan_detail.get('Persian Project End Date', None),
+                        'persian_creation_date': plan_detail.get('Persian Creation Date', None),
+                        # 'number_of_finance_provider': plan_detail.get('Number of Finance Provider', None),
+                        'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
+                        }
+                    )
+                    break
+                except Exception as e:
+                    try_count += 1
+                    print(f"Error: {e}")
+                    print(f"Retrying... ({try_count}/3)")
             trace_code = plan.trace_code
             plan.number_of_finance_provider = number_of_finance_provider(trace_code)
             plan.save()
