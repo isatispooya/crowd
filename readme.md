@@ -32,7 +32,6 @@ sudo journalctl -u crowd -f
 sudo systemctl show -p ActiveState -p LoadState -p MemoryCurrent -p MemoryMax crowd
 ps aux | grep crowd
 sudo netstat -tulpn | grep crowd
-
 ```
 
 ### مسیرهای مهم
