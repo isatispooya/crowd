@@ -10,6 +10,7 @@ urlpatterns = [
     path('participation/report/<str:trace_code>/', ParticipationReportViewset.as_view(), name='get-participation-report-user'),
     path('dashboard/admin/', DashBoardAdminViewset.as_view(), name='dashboard-admin'),
     path('dashboard/user/', DashBoardUserViewset.as_view(), name='dashboard-user'),
+    path('dashboard/user/space/<str:national_id>/', DashBoardUserViewset.as_view(), name='dashboard-user-space'),
     path('report/admin/profitability/<str:trace_code>/', ProfitabilityReportViewSet.as_view(), name='profitability-report-admin'),
     path('send/sms/finish/plan/<str:trace_code>/', SendSmsFinishPlanViewset.as_view(), name='send-sms-finish-plan'),
     path('send/sms/start/plan/', SendSmsStartPlanViewset.as_view(), name='send-sms-start-plan'),

@@ -173,13 +173,23 @@ class DashBoardAdminViewset (APIView) :
 # done
 class DashBoardUserViewset(APIView) :
     @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
-    def get (self,request) : 
-        Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        user = fun.decryptionUser(Authorization)
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+    def get (self,request,national_id=None) : 
+        if not national_id:
+            Authorization = request.headers.get('Authorization')
+            if not Authorization:
+                return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            user = fun.decryptionUser(Authorization)
+            if not user:
+                return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            user = User.objects.filter(uniqueIdentifier=national_id).first()
+            if not user:
+                return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            Authorization = request.headers.get('X-API-Key')
+            if not Authorization or Authorization != 'dj2n9#mK8$pL5@qR7vX4yH1wB9cF3tE6':
+                return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            
+
         user = user.first()
         plan_all = Plan.objects.all()
         information_plan = InformationPlan.objects.filter(plan__in = plan_all , status_show = True)
