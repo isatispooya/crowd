@@ -1228,8 +1228,7 @@ class OneTimeLoginViewset(APIView):
                 created_at__gt=timezone.now() - timedelta(minutes=10)
             )
 
-            # if active_uuids.count() >= 3:
-            if active_uuids.count() >= 30000:
+            if active_uuids.count() >= 3:
                 return Response(
                     {'error': 'تعداد درخواست‌های ورود بیش از حد مجاز است'}, 
                     status=status.HTTP_429_TOO_MANY_REQUESTS
@@ -1264,7 +1263,7 @@ class OneTimeLoginViewset(APIView):
             # بررسی اعتبار UUID
             uuid_obj = OneTimeLoginUuid.objects.filter(
                 uuid=uuid,
-                # status=True,
+                status=True,
                 created_at__gt=timezone.now() - timedelta(minutes=10)
             ).select_related('user').first()
 
