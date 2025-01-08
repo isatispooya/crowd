@@ -1198,30 +1198,99 @@ class OneTimeLoginViewset(APIView):
     @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
     def post(self, request):
         uniqueIdentifier = request.data.get('uniqueIdentifier')
+        x_key_api = request.headers.get('x-key-api')
         Authorization = request.headers.get('Authorization')
-        if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        admin = fun.decryptionadmin(Authorization)
-        if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first()
-        user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
-        if not user:
-            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        uuid = str(uuid.uuid4())
-        OneTimeLoginUuid.objects.create(uuid=uuid, user=user)
-        return Response({'uuid': uuid}, status=status.HTTP_200_OK)
-    
+
+        if not uniqueIdentifier:
+            return Response(
+                {'error': 'شناسه کاربر الزامی است'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        is_admin = Authorization and fun.decryptionadmin(Authorization)
+        if not (x_key_api == 'dj2n9#mK8$pL5@qR7vX4yH1wB9cF3tE6' or is_admin):
+            return Response(
+                {'error': 'مجوز دسترسی نامعتبر است'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        with transaction.atomic():
+            # حذف UUIDهای منقضی شده
+            OneTimeLoginUuid.objects.filter(
+                user__uniqueIdentifier=uniqueIdentifier,
+                created_at__lt=timezone.now() - timedelta(minutes=10)
+            ).delete()
+
+            # بررسی تعداد UUIDهای فعال
+            active_uuids = OneTimeLoginUuid.objects.filter(
+                user__uniqueIdentifier=uniqueIdentifier,
+                status=True,
+                created_at__gt=timezone.now() - timedelta(minutes=10)
+            )
+
+            if active_uuids.count() >= 3:
+                return Response(
+                    {'error': 'تعداد درخواست‌های ورود بیش از حد مجاز است'}, 
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+
+            # دریافت کاربر
+            user = User.objects.filter(
+                uniqueIdentifier=uniqueIdentifier,
+            ).first()
+
+            if not user:
+                return Response(
+                    {'error': 'کاربر یافت نشد یا غیرفعال است'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # ایجاد UUID جدید
+            login_uuid = OneTimeLoginUuid.objects.create(
+                uuid=str(uuid.uuid4()),
+                user=user
+            )
+
+            return Response({
+                'uuid': login_uuid.uuid,
+                'expires_in': '10 minutes'
+            }, status=status.HTTP_200_OK)
+
+
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get(self, request, uuid):
-        uuid = OneTimeLoginUuid.objects.filter(uuid=uuid, status=True, created_at__gt=timezone.now() - timedelta(minutes=10)).first()
-        if not uuid:
-            return Response({'error': 'ورود یکبار مصرف یافت نشد'}, status=status.HTTP_401_UNAUTHORIZED)
-        user = uuid.user
-        if user.is_active == False:
-            return Response({'error': 'user not active'}, status=status.HTTP_401_UNAUTHORIZED)
-        token = fun.encryptionUser(user)
-        uuid.status = False
-        uuid.save()
-        return Response({'token': token}, status=status.HTTP_200_OK)
+        try:
+            # بررسی اعتبار UUID
+            uuid_obj = OneTimeLoginUuid.objects.filter(
+                uuid=uuid,
+                status=True,
+                created_at__gt=timezone.now() - timedelta(minutes=10)
+            ).select_related('user').first()
+
+            if not uuid_obj:
+                return Response(
+                    {'error': 'لینک ورود نامعتبر یا منقضی شده است'}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            user = uuid_obj.user
+            if not user.is_active:
+                return Response(
+                    {'error': 'حساب کاربری غیرفعال است'}, 
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            # غیرفعال کردن UUID
+            uuid_obj.status = False
+            uuid_obj.save()
+
+            # ایجاد توکن
+            token = fun.encryptionUser(user)
+            return Response({'token': token}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': f'خطای سیستمی: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
