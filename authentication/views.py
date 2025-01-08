@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework import status 
 import requests
-from .models import User , Otp , Captcha , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes  , legalPersonShareholders , legalPersonStakeholders , LegalPerson
+from .models import User,OneTimeLoginUuid , Otp , Captcha , Admin , accounts ,addresses ,BlacklistedToken, financialInfo , jobInfo , privatePerson ,tradingCodes  , legalPersonShareholders , legalPersonStakeholders , LegalPerson
 from . import serializers
+import uuid
 import datetime
 from . import fun
 import json
@@ -1192,4 +1193,35 @@ class LogoutViewset(APIView):
 
 
 
+
+class OneTimeLoginViewset(APIView):
+    @method_decorator(ratelimit(**settings.RATE_LIMIT['POST']), name='post')
+    def post(self, request):
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+        if not user:
+            return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        uuid = str(uuid.uuid4())
+        OneTimeLoginUuid.objects.create(uuid=uuid, user=user)
+        return Response({'uuid': uuid}, status=status.HTTP_200_OK)
+    
+    def get(self, request, uuid):
+        uuid = OneTimeLoginUuid.objects.filter(uuid=uuid, status=True, created_at__gt=timezone.now() - timedelta(minutes=10)).first()
+        if not uuid:
+            return Response({'error': 'ورود یکبار مصرف یافت نشد'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = uuid.user
+        if user.is_active == False:
+            return Response({'error': 'user not active'}, status=status.HTTP_401_UNAUTHORIZED)
+        token = fun.encryptionUser(user)
+        uuid.status = False
+        uuid.save()
+        return Response({'token': token}, status=status.HTTP_200_OK)
 

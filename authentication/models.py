@@ -247,6 +247,13 @@ class Captcha(models.Model):
 
 
 
+class OneTimeLoginUuid(models.Model):
+    uuid = models.CharField(max_length=255,unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.BooleanField(default=True)
+    def __str__(self):
+        return f'{self.uuid} {self.user}'
 
 # class AgentUser (models.Model): 
 #     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -181,6 +181,7 @@ class DashBoardUserViewset(APIView) :
             user = fun.decryptionUser(Authorization)
             if not user:
                 return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            user = user.first()
         else:
             user = User.objects.filter(uniqueIdentifier=national_id).first()
             if not user:
@@ -190,7 +191,6 @@ class DashBoardUserViewset(APIView) :
                 return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
             
 
-        user = user.first()
         plan_all = Plan.objects.all()
         information_plan = InformationPlan.objects.filter(plan__in = plan_all , status_show = True)
         plan_all = information_plan.count()
