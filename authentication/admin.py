@@ -983,3 +983,11 @@ class legalPersonShareholdersAdmin(admin.ModelAdmin):
 admin.site.register(models.BlacklistedToken)
 admin.site.register(models.Reagent)
 
+@admin.register(models.OneTimeLoginUuid)
+class OneTimeLoginUuidAdmin(admin.ModelAdmin):
+    list_display = ('uuid', 'user', 'status', 'created_at')
+    search_fields = ('uuid', 'user__uniqueIdentifier')
+    list_filter = ('status',)
+    list_per_page = 100
+    autocomplete_fields = ('user',)
+    ordering = ['created_at']
