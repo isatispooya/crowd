@@ -16,6 +16,6 @@ urlpatterns = [
     path('log/out/', LogoutViewset.as_view(), name='log-out'),
     path('refresh/token/admin/', RefreshTokenAdminViewset.as_view(), name='refresh-token-admin'),
     path('onetime/login/', OneTimeLoginViewset.as_view(), name='onetime-login'),
-    path('onetime/login/<uuid:str>/', OneTimeLoginViewset.as_view(), name='onetime-login-admin'),
+    path('onetime/login/<str:uuid>/', OneTimeLoginViewset.as_view(), name='onetime-login-admin'),
 
 ]

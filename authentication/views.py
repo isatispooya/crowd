@@ -1274,11 +1274,6 @@ class OneTimeLoginViewset(APIView):
                 )
 
             user = uuid_obj.user
-            if not user.is_active:
-                return Response(
-                    {'error': 'حساب کاربری غیرفعال است'}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
 
             # غیرفعال کردن UUID
             uuid_obj.status = False
