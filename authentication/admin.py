@@ -219,6 +219,7 @@ class privatePersonAdmin(admin.ModelAdmin):
     search_fields = ('firstName', 'lastName', 'shNumber', 'serial')
     readonly_fields = ('user',)
     list_per_page = 25
+    autocomplete_fields = ['user']
     actions = ['export_as_excel']
     ordering = ['lastName', 'firstName']
 
@@ -308,6 +309,7 @@ class tradingCodesAdmin(admin.ModelAdmin):
     search_fields = ('user__uniqueIdentifier', 'code')
     list_filter = ('code', 'type')
     list_per_page = 25
+    autocomplete_fields = ['user']
     ordering = ['user']
     
     def get_user_identifier(self, obj):
@@ -564,6 +566,7 @@ class addressesAdmin(admin.ModelAdmin):
     list_filter = ('user__uniqueIdentifier', 'city', 'country', 'postalCode', 'province', 'remnantAddress', 'section', 'tel', 'website')
     list_per_page = 25
     ordering = ['user']
+    autocomplete_fields = ['user']
     actions = ['export_as_excel']
     def get_user_identifier(self, obj):
         return obj.user.uniqueIdentifier
@@ -642,6 +645,7 @@ class accountsAdmin(admin.ModelAdmin):
     search_fields = ('user__uniqueIdentifier', 'accountNumber', 'bank', 'sheba', 'branchName')
     list_filter = ('bank', 'type', 'isDefault', 'branchCity')
     list_per_page = 25
+    autocomplete_fields = ['user']
     ordering = ['user', 'bank']
     
     def get_user_identifier(self, obj):
@@ -729,6 +733,7 @@ class LegalPersonAdmin(admin.ModelAdmin):
     list_display = ('companyName', 'economicCode', 'registerNumber', 'get_user_identifier')
     search_fields = ('companyName', 'economicCode', 'registerNumber', 'user__uniqueIdentifier')
     list_filter = ('citizenshipCountry', 'legalPersonTypeCategory')
+    autocomplete_fields = ['user']
     list_per_page = 25
     ordering = ['companyName']
 
@@ -828,25 +833,23 @@ class LegalPersonAdmin(admin.ModelAdmin):
 class LegalPersonStakeholdersAdmin(admin.ModelAdmin):
     list_display = ('firstName', 'lastName')
     search_fields = ('firstName', 'lastName')
-    list_filter = ('firstName', 'lastName')  # حذف legalPerson
+    list_filter = ('firstName', 'lastName')
     list_per_page = 25
+    autocomplete_fields = ['user']
     ordering = ['firstName', 'lastName']
 
 
     fieldsets = (
-        ('اطلاعات شرکت', {
-            'fields': ('legalPerson',)
-        }),
-        ('اطلاعات فردی', {
+        ('اطلاعات اصلی', {
             'fields': (
+                'user',
+                'uniqueIdentifier',
+                'type',
+                'startAt',
+                'endAt',
                 ('firstName', 'lastName'),
-            )
-        }),
-        ('اطلاعات تکمیلی', {
-            'fields': (
-                'startDate',
-                'endDate',
-                'signatureFile'
+                'positionType',
+                'isOwnerSignature'
             )
         }),
     )
@@ -905,6 +908,7 @@ class legalPersonShareholdersAdmin(admin.ModelAdmin):
     search_fields = ('firstName', 'lastName', 'uniqueIdentifier', 'positionType')
     list_filter = ('positionType',)
     list_per_page = 25
+    autocomplete_fields = ['user']
     ordering = ['lastName', 'firstName']
    
     fieldsets = (
