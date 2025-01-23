@@ -268,6 +268,7 @@ class PlansViewset(APIView):
                 information_serializer =serializers.InformationPlanSerializer(information)
                 data['information_complete'] = information_serializer.data
             result.append(data)
+        result = sorted(result, key=lambda x: str(x.get('information_complete', {}).get('status_second', 0)), reverse=True)
 
         return Response(result, status=status.HTTP_200_OK)
     
