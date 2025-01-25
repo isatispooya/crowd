@@ -268,7 +268,15 @@ class PlansViewset(APIView):
                 information_serializer =serializers.InformationPlanSerializer(information)
                 data['information_complete'] = information_serializer.data
             result.append(data)
-        result = sorted(result, key=lambda x: str(x.get('information_complete', {}).get('status_second', 0)), reverse=True)
+        result = sorted(
+            result,
+            key=lambda x: (
+                str(x.get('information_complete', {}).get('status_second', '0')),
+                -int(datetime.datetime.strptime(x.get('plan', {}).get('project_end_date', '2000-01-01T00:00:00'), '%Y-%m-%dT%H:%M:%S').timestamp())
+                if x.get('plan', {}).get('project_end_date') else float('-inf')
+            ),
+            reverse=True
+        )
 
         return Response(result, status=status.HTTP_200_OK)
     
@@ -1271,7 +1279,7 @@ class EndOfFundraisingViewset(APIView) :
         admin = fun.decryptionadmin(Authorization)
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
-        admin = admin.first() 
+        admin = admin.first()
         plan = Plan.objects.filter(trace_code=trace_code).first()
         if not plan :
             return Response({'error': 'Invalid plan status'}, status=status.HTTP_400_BAD_REQUEST)
