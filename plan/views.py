@@ -265,18 +265,24 @@ class PlansViewset(APIView):
                 'picture_plan': picture_plan.data
             }
             if information:
-                information_serializer =serializers.InformationPlanSerializer(information)
+                information_serializer = serializers.InformationPlanSerializer(information)
                 data['information_complete'] = information_serializer.data
-            result.append(data)
-        result = sorted(
-            result,
-            key=lambda x: (
-                str(x.get('information_complete', {}).get('status_second', '0')),
-                -int(datetime.datetime.strptime(x.get('plan', {}).get('project_end_date', '2000-01-01T00:00:00'), '%Y-%m-%dT%H:%M:%S').timestamp())
-                if x.get('plan', {}).get('project_end_date') else float('-inf')
-            ),
-            reverse=True
-        )
+                result.append(data)
+
+            result = sorted(
+                result,
+                key=lambda x: (
+                    str(x.get('information_complete', {}).get('status_second', '0')),
+                    -int(
+                        datetime.datetime.strptime(
+                            x.get('information_complete', {}).get('payment_date', '2000-01-01T00:00:00+00:00'),
+                            '%Y-%m-%dT%H:%M:%S%z'
+                        ).timestamp()
+                    ) if x.get('information_complete', {}).get('payment_date') else float('-inf')
+                ),
+                reverse=True
+)
+
 
         return Response(result, status=status.HTTP_200_OK)
     
