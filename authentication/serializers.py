@@ -91,3 +91,73 @@ class LegalPersonSerializer(serializers.ModelSerializer):
 
     some_field = serializers.CharField(allow_blank=True, required=False)
     another_field = serializers.IntegerField(required=False, allow_null=True)
+
+
+class UserLightSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.User
+        fields = ['id', 'username', 'first_name', 'last_name' ,'uniqueIdentifier','mobile']
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    private_person = serializers.SerializerMethodField()
+    legal_person = serializers.SerializerMethodField()
+    legal_person_stakeholders = serializers.SerializerMethodField()
+    addresses = serializers.SerializerMethodField()
+    accounts = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = models.User
+        fields = ['id', 'mobile', 'status', 'type', 'uniqueIdentifier',
+                 'private_person', 'legal_person', 'legal_person_stakeholders',
+                 'addresses', 'accounts']
+
+    def get_private_person(self, obj):
+        if obj.type != 'LEGAL':  # اگر شخص حقیقی بود
+            person = obj.privateperson_set.first()
+            if person:
+                return {
+                    'firstName': person.firstName,
+                    'lastName': person.lastName,
+                    'birthDate': person.birthDate,
+                    'gender': person.gender
+                }
+        return None
+
+    def get_legal_person(self, obj):
+        if obj.type == 'LEGAL':  # اگر شخص حقوقی بود
+            legal_person = obj.legalperson_set.first()
+            if legal_person:
+                return {
+                    'companyName': legal_person.companyName,
+                    'economicCode': legal_person.economicCode,
+                    'registerNumber': legal_person.registerNumber,
+                    'registerDate': legal_person.registerDate
+                }
+        return None
+
+    def get_legal_person_stakeholders(self, obj):
+        if obj.type == 'LEGAL':  # اگر شخص حقوقی بود
+            stakeholders = obj.legalpersonstakeholders_set.all()
+            return [{
+                'firstName': stake.firstName,
+                'lastName': stake.lastName,
+                'positionType': stake.positionType,
+                'type': stake.type
+            } for stake in stakeholders]
+        return None
+
+    def get_addresses(self, obj):
+        address = obj.addresses_set.first()
+        if address:
+            return {
+                'mobile': address.mobile
+            }
+        return None
+
+    def get_accounts(self, obj):
+        return [{
+            'accountNumber': acc.accountNumber,
+            'bank': acc.bank,
+        } for acc in obj.accounts_set.all()]
+

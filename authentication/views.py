@@ -665,67 +665,34 @@ class RefreshTokenAdminViewset(APIView):
 
 
 # done
-class UserListViewset (APIView) :
+class UserListViewset(APIView):
+
     @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
     def get(self, request):
         Authorization = request.headers.get('Authorization')    
         if not Authorization:
-            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Authorization header is missing'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
             
         admin = fun.decryptionadmin(Authorization)
         if not admin:
-            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': 'admin not found'}, 
+                          status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
 
-        # Get all users with prefetch_related to reduce queries
+        # اضافه کردن prefetch برای مدل‌های حقوقی
         users = User.objects.prefetch_related(
             'privateperson_set',
-            'addresses_set', 
-            'financialinfo_set',
-            'accounts_set',
-            'jobinfo_set',
-            'tradingcodes_set',
-            'legalpersonshareholders_set',
             'legalperson_set',
-            'legalpersonstakeholders_set'
+            'legalpersonstakeholders_set',
+            'addresses_set',
+            'accounts_set',
         ).all()
 
-        user_list = []
-        
-        for user in users:
-            user_data = serializers.UserSerializer(user).data
-            
-            # Get related data for user
-            privateperson = user.privateperson_set.all()
-            privateperson_data = serializers.privatePersonSerializer(privateperson, many=True).data
-            
-            # Convert dates and gender for privateperson
-            for person in privateperson_data:
-                if person['birthDate']:
-                    try:
-                        birthDate = datetime.datetime.strptime(person['birthDate'].split('T')[0], '%Y-%m-%d')
-                        person['birthDate'] = JalaliDate(birthDate).strftime('%Y/%m/%d')
-                    except:
-                        pass
-                person['gender'] = person['gender'].replace('Female', 'زن').replace('Male', 'مرد')
+        serializer = serializers.UserListSerializer(users, many=True)
 
-            # Combine all user data
-            combined_data = {
-                **user_data,
-                'addresses': serializers.addressesSerializer(user.addresses_set.all(), many=True).data,
-                'accounts': serializers.accountsSerializer(user.accounts_set.all(), many=True).data,
-                'private_person': privateperson_data,
-                'financial_info': serializers.financialInfoSerializer(user.financialinfo_set.all(), many=True).data,
-                'job_info': serializers.jobInfoSerializer(user.jobinfo_set.all(), many=True).data,
-                'trading_codes': serializers.tradingCodesSerializer(user.tradingcodes_set.all(), many=True).data,
-                'legal_person_shareholder': serializers.legalPersonShareholdersSerializer(user.legalpersonshareholders_set.all(), many=True).data,
-                'legal_person': serializers.LegalPersonSerializer(user.legalperson_set.all(), many=True).data,
-                'legal_person_stakeholders': serializers.legalPersonStakeholdersSerializer(user.legalpersonstakeholders_set.all(), many=True).data,
-            }
-            
-            user_list.append(combined_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        return Response(user_list, status=status.HTTP_200_OK)
 
 
 # done
