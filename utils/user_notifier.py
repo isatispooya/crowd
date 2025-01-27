@@ -244,3 +244,8 @@ class UserNotifier:
         '''
         self.send_email(subject, html_message)
   
+
+    def send_status_payment_sms(self, plan, status):
+        message = f'وضعیت پرداخت شما در طرح "{plan}" به "{status}" تغییر کرد'
+        self.send_sms(message)
+

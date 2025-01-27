@@ -115,6 +115,11 @@ def get_full_name_admin(uniqueIdentifier) :
         return admin.firstName + ' ' + admin.lastName
     return 'N/A'
 
+def get_email(uniqueIdentifier) :   
+    user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+    if user :
+        return user.email
+    return ''
 
 # done
 # detial + information
@@ -812,6 +817,20 @@ class PaymentDocument(APIView):
         information = InformationPlan.objects.filter(plan=plan).first()
         information.amount_collected_now = value
         information.save()
+        status_payment_list = {
+            '0': 'رد شده',
+            '1': 'در حال بررسی', 
+            '2': 'تایید موقت',
+            '3': 'تایید نهایی'
+        }
+        uniqueIdentifier = payments.user
+        mobile_number = get_mobile_number(uniqueIdentifier)
+        status_payment = status_payment_list[request.data['status']]
+        email = get_email(uniqueIdentifier)
+        user_notifier = UserNotifier(mobile_number,email)
+        plan_name = plan.persian_name
+        user_notifier.send_status_payment_sms(plan_name,status_payment)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
