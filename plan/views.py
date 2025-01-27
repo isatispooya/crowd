@@ -2013,7 +2013,7 @@ class BankReceiptViewset(APIView):
 # گواهی مشارکت منو 
 class ParticipantMenuViewset(APIView):
     @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
-    def get (self,request):
+    def get(self, request):
         Authorization = request.headers.get('Authorization')
         if not Authorization:
             return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
@@ -2021,25 +2021,27 @@ class ParticipantMenuViewset(APIView):
         if not user:
             return Response({'error': 'user not found'}, status=status.HTTP_401_UNAUTHORIZED)
         user = user.first()
-        # payment = PaymentGateway.objects.filter(user=user, send_farabours =True , status = '3').distinct()
-        payment = PaymentGateway.objects.filter(user=user.uniqueIdentifier, status = '3')
-        serializer = serializers.PaymentGatewaySerializer(payment,many = True)
+        
+        valid_plans = InformationPlan.objects.filter(status_second='5').values_list('plan', flat=True)
+        
+        payment = PaymentGateway.objects.filter(
+            user=user.uniqueIdentifier, 
+            status='3',
+            plan__in=valid_plans
+        )
+        
+        serializer = serializers.PaymentGatewaySerializer(payment, many=True)
         plans = []
-        for i in serializer.data :
-            plan = i['plan']
-            plan = Plan.objects.filter(id=plan).first()
-            if not plan :
-                return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
-            
-            information = InformationPlan.objects.filter(plan =plan , status_second ='5').first()
-            if not information :
+        for i in serializer.data:
+            plan = Plan.objects.filter(id=i['plan']).first()
+            if not plan:
                 continue
             
             if plan not in plans:
-                plans.append(plan) 
+                plans.append(plan)
 
         plan_serializer = serializers.PlanSerializer(plans, many=True)
-        return Response (plan_serializer.data,status=status.HTTP_200_OK)
+        return Response(plan_serializer.data, status=status.HTTP_200_OK)
     
        
 class RoadMapViewset(APIView) :
