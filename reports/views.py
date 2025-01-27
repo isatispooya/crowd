@@ -231,8 +231,17 @@ class DashBoardUserViewset(APIView) :
                     amount_end = 0
             date = datetime.datetime.strptime(date , '%Y-%m-%d')
             date_jalali = JalaliDate.to_jalali(date)
-            date_jalali =str(date_jalali)
-            date_profit.append({'type': type, 'date': date_jalali , 'amount': amount_end , 'plan' : plan_id, 'plan_name':plan_name, 'trace_code':plan_obj.trace_code})
+            date_jalali = str(date_jalali)
+            profit_payment_completed = i['profit_payment_completed']  # از دیتای سریالایز شده
+            date_profit.append({
+                'type': type, 
+                'date': date_jalali, 
+                'amount': amount_end, 
+                'plan': plan_id, 
+                'plan_name': plan_name,
+                'trace_code': plan_obj.trace_code,
+                'profit_payment_completed': profit_payment_completed
+            })
             
         
         payments_count = payments.count()
