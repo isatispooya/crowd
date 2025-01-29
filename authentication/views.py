@@ -22,7 +22,9 @@ from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.conf import settings
 from django.db import transaction
+import logging
 
+logger = logging.getLogger(__name__)
 
 class CaptchaViewset(APIView) :
     @method_decorator(ratelimit(**settings.RATE_LIMIT['GET']), name='get')
@@ -1256,3 +1258,133 @@ class OneTimeLoginViewset(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+class RegisterFromSpaceViewset(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            logger.info(f"Received data from space API: {data}")  # برای دیباگ
+
+            uniqueIdentifier = data.get('uniqueIdentifier')
+            if not uniqueIdentifier:
+                return Response({'error': 'شناسه یکتا الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # بررسی وجود کاربر
+            existing_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+            if existing_user:
+                return Response({'message': 'کاربر وجود دارد'}, status=status.HTTP_200_OK)
+
+            with transaction.atomic():
+                # ایجاد کاربر
+                user = User.objects.create(
+                    uniqueIdentifier=uniqueIdentifier,
+                    email=data.get('email'),
+                    mobile=str(data.get('mobile', '')),
+                    type=data.get('type', ''),
+                    status=data.get('status', 'Sejami'),
+                    agent=data.get('agent')
+                )
+
+                # ایجاد اطلاعات شخص حقیقی
+                if data.get('privatePerson'):
+                    private_person_data = data['privatePerson']
+                    privatePerson.objects.create(
+                        user=user,
+                        birthDate=private_person_data.get('birthDate', ''),
+                        fatherName=private_person_data.get('fatherName', ''),
+                        firstName=private_person_data.get('firstName', ''),
+                        gender=private_person_data.get('gender', ''),
+                        lastName=private_person_data.get('lastName', ''),
+                        placeOfBirth=private_person_data.get('placeOfBirth', ''),
+                        placeOfIssue=private_person_data.get('placeOfIssue', ''),
+                        seriSh=private_person_data.get('seriSh', ''),
+                        seriShChar=private_person_data.get('seriShChar', ''),
+                        serial=private_person_data.get('serial', ''),
+                        shNumber=private_person_data.get('shNumber', ''),
+                        signatureFile=private_person_data.get('signatureFile')
+                    )
+
+                # ایجاد حساب‌های بانکی
+                for account_data in data.get('accounts', []):
+                    accounts.objects.create(
+                        user=user,
+                        accountNumber=account_data.get('accountNumber', ''),
+                        bank=account_data.get('bank', {}).get('name', ''),
+                        branchCity=account_data.get('branchCity', {}).get('name', ''),
+                        branchCode=account_data.get('branchCode', ''),
+                        branchName=account_data.get('branchName', ''),
+                        isDefault=account_data.get('isDefault', False),
+                        modifiedDate=account_data.get('modifiedDate', ''),
+                        type=account_data.get('type', ''),
+                        sheba=account_data.get('sheba', '')
+                    )
+
+                # ایجاد آدرس‌ها
+                for address_data in data.get('addresses', []):
+                    addresses.objects.create(
+                        user=user,
+                        alley=address_data.get('alley', ''),
+                        city=address_data.get('city', {}).get('name', ''),
+                        cityPrefix=address_data.get('cityPrefix', ''),
+                        country=address_data.get('country', {}).get('name', ''),
+                        countryPrefix=address_data.get('countryPrefix', ''),
+                        email=address_data.get('email', ''),
+                        emergencyTel=address_data.get('emergencyTel', ''),
+                        emergencyTelCityPrefix=address_data.get('emergencyTelCityPrefix', ''),
+                        emergencyTelCountryPrefix=address_data.get('emergencyTelCountryPrefix', ''),
+                        fax=address_data.get('fax', ''),
+                        faxPrefix=address_data.get('faxPrefix', ''),
+                        mobile=address_data.get('mobile', ''),
+                        plaque=address_data.get('plaque', ''),
+                        postalCode=address_data.get('postalCode', ''),
+                        province=address_data.get('province', {}).get('name', ''),
+                        remnantAddress=address_data.get('remnantAddress', ''),
+                        section=address_data.get('section', {}).get('name', ''),
+                        tel=address_data.get('tel', ''),
+                        website=address_data.get('website', '')
+                    )
+
+                # ایجاد اطلاعات مالی
+                if data.get('financialInfo'):
+                    financial_info_data = data['financialInfo']
+                    financialInfo.objects.create(
+                        user=user,
+                        assetsValue=financial_info_data.get('assetsValue', ''),
+                        cExchangeTransaction=financial_info_data.get('cExchangeTransaction', ''),
+                        companyPurpose=financial_info_data.get('companyPurpose', ''),
+                        financialBrokers=', '.join([broker.get('broker', {}).get('title', '') for broker in financial_info_data.get('financialBrokers', [])]),
+                        inComingAverage=financial_info_data.get('inComingAverage', ''),
+                        outExchangeTransaction=financial_info_data.get('outExchangeTransaction', ''),
+                        rate=financial_info_data.get('rate', ''),
+                        rateDate=financial_info_data.get('rateDate', ''),
+                        referenceRateCompany=financial_info_data.get('referenceRateCompany', ''),
+                        sExchangeTransaction=financial_info_data.get('sExchangeTransaction', ''),
+                        tradingKnowledgeLevel=financial_info_data.get('tradingKnowledgeLevel', ''),
+                        transactionLevel=financial_info_data.get('transactionLevel', '')
+                    )
+
+                # ایجاد اطلاعات شغلی
+                if data.get('jobInfo'):
+                    job_info_data = data['jobInfo']
+                    jobInfo.objects.create(
+                        user=user,
+                        companyAddress=job_info_data.get('companyAddress', ''),
+                        companyCityPrefix=job_info_data.get('companyCityPrefix', ''),
+                        companyEmail=job_info_data.get('companyEmail', ''),
+                        companyFax=job_info_data.get('companyFax', ''),
+                        companyFaxPrefix=job_info_data.get('companyFaxPrefix', ''),
+                        companyName=job_info_data.get('companyName', ''),
+                        companyPhone=job_info_data.get('companyPhone', ''),
+                        companyPostalCode=job_info_data.get('companyPostalCode', ''),
+                        companyWebSite=job_info_data.get('companyWebSite', ''),
+                        employmentDate=job_info_data.get('employmentDate', ''),
+                        job=job_info_data.get('job', {}).get('title', ''),
+                        jobDescription=job_info_data.get('jobDescription', ''),
+                        position=job_info_data.get('position', '')
+                    )
+
+                return Response({'message': 'کاربر با موفقیت ثبت شد'}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            print(f'خطا در ثبت اطلاعات: {str(e)}')
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

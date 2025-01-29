@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import CaptchaViewset,OtpViewset,OneTimeLoginViewset,LoginViewset,OtpAdminViewset,UserOneViewset,LogoutViewset,AddBoursCodeUserViewset,LoginAdminViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset, RefreshTokenAdminViewset
+from.views import CaptchaViewset,OtpViewset,OneTimeLoginViewset,LoginViewset,OtpAdminViewset,RegisterFromSpaceViewset,UserOneViewset,LogoutViewset,AddBoursCodeUserViewset,LoginAdminViewset , InformationViewset, UserListViewset , OtpUpdateViewset, UpdateInformationViewset, RefreshTokenAdminViewset
 
 urlpatterns = [
     path('captcha/', CaptchaViewset.as_view(), name='captcha'),
@@ -17,5 +17,7 @@ urlpatterns = [
     path('refresh/token/admin/', RefreshTokenAdminViewset.as_view(), name='refresh-token-admin'),
     path('onetime/login/', OneTimeLoginViewset.as_view(), name='onetime-login'),
     path('onetime/login/<str:uuid>/', OneTimeLoginViewset.as_view(), name='onetime-login-admin'),
+    path('register-from-space/', RegisterFromSpaceViewset.as_view(), name='register-from-space'),
+
 
 ]
