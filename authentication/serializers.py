@@ -113,7 +113,7 @@ class UserListSerializer(serializers.ModelSerializer):
                  'addresses', 'accounts']
 
     def get_private_person(self, obj):
-        if obj.type != 'LEGAL':  # اگر شخص حقیقی بود
+        if obj.type != 'IranianLegalPerson':  # اگر شخص حقیقی بود
             person = obj.privateperson_set.first()
             if person:
                 return {
@@ -125,7 +125,7 @@ class UserListSerializer(serializers.ModelSerializer):
         return None
 
     def get_legal_person(self, obj):
-        if obj.type == 'LEGAL':  # اگر شخص حقوقی بود
+        if obj.type == 'IranianLegalPerson':  # اگر شخص حقوقی بود
             legal_person = obj.legalperson_set.first()
             if legal_person:
                 return {
@@ -137,7 +137,7 @@ class UserListSerializer(serializers.ModelSerializer):
         return None
 
     def get_legal_person_stakeholders(self, obj):
-        if obj.type == 'LEGAL':  # اگر شخص حقوقی بود
+        if obj.type == 'IranianLegalPerson':  # اگر شخص حقوقی بود
             stakeholders = obj.legalpersonstakeholders_set.all()
             return [{
                 'firstName': stake.firstName,
@@ -151,7 +151,7 @@ class UserListSerializer(serializers.ModelSerializer):
         address = obj.addresses_set.first()
         if address:
             return {
-                'mobile': address.mobile
+                'city': address.city,
             }
         return None
 
