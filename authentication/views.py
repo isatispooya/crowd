@@ -1261,12 +1261,10 @@ class OneTimeLoginViewset(APIView):
 
 class RegisterFromSpaceViewset(APIView):
     def post(self, request):
-        # try:
+        try:
             data = request.data
             data = json.loads(data)
-            print(data)
-            logger.info(data)
-            logger.warn(data)
+
             uniqueIdentifier = data.get('uniqueIdentifier')
             if not uniqueIdentifier:
                 return Response({'error': 'شناسه یکتا الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1388,6 +1386,6 @@ class RegisterFromSpaceViewset(APIView):
 
                 return Response({'message': 'کاربر با موفقیت ثبت شد'}, status=status.HTTP_201_CREATED)
 
-        # except Exception as e:
-        #     print(f'خطا در ثبت اطلاعات: {str(e)}')
-        #     return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            print(f'خطا در ثبت اطلاعات: {str(e)}')
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
