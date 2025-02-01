@@ -1261,9 +1261,8 @@ class OneTimeLoginViewset(APIView):
 
 class RegisterFromSpaceViewset(APIView):
     def post(self, request):
-        try:
+        # try:
             data = request.data
-            logger.info(f"Received data from space API: {data}")  # برای دیباگ
 
             uniqueIdentifier = data.get('uniqueIdentifier')
             if not uniqueIdentifier:
@@ -1286,6 +1285,9 @@ class RegisterFromSpaceViewset(APIView):
                 )
 
                 # ایجاد اطلاعات شخص حقیقی
+                print(data)
+                logger.info(data)
+                logger.warn(data)
                 if data.get('privatePerson'):
                     private_person_data = data['privatePerson']
                     privatePerson.objects.create(
@@ -1385,6 +1387,6 @@ class RegisterFromSpaceViewset(APIView):
 
                 return Response({'message': 'کاربر با موفقیت ثبت شد'}, status=status.HTTP_201_CREATED)
 
-        except Exception as e:
-            print(f'خطا در ثبت اطلاعات: {str(e)}')
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # except Exception as e:
+        #     print(f'خطا در ثبت اطلاعات: {str(e)}')
+        #     return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
