@@ -1263,7 +1263,10 @@ class RegisterFromSpaceViewset(APIView):
     def post(self, request):
         # try:
             data = request.data
-
+            data = json.loads(data)
+            print(data)
+            logger.info(data)
+            logger.warn(data)
             uniqueIdentifier = data.get('uniqueIdentifier')
             if not uniqueIdentifier:
                 return Response({'error': 'شناسه یکتا الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1285,9 +1288,7 @@ class RegisterFromSpaceViewset(APIView):
                 )
 
                 # ایجاد اطلاعات شخص حقیقی
-                print(data)
-                logger.info(data)
-                logger.warn(data)
+
                 if data.get('privatePerson'):
                     private_person_data = data['privatePerson']
                     privatePerson.objects.create(
