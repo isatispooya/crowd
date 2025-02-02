@@ -227,6 +227,8 @@ class PlansViewset(APIView):
                     collected = payment_df['value'].sum()
                     information.amount_collected_now = collected
                     information.save()
+            if not information :
+                information = InformationPlan.objects.create(plan=plan)
             information = InformationPlan.objects.filter(plan=plan).first()
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
             company = ProjectOwnerCompan.objects.filter(plan=plan)  
