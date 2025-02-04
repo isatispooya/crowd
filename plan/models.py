@@ -13,7 +13,7 @@ def validate_file_type(file):
         'text/csv', 'application/vnd.ms-excel'                                     # csv, xls
     ]
     
-    valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx', 'csv', 'xls']
+    valid_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'rar', 'docx', 'xlsx', 'csv', 'xls' , ]
     
     # بررسی پسوند فایل
     file_extension = file.name.split('.')[-1].lower()
@@ -226,6 +226,11 @@ class InformationPlan (models.Model):
     ]
     payback_period = models.CharField (max_length= 10 , null=True, blank=True , choices=payback_period_option , default='1')
     period_length = models.IntegerField (null=True, blank=True , default=12)
+    viedo = models.FileField (
+        upload_to ='static/',
+        null=True,
+        blank=True,
+    )
     def __str__(self) :
          return str(self.plan.persian_name)
          
