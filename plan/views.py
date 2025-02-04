@@ -305,6 +305,7 @@ class PlansViewset(APIView):
         if not admin:
             return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
         admin = admin.first()
+        
         crowd_founding_api = CrowdfundingAPI()
         plan_list = crowd_founding_api.get_company_projects()
         BASE_URL = os.getenv('BASE_URL')
@@ -2331,5 +2332,74 @@ class ComplaintViewset (APIView):
         serializer = serializers.ComplaintSerializer(complaint, many=True).data
 
         return Response(serializer, status=status.HTTP_200_OK)
+
+class UpdatePlanViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='50/m', method='PATCH', block=True))
+    def patch(self, request, trace_code):
+        Authorization = request.headers.get('Authorization')
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        admin = fun.decryptionadmin(Authorization)
+        if not admin:
+            return Response({'error': 'admin not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        admin = admin.first()
+        
+        crowd_founding_api = CrowdfundingAPI()
+        plan_detail = crowd_founding_api.get_project_info(trace_code)
+        
+        try:
+            plan, created = Plan.objects.update_or_create(
+                trace_code=trace_code,
+                defaults={
+                    'creation_date': plan_detail.get('Creation Date', None),
+                    'persian_name': plan_detail.get('Persian Name', None),
+                    'persian_suggested_symbol': plan_detail.get('Persian Suggested Symbol', None),
+                    'persoan_approved_symbol': plan_detail.get('Persoan Approved Symbol', None),
+                    'english_name': plan_detail.get('English Name', None),
+                    'english_suggested_symbol': plan_detail.get('English Suggested Symbol', None),
+                    'english_approved_symbol': plan_detail.get('English Approved Symbol', None),
+                    'industry_group_id': plan_detail.get('Industry Group ID', None),
+                    'industry_group_description': plan_detail.get('Industry Group Description', None),
+                    'sub_industry_group_id': plan_detail.get('Sub Industry Group ID', None),
+                    'sub_industry_group_description': plan_detail.get('Sub Industry Group Description', None),
+                    'persian_subject': plan_detail.get('Persian Subject', None),
+                    'english_subject': plan_detail.get('English Subject', None),
+                    'unit_price': plan_detail.get('Unit Price', None),
+                    'total_units': plan_detail.get('Total Units', None),
+                    'company_unit_counts': plan_detail.get('Company Unit Counts', None),
+                    'total_price': plan_detail.get('Total Price', None),
+                    'crowd_funding_type_id': plan_detail.get('Crowd Funding Type ID', None),
+                    'crowd_funding_type_description': plan_detail.get('Crowd Funding Type Description', None),
+                    'float_crowd_funding_type_description': plan_detail.get('Float Crowd Funding Type Description', None),
+                    'minimum_required_price': plan_detail.get('Minimum Required Price', None),
+                    'real_person_minimum_availabe_price': plan_detail.get('Real Person Minimum Availabe Price', None),
+                    'real_person_maximum_available_price': plan_detail.get('Real Person Maximum Available Price', None),
+                    'legal_person_minimum_availabe_price': plan_detail.get('Legal Person Minimum Availabe Price', None),
+                    'legal_person_maximum_availabe_price': plan_detail.get('Legal Person Maximum Available Price', None),
+                    'underwriting_duration': plan_detail.get('Underwriting Duration', None),
+                    'suggested_underwriting_start_date': plan_detail.get('Suggested Underwriting Start Date', None),
+                    'suggested_underwriting_end_date': plan_detail.get('Suggested Underwriting End Date', None),
+                    'approved_underwriting_start_date': plan_detail.get('Approved Underwriting Start Date', None),
+                    'approved_underwriting_end_date': plan_detail.get('Approved Underwriting End Date', None),
+                    'project_start_date': plan_detail.get('Project Start Date', None),
+                    'project_end_date': plan_detail.get('Project End Date', None),
+                    'settlement_description': plan_detail.get('Settlement Description', None),
+                    'project_status_description': plan_detail.get('Project Status Description', None),
+                    'project_status_id': plan_detail.get('Project Status ID', None),
+                    'persian_suggested_underwiring_start_date': plan_detail.get('Persian Suggested Underwiring Start Date', None),
+                    'persian_suggested_underwriting_end_date': plan_detail.get('Persian Suggested Underwiring End Date', None),
+                    'persian_approved_underwriting_start_date': plan_detail.get('Persian Approved Underwiring Start Date', None),
+                    'persian_approved_underwriting_end_date': plan_detail.get('Persian Approved Underwiring End Date', None),
+                    'persian_project_start_date': plan_detail.get('Persian Project Start Date', None),
+                    'persian_project_end_date': plan_detail.get('Persian Project End Date', None),
+                    'persian_creation_date': plan_detail.get('Persian Creation Date', None),
+                    'sum_of_funding_provided': plan_detail.get('SumOfFundingProvided', None)
+                }
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'طرح با موفقیت به‌روزرسانی شد'}, status=status.HTTP_200_OK)
 
 

@@ -1,10 +1,11 @@
 from django.urls import path
-from.views import PlansViewset, BankReceiptViewset,CheckVerificationReceiptAdminViewset, WarrantyListAdminViewset,ComplaintViewset,CheckVerificationPaymentAdminViewset,PaymentUserReport ,SendParticipationNotificationViewset,PaymentInquiryViewSet,PlanViewset,PaymentUser, CertificateAdminViewset, Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset 
+from.views import PlansViewset, BankReceiptViewset,CheckVerificationReceiptAdminViewset,UpdatePlanViewset, WarrantyListAdminViewset,ComplaintViewset,CheckVerificationPaymentAdminViewset,PaymentUserReport ,SendParticipationNotificationViewset,PaymentInquiryViewSet,PlanViewset,PaymentUser, CertificateAdminViewset, Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset 
 
 
 urlpatterns = [
 
     path('plans/', PlansViewset.as_view(), name='plans'),
+    path('plan/update/<str:trace_code>/', UpdatePlanViewset.as_view(), name='plans'),
     path('plan/<str:trace_code>/', PlanViewset.as_view(), name='plan'),
     path('appendices/<str:trace_code>/', AppendicesViewset.as_view(), name='appendices-admin'),
     path('send/picture/<str:trace_code>/', SendpicturePlanViewset.as_view(), name='send-picture-admin'),
