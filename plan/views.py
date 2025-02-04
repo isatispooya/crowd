@@ -233,6 +233,7 @@ class PlansViewset(APIView):
             board_members = ListOfProjectBoardMembers.objects.filter(plan=plan)  
             company = ProjectOwnerCompan.objects.filter(plan=plan)  
             shareholder = ListOfProjectBigShareHolders.objects.filter(plan=plan)  
+            appendices = Appendices.objects.filter(plan=plan)  
             plan_serializer = serializers.PlanSerializer(plan)
             board_members_serializer = serializers.ListOfProjectBoardMembersSerializer(board_members, many=True)
             board_members_list = []
@@ -269,7 +270,8 @@ class PlansViewset(APIView):
                 'board_members': board_members_list , 
                 'shareholder': shareholder_list  ,
                 'company': company_serializer.data  ,
-                'picture_plan': picture_plan.data
+                'picture_plan': picture_plan.data,
+                'appendices': serializers.AppendicesSerializer(appendices, many=True).data
             }
             if information:
                 information_serializer = serializers.InformationPlanSerializer(information)
