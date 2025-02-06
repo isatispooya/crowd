@@ -2403,3 +2403,26 @@ class UpdatePlanViewset(APIView):
         return Response({'message': 'طرح با موفقیت به‌روزرسانی شد'}, status=status.HTTP_200_OK)
 
 
+
+class ParticipantForSpaceViewset(APIView):
+    @method_decorator(ratelimit(key='ip', rate='50/m', method='GET', block=True))
+    def get(self,request,trace_code):
+        Authorization = "dj2n9#mK8$pL5@qR7vX4yH1wB9cF3tE6"
+        if not Authorization:
+            return Response({'error': 'Authorization header is missing'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        plan = Plan.objects.filter(trace_code=trace_code).first()
+        if not plan:
+            return Response({'error': 'plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        payments = PaymentGateway.objects.filter(plan=plan)
+        response = serializers.PaymentGatewaySerializer(payments,many=True)
+
+        df = pd.DataFrame(response.data)
+        if len(df)==0:
+            return Response([], status=status.HTTP_200_OK)
+        df['fulname'] = [get_name(x) for x in df['user']]
+        
+        df = df.fillna('')
+        df = df.to_dict('records')
+
+        return Response(df, status=status.HTTP_200_OK)

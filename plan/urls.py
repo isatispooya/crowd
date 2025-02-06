@@ -1,5 +1,5 @@
 from django.urls import path
-from.views import PlansViewset, BankReceiptViewset,CheckVerificationReceiptAdminViewset,UpdatePlanViewset, WarrantyListAdminViewset,ComplaintViewset,CheckVerificationPaymentAdminViewset,PaymentUserReport ,SendParticipationNotificationViewset,PaymentInquiryViewSet,PlanViewset,PaymentUser, CertificateAdminViewset, Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset 
+from.views import PlansViewset, BankReceiptViewset,CheckVerificationReceiptAdminViewset,UpdatePlanViewset, WarrantyListAdminViewset,ParticipantForSpaceViewset,ComplaintViewset,CheckVerificationPaymentAdminViewset,PaymentUserReport ,SendParticipationNotificationViewset,PaymentInquiryViewSet,PlanViewset,PaymentUser, CertificateAdminViewset, Certificate,TransmissionViewset ,ParticipantMenuViewset,  DocumentationViewset,WarrantyAdminViewset,AppendicesViewset,PaymentDocument,EndOfFundraisingViewset,ShareholdersListExelViewset, SendParticipationCertificateToFaraboursViewset,CommentAdminViewset , CommentViewset ,InformationPlanViewset   ,SendpicturePlanViewset , ParticipantViewset 
 
 
 urlpatterns = [
@@ -33,5 +33,6 @@ urlpatterns = [
     path('check/verification/payment/admin/', CheckVerificationPaymentAdminViewset.as_view(), name='check-verification-payment-admin'), # بررسی پرداخت چک های سود سرمایه پذیر از طرف ادمین    
     path('check/verification/receipt/admin/', CheckVerificationReceiptAdminViewset.as_view(), name='check-verification-receipt-admin'), # بررسی دریافت چک های سود سرمایه گذار از طرف ادمین    
     path('complaint/user/<str:trace_code>/', ComplaintViewset.as_view(), name='complaint'), # شکایات کاربران
+    path('participant/for/space/<str:trace_code>/', ParticipantForSpaceViewset.as_view(), name='participant-for-space'), # سرمایه گذراان برای space
 ]
 
